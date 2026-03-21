@@ -1,0 +1,54 @@
+{
+    "manifest_version": 3,
+    "name": "TryItOn — Will This Fit Me?",
+    "version": "1.0.0",
+    "description": "AI-powered fit check for anything you shop online",
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage",
+        "identity"
+    ],
+    "oauth2": {
+        "client_id": "777217128855-n7uns4h3b9ocn7nkspmuj46hiv4sdmmn.apps.googleusercontent.com",
+        "scopes": ["openid", "email", "profile"]
+    },
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "src/background/service-worker.ts",
+        "type": "module"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "TryItOn"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "src/content/content-script.ts"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "icons/*",
+                "popup.html"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ]
+}

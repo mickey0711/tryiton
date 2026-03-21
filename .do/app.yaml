@@ -1,0 +1,50 @@
+name: tryiton
+region: nyc
+
+services:
+  - name: api
+    source_dir: services/api
+    dockerfile_path: services/api/Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    run_command: node dist/server.js
+    build_command: npm install && npm run build
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${tryiton-db.DATABASE_URL}
+      - key: RESEND_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: CHROME_EXTENSION_URL
+        value: https://chrome.google.com/webstore/detail/tryiton/YOUR_EXTENSION_ID
+      - key: EMAIL_FROM
+        value: "TryIt4U <noreply@tryit4u.ai>"
+      - key: GOOGLE_CLIENT_ID
+        value: 777217128855-n7uns4h3b9ocn7nkspmuj46hiv4sdmmn.apps.googleusercontent.com
+    health_check:
+      http_path: /health
+      period_seconds: 30
+
+static_sites:
+  - name: landing
+    source_dir: landing
+    index_document: index.html
+    error_document: index.html
+    routes:
+      - path: /
+
+databases:
+  - name: tryiton-db
+    engine: PG
+    version: "15"
+    size: db-s-dev-database
+    num_nodes: 1

@@ -1,0 +1,114 @@
+version: "3.9"
+services:
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: tryiton
+      POSTGRES_PASSWORD: tryiton
+      POSTGRES_DB: tryiton
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tryiton"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  localstack:
+    image: localstack/localstack:3
+    environment:
+      SERVICES: s3
+      DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - ./infra/localstack-init.sh:/etc/localstack/init/ready.d/init.sh
+    healthcheck:
+      test: ["CMD-SHELL", "awslocal s3 ls || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://tryiton:tryiton@postgres:5432/tryiton
+      REDIS_URL: redis://redis:6379
+      S3_BUCKET: tryiton-local
+      S3_ENDPOINT: http://localstack:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: us-east-1
+      JWT_SECRET: dev-secret-do-not-use-in-production
+      JWT_EXPIRES_IN: "1h"
+      EMAIL_TRANSPORT: console
+      CORS_ORIGINS: "chrome-extension://,http://localhost:3000,http://localhost:5173"
+      WEB_APP_URL: http://localhost:3000
+      PORT: "8080"
+      NODE_ENV: development
+      LOG_LEVEL: info
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      localstack: { condition: service_healthy }
+    restart: unless-stopped
+
+  tryon-worker:
+    build:
+      context: ./services/inference/tryon
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql://tryiton:tryiton@postgres:5432/tryiton
+      REDIS_URL: redis://redis:6379
+      S3_BUCKET: tryiton-local
+      S3_ENDPOINT: http://localstack:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: us-east-1
+      # AI provider — set AI_PROVIDER=replicate or segmind to use real AI
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      REPLICATE_API_TOKEN: ${REPLICATE_API_TOKEN:-}
+      REPLICATE_MODEL_TRYON: ${REPLICATE_MODEL_TRYON:-cuuupid/idm-vton:906425dbca90663ff5427624839572cc56ea7d380343d13e2a4c4b09d7d0add5}
+      SEGMIND_API_KEY: ${SEGMIND_API_KEY:-}
+      SEGMIND_ENDPOINT: ${SEGMIND_ENDPOINT:-https://api.segmind.com/v1/virtual-try-on}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      localstack: { condition: service_healthy }
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Try-On — TryIt4U</title>
+<meta name="description" content="Check out this virtual try-on result from TryIt4U — AI-powered fashion try-on">
+<meta property="og:title" content="My Try-On — TryIt4U">
+<meta property="og:description" content="See how this looks on me! AI-powered virtual try-on by TryIt4U">
+<meta property="og:type" content="website">
+<meta property="og:image" content="">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0f;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.card{max-width:480px;width:90%;background:#12121e;border-radius:20px;padding:24px;border:1px solid rgba(124,58,237,.15);box-shadow:0 25px 60px rgba(0,0,0,.4)}
+.header{text-align:center;margin-bottom:20px}
+.logo{font-size:20px;font-weight:800;background:linear-gradient(135deg,#7c3aed,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:inline-block}
+.result-img{width:100%;border-radius:14px;aspect-ratio:3/4;object-fit:cover;background:#1a1a2e;display:block;margin-bottom:16px}
+.product-title{font-size:16px;font-weight:700;text-align:center;margin-bottom:8px;color:#e2e8f0}
+.meta{display:flex;justify-content:center;gap:16px;margin-bottom:16px;font-size:12px;color:#94a3b8}
+.meta strong{color:#a78bfa}
+.fit-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.fit-badge.great{background:rgba(74,222,128,.1);color:#4ade80;border:1px solid rgba(74,222,128,.25)}
+.fit-badge.good{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.25)}
+.fit-badge.poor{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.25)}
+.cta{display:block;width:100%;text-align:center;padding:14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:white;font-size:14px;font-weight:700;text-decoration:none;transition:opacity .2s}
+.cta:hover{opacity:.9}
+.share-row{display:flex;gap:8px;margin-top:12px;justify-content:center}
+.share-btn{padding:8px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#94a3b8;font-size:12px;cursor:pointer;transition:background .2s}
+.share-btn:hover{background:rgba(255,255,255,.08)}
+.footer-note{text-align:center;margin-top:24px;font-size:11px;color:#475569}
+.footer-note a{color:#7c3aed;text-decoration:none}
+.loading{text-align:center;padding:60px 0;font-size:14px;color:#94a3b8}
+.loading .spinner{width:32px;height:32px;border:3px solid rgba(124,58,237,.2);border-top-color:#7c3aed;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error{text-align:center;padding:40px 20px;color:#f87171}
+</style>
+</head>
+<body>
+<div class="card" id="content">
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Loading try-on result…</div>
+    </div>
+</div>
+<div class="footer-note" style="margin-top:20px">
+    Powered by <a href="https://tryit4u.ai">TryIt4U</a> — AI Virtual Try-On
+</div>
+
+<script>
+(async function(){
+    const shareId = window.location.pathname.split('/s/')[1] || window.location.hash.replace('#','');
+    if(!shareId){
+        document.getElementById('content').innerHTML='<div class="error">❌ Invalid share link</div>';
+        return;
+    }
+
+    const API = 'http://localhost:8080';
+    try{
+        const res = await fetch(`${API}/share/s/${shareId}`);
+        if(!res.ok) throw new Error('Not found');
+        const data = await res.json();
+
+        const fitScore = data.fit_score ?? 0;
+        const fitClass = fitScore >= 80 ? 'great' : fitScore >= 60 ? 'good' : 'poor';
+        const fitLabel = fitScore >= 85 ? 'Excellent fit' : fitScore >= 75 ? 'Good fit' : fitScore >= 60 ? 'Decent fit' : 'Try another size';
+
+        // Update OG image
+        const ogImg = document.querySelector('meta[property="og:image"]');
+        if(ogImg && data.result_url) ogImg.setAttribute('content', data.result_url);
+
+        const date = new Date(data.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+
+        document.getElementById('content').innerHTML = `
+            <div class="header"><span class="logo">TryIt4U ✨</span></div>
+            ${data.result_url ? `<img class="result-img" src="${data.result_url}" alt="Try-on result">` : ''}
+            ${data.product_title ? `<div class="product-title">${data.product_title}</div>` : ''}
+            <div class="meta">
+                ${fitScore > 0 ? `<span class="fit-badge ${fitClass}">👕 ${fitLabel} · ${fitScore}%</span>` : ''}
+                <span>📅 ${date}</span>
+            </div>
+            <a class="cta" href="https://tryit4u.ai">Try It On Yourself →</a>
+            <div class="share-row">
+                <button class="share-btn" onclick="shareOn('whatsapp')">WhatsApp</button>
+                <button class="share-btn" onclick="shareOn('twitter')">Twitter</button>
+                <button class="share-btn" onclick="copyLink()">📋 Copy Link</button>
+            </div>
+        `;
+    }catch(err){
+        document.getElementById('content').innerHTML='<div class="error">😔 This try-on result was not found or has expired.</div><a class="cta" href="https://tryit4u.ai" style="margin-top:16px">Try TryIt4U →</a>';
+    }
+})();
+
+function shareOn(p){
+    const url = encodeURIComponent(window.location.href);
+    const txt = encodeURIComponent('Check out my virtual try-on! AI-powered by TryIt4U ✨');
+    const links = {
+        whatsapp: `https://wa.me/?text=${txt}%20${url}`,
+        twitter: `https://twitter.com/intent/tweet?text=${txt}&url=${url}`,
+    };
+    if(links[p]) window.open(links[p],'_blank','noopener');
+}
+function copyLink(){
+    navigator.clipboard.writeText(window.location.href).then(()=>{
+        const btns = document.querySelectorAll('.share-btn');
+        btns[btns.length-1].textContent='Copied! ✓';
+        setTimeout(()=>btns[btns.length-1].textContent='📋 Copy Link',2000);
+    });
+}
+</script>
+</body>
+</html>

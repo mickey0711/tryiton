@@ -1,0 +1,206 @@
+.page {
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px 100px;
+}
+
+/* Background glows */
+.glow1 {
+    position: fixed;
+    top: -200px;
+    left: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(99, 102, 241, 0.15), transparent 70%);
+    pointer-events: none;
+}
+
+.glow2 {
+    position: fixed;
+    bottom: -200px;
+    right: -200px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(139, 92, 246, 0.12), transparent 70%);
+    pointer-events: none;
+}
+
+.nav {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.loginLink {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.loginLink:hover {
+    color: var(--text);
+}
+
+.hero {
+    max-width: 720px;
+    text-align: center;
+    padding: 60px 0 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #a5b4fc;
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.headline {
+    font-size: clamp(48px, 8vw, 80px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+}
+
+.gradient {
+    background: linear-gradient(135deg, #6366f1 0%, #a78bfa 50%, #f472b6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sub {
+    font-size: 18px;
+    color: var(--text-muted);
+    line-height: 1.65;
+    max-width: 520px;
+}
+
+.sub em {
+    font-style: italic;
+    color: var(--text);
+}
+
+.cta {
+    display: inline-block;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    font-size: 17px;
+    font-weight: 700;
+    padding: 16px 36px;
+    border-radius: 99px;
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.5);
+    transition: all 0.25s;
+}
+
+.cta:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 48px rgba(99, 102, 241, 0.7);
+}
+
+.ctaHint {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Categories */
+.cats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    max-width: 700px;
+    margin: 10px 0 60px;
+}
+
+.catPill {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 99px;
+    transition: all 0.2s;
+}
+
+.catPill:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    color: #a5b4fc;
+}
+
+/* How it works */
+.how {
+    max-width: 900px;
+    width: 100%;
+    text-align: center;
+}
+
+.sectionTitle {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 36px;
+    background: linear-gradient(135deg, var(--text), #a5b4fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.step {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 20px;
+    transition: all 0.2s;
+}
+
+.step:hover {
+    border-color: rgba(99, 102, 241, 0.3);
+    transform: translateY(-2px);
+}
+
+.stepIcon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.stepTitle {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.stepDesc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
