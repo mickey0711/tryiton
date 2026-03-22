@@ -1,22 +1,26 @@
 {
-    "name": "tryiton",
-    "version": "1.0.0",
-    "private": true,
-    "workspaces": [
-        "apps/*",
-        "services/*",
-        "packages/*"
-    ],
-    "scripts": {
-        "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
-        "dev:api": "npm run dev --workspace=services/api",
-        "dev:web": "npm run dev --workspace=apps/web",
-        "build:extension": "npm run build --workspace=apps/extension",
-        "docker:up": "docker-compose up --build",
-        "docker:down": "docker-compose down"
-    },
-    "devDependencies": {
-        "concurrently": "^8.2.2",
-        "typescript": "^5.4.5"
-    }
+  "name": "tryiton",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "npm run dev --workspace=services/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build:extension": "npm run build --workspace=apps/extension",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down",
+    "start": "node_modules/.bin/tsx services/api/src/server.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "tsx": "^4.16.0"
+  }
 }
