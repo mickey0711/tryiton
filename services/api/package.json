@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "echo \"Build complete \u2014 using tsx runtime\"",
+    "start": "node_modules/.bin/tsx src/server.ts",
     "db:migrate": "node -r tsx/cjs src/db/migrate.ts"
   },
   "dependencies": {
