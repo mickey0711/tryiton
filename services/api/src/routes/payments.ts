@@ -18,50 +18,72 @@ function getStripe() {
     return stripe;
 }
 
-const PLANS: Record<string, { priceId: string; credits: number; label: string; price: number; recurring: boolean }> = {
-    // ─── Subscriptions ────────────────────────────────────────────────────────
+const PLANS: Record<string, {
+    priceId: string; credits: number; label: string;
+    price: number; recurring: boolean;
+    billing: "monthly" | "annual" | "one_time";
+    recommended?: boolean;
+    badge?: string;
+    creditsPerMonth?: number;
+    monthlyEquivalent?: number;   // effective $/mo shown to user
+    savingsAmount?: number;       // total saved vs monthly × 12
+}> = {
+    // ─── Monthly Subscriptions ────────────────────────────────────────────────
     pro_basic: {
         priceId: process.env.PADDLE_PRO_BASIC_PRICE_ID ?? "price_placeholder_pro_basic",
-        credits: 50,
-        label: "Pro Basic — 50 try-ons/mo",
-        price: 19.90,
-        recurring: true,
+        credits: 50, label: "Pro Basic — 50 try-ons/mo",
+        price: 19.90, recurring: true, billing: "monthly",
     },
     pro_plus: {
         priceId: process.env.PADDLE_PRO_PLUS_PRICE_ID ?? "price_placeholder_pro_plus",
-        credits: 150,
-        label: "Pro Plus — 150 try-ons/mo",
-        price: 49.90,
-        recurring: true,
+        credits: 150, label: "Pro Plus — 150 try-ons/mo",
+        price: 49.90, recurring: true, billing: "monthly",
+    },
+    // ─── Annual Subscriptions (10% off) ───────────────────────────────────────
+    pro_basic_annual: {
+        priceId: process.env.PADDLE_PRO_BASIC_ANNUAL_PRICE_ID ?? "price_placeholder_pro_basic_annual",
+        credits: 600,               // 50/mo × 12
+        creditsPerMonth: 50,
+        label: "Pro Basic Annual — 50 try-ons/mo",
+        price: 214.90,             // total/year — $19.90 × 12 × 0.9
+        monthlyEquivalent: 17.90,  // $214.90 ÷ 12
+        savingsAmount: 23.90,      // $19.90 × 12 − $214.90
+        recurring: true, billing: "annual",
+        badge: "הכי משתלם — חיסכון 10%",
+    },
+    pro_plus_annual: {
+        priceId: process.env.PADDLE_PRO_PLUS_ANNUAL_PRICE_ID ?? "price_placeholder_pro_plus_annual",
+        credits: 1800,             // 150/mo × 12
+        creditsPerMonth: 150,
+        label: "Pro Plus Annual — 150 try-ons/mo",
+        price: 539.00,             // total/year — $49.90 × 12 × 0.9
+        monthlyEquivalent: 44.90,  // $539.00 ÷ 12
+        savingsAmount: 59.80,      // $49.90 × 12 − $539.00
+        recurring: true, billing: "annual",
+        recommended: true,
+        badge: "הכי משתלם — חיסכון 10%",
     },
     // ─── Credit Packs ─────────────────────────────────────────────────────────
     credits_20: {
         priceId: process.env.PADDLE_CREDITS_20_PRICE_ID ?? "price_placeholder_credits_20",
-        credits: 20,
-        label: "20 Credits Pack",
-        price: 9.99,
-        recurring: false,
+        credits: 20, label: "20 Credits Pack",
+        price: 9.99, recurring: false, billing: "one_time",
     },
     credits_40: {
         priceId: process.env.PADDLE_CREDITS_40_PRICE_ID ?? "price_placeholder_credits_40",
-        credits: 40,
-        label: "40 Credits Pack",
-        price: 19.99,
-        recurring: false,
+        credits: 40, label: "40 Credits Pack",
+        price: 19.99, recurring: false, billing: "one_time",
     },
     credits_130: {
         priceId: process.env.PADDLE_CREDITS_130_PRICE_ID ?? "price_placeholder_credits_130",
-        credits: 130,
-        label: "130 Credits Pack",
-        price: 49.90,
-        recurring: false,
+        credits: 130, label: "130 Credits Pack",
+        price: 49.90, recurring: false, billing: "one_time",
     },
     credits_200: {
         priceId: process.env.PADDLE_CREDITS_200_PRICE_ID ?? "price_placeholder_credits_200",
-        credits: 200,
-        label: "200 Credits Pack",
-        price: 99.00,
-        recurring: false,
+        credits: 200, label: "200 Credits Pack",
+        price: 99.00, recurring: false, billing: "one_time",
+        badge: "הכי משתלם",
     },
 };
 
