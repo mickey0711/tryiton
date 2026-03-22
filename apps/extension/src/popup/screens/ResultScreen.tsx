@@ -94,7 +94,7 @@ function ZoomableImage({ src, alt }: { src: string; alt: string }) {
             <div
                 ref={containerRef}
                 style={{
-                    width: "100%", height: 520,
+                    width: "100%", height: 380,
                     overflow: "hidden", borderRadius: 12,
                     background: "linear-gradient(135deg, #0a0a12, #0f0f1e)",
                     position: "relative", userSelect: "none",
@@ -261,7 +261,7 @@ export function ResultScreen({ result, onRegenerate, onBack, onSceneVibe, onPric
         const token = await getToken();
         if (token && !result.jobId.startsWith("mock-")) {
             try {
-                await fetch("http://localhost:8080/library/saved", {
+                await fetch("https://tryiton-app-f32z6.ondigitalocean.app/library/saved", {
                     method: "POST",
                     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                     body: JSON.stringify({ job_id: result.jobId, snapshot: { result_url: result.resultUrl, product_image: result.productSrc, fit_score: result.fitScore } }),
