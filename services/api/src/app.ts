@@ -36,6 +36,7 @@ import oauthRouter from "./routes/oauth";
 import spaceRouter from "./routes/space";
 import privacyRouter from "./routes/privacy";
 import legalRouter from "./routes/legal";
+import adminRouter from "./routes/admin";
 
 const app = express();
 
@@ -116,6 +117,7 @@ app.use("/auth/oauth", oauthRouter);
 app.use("/space", spaceRouter);
 app.use("/privacy", privacyRouter);
 app.use("/", legalRouter);
+app.use("/admin", adminRouter);
 
 // ─── Landing page (served from /public) ─────────────────────────────────────
 const publicDir = path.resolve(__dirname, "../public");
