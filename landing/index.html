@@ -1483,13 +1483,16 @@ document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
 // Nav scroll
 addEventListener('scroll',()=>{document.querySelector('nav').style.background=scrollY>50?'rgba(5,5,8,.97)':'rgba(5,5,8,.7)'});
 
-// Cookie
-function acceptCookie(){localStorage.setItem('cookie','1');document.getElementById('cookie').style.display='none'}
-function closeCookie(){document.getElementById('cookie').style.display='none'}
-if(localStorage.getItem('cookie'))document.getElementById('cookie').style.display='none';
+// Cookie — Safari/iPhone private mode safe
+function _cookieStorage(action,val){
+  try{if(action==='set')localStorage.setItem('cookie_ok','1');return localStorage.getItem('cookie_ok');}catch(e){return null;}
+}
+function acceptCookie(){_cookieStorage('set');document.getElementById('cookie').style.display='none';}
+function closeCookie(){document.getElementById('cookie').style.display='none';}
+(function(){if(_cookieStorage())document.getElementById('cookie').style.display='none';})();
 
 // Waitlist / Newsletter signup
-const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8080' : 'https://api.tryit4u.ai';
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8080' : window.location.origin;
 let done=false;
 async function handleJoin(e,src){
   e.preventDefault();
