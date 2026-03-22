@@ -380,6 +380,8 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       </div>
     </div>
     <div class="user-menu-wrap" id="user-menu-wrap">
+      <!-- BUG-02 FIX: Sign In button directly in navbar, outside hidden dropdown -->
+      <button id="nav-signin-btn" onclick="openSignIn('login')" aria-label="Sign In" style="display:flex;align-items:center;gap:6px;padding:7px 16px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);border-radius:100px;color:#a78bfa;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;transition:.2s" onmouseover="this.style.background='rgba(124,58,237,.3)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">🔑 Sign In</button>
       <button class="user-avatar" id="user-avatar-btn" onclick="toggleUserMenu()" aria-label="User account menu" aria-haspopup="true" aria-expanded="false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       </button>
@@ -482,99 +484,68 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   </div>
 </section>
 
-<!-- LOGOS -->
+<!-- LOGOS — BUG-01 FIX: text badges, no broken external images -->
 <div class="logos" aria-label="Supported stores" id="stores">
-  <p class="logos-lbl" data-i18n="logos_lbl">Trusted by shoppers at the world's top brands</p>
+  <p class="logos-lbl" data-i18n="logos_lbl">Works with the world's top brands &amp; stores</p>
+  <style>
+    .mq-logo{display:inline-flex;align-items:center;justify-content:center;padding:6px 14px;margin:0 6px;border:1px solid rgba(255,255,255,.12);border-radius:100px;font-size:13px;font-weight:700;color:rgba(255,255,255,.65);letter-spacing:.5px;white-space:nowrap;text-decoration:none;transition:.2s;background:rgba(255,255,255,.04)}
+    .mq-logo:hover{border-color:rgba(124,58,237,.5);color:#a78bfa;background:rgba(124,58,237,.08)}
+  </style>
   <div class="mq-track-wrap" aria-hidden="true">
     <div class="mq-track">
-      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener" title="ZARA"><img src="https://logo.clearbit.com/zara.com" alt="ZARA" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/zara/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener" title="H&amp;M"><img src="https://logo.clearbit.com/hm.com" alt="H&amp;M" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/hm/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener" title="ASOS"><img src="https://logo.clearbit.com/asos.com" alt="ASOS" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/asos/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener" title="Nike"><img src="https://logo.clearbit.com/nike.com" alt="Nike" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/nike/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener" title="Adidas"><img src="https://logo.clearbit.com/adidas.com" alt="Adidas" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/adidas/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://aloyoga.com" target="_blank" rel="noopener" title="Alo Yoga"><img src="https://logo.clearbit.com/aloyoga.com" alt="Alo Yoga" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/alo/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener" title="Shein"><img src="https://logo.clearbit.com/shein.com" alt="Shein" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/shein/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener" title="Mango"><img src="https://logo.clearbit.com/mango.com" alt="Mango" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/mango/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener" title="Uniqlo"><img src="https://logo.clearbit.com/uniqlo.com" alt="Uniqlo" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/uniqlo/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://levi.com" target="_blank" rel="noopener" title="Levi's"><img src="https://logo.clearbit.com/levi.com" alt="Levi's" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/levis/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener" title="Puma"><img src="https://logo.clearbit.com/puma.com" alt="Puma" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/puma/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener" title="Gap"><img src="https://logo.clearbit.com/gap.com" alt="Gap" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/gap/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://reebok.com" target="_blank" rel="noopener" title="Reebok"><img src="https://logo.clearbit.com/reebok.com" alt="Reebok" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/reebok/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://underarmour.com" target="_blank" rel="noopener" title="Under Armour"><img src="https://logo.clearbit.com/underarmour.com" alt="Under Armour" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/underarmour/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener" title="Vans"><img src="https://logo.clearbit.com/vans.com" alt="Vans" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/vans/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener" title="Converse"><img src="https://logo.clearbit.com/converse.com" alt="Converse" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/converse/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener" title="New Balance"><img src="https://logo.clearbit.com/newbalance.com" alt="New Balance" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/newbalance/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener" title="The North Face"><img src="https://logo.clearbit.com/thenorthface.com" alt="The North Face" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/thenorthface/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener" title="Lululemon"><img src="https://logo.clearbit.com/lululemon.com" alt="Lululemon" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/lululemon/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://revolve.com" target="_blank" rel="noopener" title="Revolve"><img src="https://logo.clearbit.com/revolve.com" alt="Revolve" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/revolve/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener" title="Amazon"><img src="https://logo.clearbit.com/amazon.com" alt="Amazon" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/amazon/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener" title="eBay"><img src="https://logo.clearbit.com/ebay.com" alt="eBay" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ebay/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://temu.com" target="_blank" rel="noopener" title="Temu"><img src="https://logo.clearbit.com/temu.com" alt="Temu" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/temu/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo mq-ali" href="https://aliexpress.com" target="_blank" rel="noopener" title="AliExpress"><img src="https://logo.clearbit.com/aliexpress.com" alt="AliExpress" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/aliexpress/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener" title="Etsy"><img src="https://logo.clearbit.com/etsy.com" alt="Etsy" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/etsy/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener" title="Zalando"><img src="https://logo.clearbit.com/zalando.com" alt="Zalando" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/zalando/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener" title="Farfetch"><img src="https://logo.clearbit.com/farfetch.com" alt="Farfetch" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/farfetch/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener" title="Nordstrom"><img src="https://logo.clearbit.com/nordstrom.com" alt="Nordstrom" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/nordstrom/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://forever21.com" target="_blank" rel="noopener" title="Forever 21"><img src="https://logo.clearbit.com/forever21.com" alt="Forever 21" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/forever21/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener" title="Ralph Lauren"><img src="https://logo.clearbit.com/ralphlauren.com" alt="Ralph Lauren" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ralphlauren/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener" title="Calvin Klein"><img src="https://logo.clearbit.com/calvinklein.com" alt="Calvin Klein" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/calvinklein/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://tommy.com" target="_blank" rel="noopener" title="Tommy Hilfiger"><img src="https://logo.clearbit.com/tommy.com" alt="Tommy Hilfiger" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/tommy/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://lacoste.com" target="_blank" rel="noopener" title="Lacoste"><img src="https://logo.clearbit.com/lacoste.com" alt="Lacoste" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/lacoste/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener" title="Hugo Boss"><img src="https://logo.clearbit.com/hugoboss.com" alt="Hugo Boss" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/hugoboss/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener" title="Gucci"><img src="https://logo.clearbit.com/gucci.com" alt="Gucci" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/gucci/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://michaelkors.com" target="_blank" rel="noopener" title="Michael Kors"><img src="https://logo.clearbit.com/michaelkors.com" alt="Michael Kors" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/michaelkors/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://coach.com" target="_blank" rel="noopener" title="Coach"><img src="https://logo.clearbit.com/coach.com" alt="Coach" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/coach/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://anthropologie.com" target="_blank" rel="noopener" title="Anthropologie"><img src="https://logo.clearbit.com/anthropologie.com" alt="Anthropologie" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/anthropologie/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://bananarepublic.com" target="_blank" rel="noopener" title="Banana Republic"><img src="https://logo.clearbit.com/bananarepublic.com" alt="Banana Republic" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/bananarepublic/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://jcrew.com" target="_blank" rel="noopener" title="J.Crew"><img src="https://logo.clearbit.com/jcrew.com" alt="J.Crew" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/jcrew/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ssense.com" target="_blank" rel="noopener" title="SSENSE"><img src="https://logo.clearbit.com/ssense.com" alt="SSENSE" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ssense/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ohpolly.com" target="_blank" rel="noopener" title="Oh Polly"><img src="https://logo.clearbit.com/ohpolly.com" alt="Oh Polly" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ohpolly/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener" title="ZARA"><img src="https://logo.clearbit.com/zara.com" alt="ZARA" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/zara/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener" title="H&amp;M"><img src="https://logo.clearbit.com/hm.com" alt="H&amp;M" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/hm/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener" title="ASOS"><img src="https://logo.clearbit.com/asos.com" alt="ASOS" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/asos/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener" title="Nike"><img src="https://logo.clearbit.com/nike.com" alt="Nike" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/nike/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener" title="Adidas"><img src="https://logo.clearbit.com/adidas.com" alt="Adidas" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/adidas/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://aloyoga.com" target="_blank" rel="noopener" title="Alo Yoga"><img src="https://logo.clearbit.com/aloyoga.com" alt="Alo Yoga" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/alo/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener" title="Shein"><img src="https://logo.clearbit.com/shein.com" alt="Shein" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/shein/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener" title="Mango"><img src="https://logo.clearbit.com/mango.com" alt="Mango" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/mango/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener" title="Uniqlo"><img src="https://logo.clearbit.com/uniqlo.com" alt="Uniqlo" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/uniqlo/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://levi.com" target="_blank" rel="noopener" title="Levi's"><img src="https://logo.clearbit.com/levi.com" alt="Levi's" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/levis/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener" title="Puma"><img src="https://logo.clearbit.com/puma.com" alt="Puma" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/puma/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener" title="Gap"><img src="https://logo.clearbit.com/gap.com" alt="Gap" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/gap/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://reebok.com" target="_blank" rel="noopener" title="Reebok"><img src="https://logo.clearbit.com/reebok.com" alt="Reebok" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/reebok/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://underarmour.com" target="_blank" rel="noopener" title="Under Armour"><img src="https://logo.clearbit.com/underarmour.com" alt="Under Armour" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/underarmour/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener" title="Vans"><img src="https://logo.clearbit.com/vans.com" alt="Vans" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/vans/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener" title="Converse"><img src="https://logo.clearbit.com/converse.com" alt="Converse" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/converse/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener" title="New Balance"><img src="https://logo.clearbit.com/newbalance.com" alt="New Balance" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/newbalance/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener" title="The North Face"><img src="https://logo.clearbit.com/thenorthface.com" alt="The North Face" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/thenorthface/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener" title="Lululemon"><img src="https://logo.clearbit.com/lululemon.com" alt="Lululemon" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/lululemon/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://revolve.com" target="_blank" rel="noopener" title="Revolve"><img src="https://logo.clearbit.com/revolve.com" alt="Revolve" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/revolve/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener" title="Amazon"><img src="https://logo.clearbit.com/amazon.com" alt="Amazon" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/amazon/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener" title="eBay"><img src="https://logo.clearbit.com/ebay.com" alt="eBay" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ebay/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://temu.com" target="_blank" rel="noopener" title="Temu"><img src="https://logo.clearbit.com/temu.com" alt="Temu" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/temu/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://aliexpress.com" target="_blank" rel="noopener" title="AliExpress"><img src="https://logo.clearbit.com/aliexpress.com" alt="AliExpress" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/aliexpress/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener" title="Etsy"><img src="https://logo.clearbit.com/etsy.com" alt="Etsy" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/etsy/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener" title="Zalando"><img src="https://logo.clearbit.com/zalando.com" alt="Zalando" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/zalando/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener" title="Farfetch"><img src="https://logo.clearbit.com/farfetch.com" alt="Farfetch" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/farfetch/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener" title="Nordstrom"><img src="https://logo.clearbit.com/nordstrom.com" alt="Nordstrom" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/nordstrom/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://forever21.com" target="_blank" rel="noopener" title="Forever 21"><img src="https://logo.clearbit.com/forever21.com" alt="Forever 21" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/forever21/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener" title="Ralph Lauren"><img src="https://logo.clearbit.com/ralphlauren.com" alt="Ralph Lauren" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ralphlauren/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener" title="Calvin Klein"><img src="https://logo.clearbit.com/calvinklein.com" alt="Calvin Klein" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/calvinklein/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://tommy.com" target="_blank" rel="noopener" title="Tommy Hilfiger"><img src="https://logo.clearbit.com/tommy.com" alt="Tommy Hilfiger" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/tommy/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://lacoste.com" target="_blank" rel="noopener" title="Lacoste"><img src="https://logo.clearbit.com/lacoste.com" alt="Lacoste" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/lacoste/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener" title="Hugo Boss"><img src="https://logo.clearbit.com/hugoboss.com" alt="Hugo Boss" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/hugoboss/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener" title="Gucci"><img src="https://logo.clearbit.com/gucci.com" alt="Gucci" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/gucci/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://michaelkors.com" target="_blank" rel="noopener" title="Michael Kors"><img src="https://logo.clearbit.com/michaelkors.com" alt="Michael Kors" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/michaelkors/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://coach.com" target="_blank" rel="noopener" title="Coach"><img src="https://logo.clearbit.com/coach.com" alt="Coach" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/coach/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://anthropologie.com" target="_blank" rel="noopener" title="Anthropologie"><img src="https://logo.clearbit.com/anthropologie.com" alt="Anthropologie" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/anthropologie/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://bananarepublic.com" target="_blank" rel="noopener" title="Banana Republic"><img src="https://logo.clearbit.com/bananarepublic.com" alt="Banana Republic" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/bananarepublic/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://jcrew.com" target="_blank" rel="noopener" title="J.Crew"><img src="https://logo.clearbit.com/jcrew.com" alt="J.Crew" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/jcrew/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ssense.com" target="_blank" rel="noopener" title="SSENSE"><img src="https://logo.clearbit.com/ssense.com" alt="SSENSE" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ssense/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ohpolly.com" target="_blank" rel="noopener" title="Oh Polly"><img src="https://logo.clearbit.com/ohpolly.com" alt="Oh Polly" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ohpolly/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
+      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener">ZARA</a>
+      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener">H&amp;M</a>
+      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener">ASOS</a>
+      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener">NIKE</a>
+      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener">adidas</a>
+      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener">amazon</a>
+      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener">SHEIN</a>
+      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener">Mango</a>
+      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener">UNIQLO</a>
+      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener">Levi's</a>
+      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener">PUMA</a>
+      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener">GAP</a>
+      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener">Vans</a>
+      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener">Converse</a>
+      <a class="mq-logo" href="https://aloyoga.com" target="_blank" rel="noopener">Alo Yoga</a>
+      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener">lululemon</a>
+      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener">Nordstrom</a>
+      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener">etsy</a>
+      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener">FARFETCH</a>
+      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener">Zalando</a>
+      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener">GUCCI</a>
+      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener">Ralph Lauren</a>
+      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener">Calvin Klein</a>
+      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener">HUGO BOSS</a>
+      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener">The North Face</a>
+      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener">New Balance</a>
+      <a class="mq-logo" href="https://revolve.com" target="_blank" rel="noopener">REVOLVE</a>
+      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener">eBay</a>
+      <a class="mq-logo" href="https://aliexpress.com" target="_blank" rel="noopener">AliExpress</a>
+      <a class="mq-logo" href="https://forever21.com" target="_blank" rel="noopener">Forever 21</a>
+      <!-- duplicate set for seamless scroll -->
+      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener">ZARA</a>
+      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener">H&amp;M</a>
+      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener">ASOS</a>
+      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener">NIKE</a>
+      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener">adidas</a>
+      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener">amazon</a>
+      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener">SHEIN</a>
+      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener">Mango</a>
+      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener">UNIQLO</a>
+      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener">Levi's</a>
+      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener">PUMA</a>
+      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener">GAP</a>
+      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener">Vans</a>
+      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener">GUCCI</a>
+      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener">Ralph Lauren</a>
     </div>
   </div>
   <p class="logos-count" data-i18n="logos_count">Works on <b>500+ stores</b> worldwide &mdash; anywhere you shop</p>
 </div>
+
+
+
 
 <!-- FEATURES -->
 <section class="sec" id="features" aria-labelledby="features-heading">
@@ -1205,70 +1176,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   </div>
 </section>
 
-
-
-<!-- REWARDS -->
-<section class="sec" id="rewards" aria-labelledby="rewards-heading">
-  <p class="sec-lbl rv">Referral Rewards</p>
-  <h2 class="sec-h rv" id="rewards-heading">Share &amp; earn free try-ons.<br><span class="grad">Everyone wins.</span></h2>
-  <p class="sec-sub rv">Invite friends and you <b style="color:#f1f5f9">both</b> get free AI try-on credits. No limit — the more you share, the more you earn.</p>
-
-  <div class="rw-steps rv">
-    <div class="rw-box">
-      <div class="rw-num">01</div>
-      <div class="rw-icon">🔗</div>
-      <h3 class="rw-title">Get your link</h3>
-      <p class="rw-desc">Sign up and receive your unique personal referral link instantly in your dashboard.</p>
-    </div>
-    <div class="rw-arrow">→</div>
-    <div class="rw-box">
-      <div class="rw-num">02</div>
-      <div class="rw-icon">📨</div>
-      <h3 class="rw-title">Share with friends</h3>
-      <p class="rw-desc">Send via WhatsApp, Instagram, email — any way you like. No limit on invites.</p>
-    </div>
-    <div class="rw-arrow">→</div>
-    <div class="rw-box rw-box-accent">
-      <div class="rw-num">03</div>
-      <div class="rw-icon">🎁</div>
-      <h3 class="rw-title">Both get credits</h3>
-      <p class="rw-desc">Your friend gets <b style="color:#4ade80">5 bonus try-ons</b>. You earn <b style="color:#a78bfa">5 try-ons</b> the moment they join.</p>
-    </div>
-  </div>
-
-  <div class="rw-milestones-wrap rv">
-    <p class="rw-ms-heading">🏆 Unlock Milestone Rewards</p>
-    <div class="rw-milestones">
-      <div class="rw-ms-card">
-        <div class="rw-ms-medal">🥉</div>
-        <div class="rw-ms-count">5 Friends</div>
-        <div class="rw-ms-reward">+25 free try-ons</div>
-        <div class="rw-ms-tag">Bronze</div>
-      </div>
-      <div class="rw-ms-card rw-ms-silver">
-        <div class="rw-ms-medal">🥈</div>
-        <div class="rw-ms-count">15 Friends</div>
-        <div class="rw-ms-reward">1 month Pro — free</div>
-        <div class="rw-ms-tag">Silver</div>
-      </div>
-      <div class="rw-ms-card rw-ms-gold">
-        <div class="rw-ms-medal">🥇</div>
-        <div class="rw-ms-count">50 Friends</div>
-        <div class="rw-ms-reward">Lifetime Pro access</div>
-        <div class="rw-ms-tag">Gold</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="rw-link-box rv">
-    <div class="rw-link-label">Your personal referral link</div>
-    <div class="rw-link-row">
-      <div class="rw-link-url">tryit4u.ai/ref/<span id="ref-code">join-AB12</span></div>
-      <button onclick="copyRef()" id="copy-ref-btn" class="rw-copy-btn">Copy Link 🔗</button>
-    </div>
-    <p class="rw-link-note">Join the beta to activate your personal referral link</p>
-  </div>
-</section>
+<!-- BUG-07 FIX: duplicate rewards section removed -->
 
 <!-- BLOG / PRESS -->
 <section class="sec" id="blog" aria-labelledby="blog-heading">
@@ -1419,6 +1327,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       <ul>
         <li><a href="javascript:openSignIn('register')">Sign Up</a></li>
         <li><a href="javascript:openSignIn('login')">Log In</a></li>
+        <li><a href="javascript:openSignIn('login')">My Profile</a></li>
         <li><a href="#wishlist">My Wishlist</a></li>
         <li><a href="#">My Profile</a></li>
         <li><a href="#">My Looks</a></li>
@@ -1437,7 +1346,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2025 TryIt4U AI Ltd. All rights reserved.</p>
+    <p>© 2026 TryIt4U AI Ltd. All rights reserved.</p>
     <span class="a11y-flag">♿ WCAG 2.1 AA · <a href="javascript:openLegal('accessibility')" style="color:var(--m)">Accessibility Statement</a></span>
     <div class="footer-bottom-links">
       <a href="javascript:openLegal('privacy')">Privacy</a><a href="javascript:openLegal('terms')">Terms</a><a href="javascript:openLegal('privacy')">Cookies</a><a href="#contact">Contact</a>
