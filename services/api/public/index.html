@@ -341,12 +341,6 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   <button class="a11y-btn" onclick="document.body.classList.toggle('hi-contrast')" title="High contrast" aria-label="Toggle high contrast">◐</button>
 </div>
 
-<!-- COOKIE CONSENT -->
-<div id="cookie" role="region" aria-label="Cookie consent">
-  <p>🍪 We use cookies to improve your experience and analyse traffic. <a href="javascript:openLegal('privacy')" onclick="closeCookie()">Privacy Policy</a> · <a href="javascript:openLegal('cookie')" onclick="closeCookie()">Cookie Policy</a></p>
-  <button class="cbtn cbtn-decline" onclick="this.closest('#cookie').remove()">Decline</button>
-  <button class="cbtn cbtn-accept" onclick="this.closest('#cookie').remove();try{localStorage.setItem('cookie_ok','1')}catch(e){}">Accept All</button>
-</div>
 
 <!-- NAV -->
 <nav role="navigation" aria-label="Main navigation">
