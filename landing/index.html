@@ -1485,6 +1485,14 @@ function acceptCookie(){_cookieStorage('set');document.getElementById('cookie').
 function closeCookie(){document.getElementById('cookie').style.display='none';}
 (function(){if(_cookieStorage())document.getElementById('cookie').style.display='none';})();
 
+// UTM capture — store on landing, send on signup
+(function(){
+  const p = new URLSearchParams(location.search);
+  const utm = {utm_source:p.get('utm_source'),utm_medium:p.get('utm_medium'),utm_campaign:p.get('utm_campaign'),utm_content:p.get('utm_content')};
+  if(utm.utm_source||utm.utm_medium||utm.utm_campaign) try{localStorage.setItem('_utm',JSON.stringify(utm));}catch(e){}
+})();
+function getUTM(){try{return JSON.parse(localStorage.getItem('_utm')||'{}');}catch(e){return {};}}
+
 // Waitlist / Newsletter signup
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8080' : window.location.origin;
 let done=false;
@@ -1498,12 +1506,12 @@ async function handleJoin(e,src){
   const list=JSON.parse(localStorage.getItem('wl')||'[]');
   if(!list.find(x=>x.email===em))list.push({email:em,ts:new Date().toISOString()});
   localStorage.setItem('wl',JSON.stringify(list));
-  // POST to real newsletter API
+  // POST to real newsletter API with UTM data
   try{
     await fetch(API_BASE+'/newsletter/subscribe',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:em,source:src||'landing'})
+      body:JSON.stringify({email:em,source:src||'landing',referrer_url:document.referrer||undefined,...getUTM()})
     });
   }catch(err){
     console.warn('Newsletter API not reachable, saved locally',err);

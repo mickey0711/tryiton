@@ -211,6 +211,40 @@ const MIGRATIONS = [
   );
   CREATE INDEX IF NOT EXISTS oauth_providers_user_idx ON oauth_providers(user_id);
     `,
+    // 008: UTM tracking + marketing campaigns table
+    `
+  ALTER TABLE newsletter_subscribers
+    ADD COLUMN IF NOT EXISTS utm_source   TEXT,
+    ADD COLUMN IF NOT EXISTS utm_medium   TEXT,
+    ADD COLUMN IF NOT EXISTS utm_campaign TEXT,
+    ADD COLUMN IF NOT EXISTS utm_content  TEXT,
+    ADD COLUMN IF NOT EXISTS ip           TEXT,
+    ADD COLUMN IF NOT EXISTS country      TEXT,
+    ADD COLUMN IF NOT EXISTS referrer_url TEXT;
+
+  CREATE TABLE IF NOT EXISTS campaigns (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name        TEXT NOT NULL,
+    platform    TEXT NOT NULL DEFAULT 'other',
+    utm_campaign TEXT,
+    budget      NUMERIC DEFAULT 0,
+    spent       NUMERIC DEFAULT 0,
+    clicks      INT    DEFAULT 0,
+    impressions INT    DEFAULT 0,
+    notes       TEXT,
+    active      BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE TABLE IF NOT EXISTS site_pixels (
+    id       UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    platform TEXT NOT NULL UNIQUE,
+    pixel_id TEXT NOT NULL,
+    active   BOOLEAN NOT NULL DEFAULT TRUE,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+    `,
 ];
 
 export async function runMigrations() {
