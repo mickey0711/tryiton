@@ -11,6 +11,7 @@ if (process.env.SENTRY_DSN) {
 }
 
 import express from "express";
+import path from "path";
 import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
@@ -45,7 +46,18 @@ app.use((req, _res, next) => {
 });
 
 // ─── Security ──────────────────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'", "https:"],
+        },
+    },
+}));
 app.use(
     cors({
         origin: (origin, cb) => {
@@ -104,6 +116,13 @@ app.use("/auth/oauth", oauthRouter);
 app.use("/space", spaceRouter);
 app.use("/privacy", privacyRouter);
 app.use("/", legalRouter);
+
+// ─── Landing page (served from /public) ─────────────────────────────────────
+const publicDir = path.resolve(__dirname, "../public");
+app.use(express.static(publicDir));
+app.get("/", (_req, res) => {
+    res.sendFile(path.join(publicDir, "index.html"));
+});
 
 // ─── 404 ───────────────────────────────────────────────────────────────────────
 app.use((_req, res) => {
