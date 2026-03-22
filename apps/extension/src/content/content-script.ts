@@ -1,9 +1,10 @@
 // Content Script — TryItOn
 // Injects floating "Will this fit me?" button, detects product image and category
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "https://tryiton-app-f32z6.ondigitalocean.app";
 const BUTTON_ID = "tryiton-floating-btn";
 const OVERLAY_ID = "tryiton-select-overlay";
+
 
 // ─── Product Image Scoring ─────────────────────────────────────────────────────
 
@@ -138,6 +139,63 @@ function getCachedCategory(): TryOnCategory {
     return _detectedCategory;
 }
 
+// ─── Product Specs Detection ───────────────────────────────────────────────────
+
+interface ProductSpecs {
+    title?: string;
+    brand?: string;
+    dimensions?: string;
+    sizeChart?: string;
+    materials?: string;
+    price?: string;
+}
+
+function detectProductSpecs(): ProductSpecs {
+    const specs: ProductSpecs = {};
+
+    // Title
+    specs.title = (
+        document.querySelector('h1')?.textContent ||
+        document.querySelector('[itemprop="name"]')?.textContent ||
+        document.title
+    )?.trim().slice(0, 120);
+
+    // Brand
+    specs.brand = (
+        document.querySelector('[itemprop="brand"]')?.textContent ||
+        document.querySelector('[class*="brand"]')?.textContent ||
+        document.querySelector('[class*="vendor"]')?.textContent
+    )?.trim().slice(0, 60);
+
+    // Price
+    specs.price = (
+        document.querySelector('[itemprop="price"]')?.getAttribute("content") ||
+        document.querySelector('[class*="price"]')?.textContent ||
+        document.querySelector('[class*="Price"]')?.textContent
+    )?.trim().slice(0, 30);
+
+    // Dimensions — look for common patterns in product descriptions
+    const bodyText = document.body.innerText.slice(0, 8000);
+    const dimMatch = bodyText.match(
+        /(?:dimensions?|size|measurements?|width|height|depth|length)[:\s]+([\d.]+\s*[x×\-]\s*[\d.]+(?:\s*[x×\-]\s*[\d.]+)?\s*(?:cm|mm|inches?|in|"|\')?)/i
+    );
+    if (dimMatch) specs.dimensions = dimMatch[0].trim().slice(0, 100);
+
+    // Material / fabric
+    const matMatch = bodyText.match(
+        /(?:material|fabric|composition|made from|made of)[:\s]+([a-zA-Z0-9%,\s]+)/i
+    );
+    if (matMatch) specs.materials = matMatch[0].trim().slice(0, 100);
+
+    // Size chart text (look for size labels)
+    const sizeTableEl = document.querySelector('[class*="size-chart"], [class*="sizeChart"], [id*="size-guide"], table');
+    if (sizeTableEl) {
+        specs.sizeChart = sizeTableEl.textContent?.trim().slice(0, 300);
+    }
+
+    return specs;
+}
+
 // Category display info
 const CAT_INFO: Record<TryOnCategory, { icon: string; label: string }> = {
     tops:        { icon: "👕", label: "Top" },
@@ -217,9 +275,10 @@ function createButton() {
     btn.addEventListener("click", () => {
         const src = detectProductImage();
         const category = getCachedCategory();
+        const specs = detectProductSpecs();
         if (src) {
             try {
-                chrome.runtime.sendMessage({ type: "PRODUCT_DETECTED", src, category });
+                chrome.runtime.sendMessage({ type: "PRODUCT_DETECTED", src, category, specs });
             } catch {
                 // Extension context invalidated after reload — user needs to refresh
             }
@@ -287,7 +346,8 @@ function startManualSelection() {
         }
         if (src) {
             try {
-                chrome.runtime.sendMessage({ type: "PRODUCT_DETECTED", src, category: getCachedCategory() });
+                const specs = detectProductSpecs();
+                chrome.runtime.sendMessage({ type: "PRODUCT_DETECTED", src, category: getCachedCategory(), specs });
             } catch {
                 // Extension context invalidated — silently ignore
             }

@@ -46,7 +46,7 @@ export interface JobResult {
     productSrc: string | null;
 }
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "https://tryiton-app-f32z6.ondigitalocean.app";
 
 function App() {
     const [screen, setScreen] = useState<Screen>("onboarding");

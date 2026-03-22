@@ -18,6 +18,7 @@ chrome.runtime.onInstalled.addListener(() => {
 // ─── State ────────────────────────────────────────────────────────────────────
 let lastProductSrc: string | null = null;
 let lastProductCategory: string = "tops";
+let lastProductSpecs: Record<string, any> | null = null;
 
 // ─── Single unified message listener ─────────────────────────────────────────
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -26,6 +27,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.type === "PRODUCT_DETECTED") {
         lastProductSrc = msg.src;
         lastProductCategory = msg.category ?? "tops";
+        lastProductSpecs = msg.specs ?? null;
         // Try to open popup — may not be available in all contexts, ignore errors
         if (chrome.action?.openPopup) {
             chrome.action.openPopup().catch(() => { /* not available */ });
@@ -35,13 +37,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     }
 
     if (msg.type === "GET_LAST_PRODUCT") {
-        sendResponse({ src: lastProductSrc, category: lastProductCategory });
+        sendResponse({ src: lastProductSrc, category: lastProductCategory, specs: lastProductSpecs });
         return true;
     }
 
     if (msg.type === "CLEAR_PRODUCT") {
         lastProductSrc = null;
         lastProductCategory = "tops";
+        lastProductSpecs = null;
         sendResponse({ ok: true });
         return true;
     }

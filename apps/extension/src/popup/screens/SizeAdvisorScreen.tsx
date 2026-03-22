@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "https://tryiton-app-f32z6.ondigitalocean.app";
 
 // Category groups
 const UPPER_BODY = ["tops", "jacket", "dress"];   // waist-up photo
