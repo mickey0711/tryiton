@@ -4,12 +4,11 @@ region: nyc
 services:
   - name: api
     source_dir: services/api
-    dockerfile_path: services/api/Dockerfile
     http_port: 8080
     instance_count: 1
     instance_size_slug: basic-xxs
-    run_command: node_modules/.bin/tsx src/server.ts
-    build_command: cd services/api && npm install
+    run_command: npm start
+    build_command: npm install
     envs:
       - key: NODE_ENV
         value: production
