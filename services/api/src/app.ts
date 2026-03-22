@@ -116,8 +116,8 @@ app.use("/size", sizeRouter);
 app.use("/auth/oauth", oauthRouter);
 app.use("/space", spaceRouter);
 app.use("/privacy", privacyRouter);
-app.use("/", legalRouter);
 app.use("/admin", adminRouter);
+app.use("/", legalRouter);
 
 // ─── Landing page (served from /public) ─────────────────────────────────────
 const publicDir = path.resolve(__dirname, "../public");
