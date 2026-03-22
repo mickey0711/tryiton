@@ -33,6 +33,7 @@ import pricesRouter from "./routes/prices";
 import sizeRouter from "./routes/size";
 import oauthRouter from "./routes/oauth";
 import spaceRouter from "./routes/space";
+import privacyRouter from "./routes/privacy";
 
 const app = express();
 
@@ -100,6 +101,7 @@ app.use("/prices", pricesRouter);
 app.use("/size", sizeRouter);
 app.use("/auth/oauth", oauthRouter);
 app.use("/space", spaceRouter);
+app.use("/privacy", privacyRouter);
 
 // ─── 404 ───────────────────────────────────────────────────────────────────────
 app.use((_req, res) => {
