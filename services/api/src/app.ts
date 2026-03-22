@@ -121,9 +121,23 @@ app.use("/", legalRouter);
 
 // ─── Landing page (served from /public) ─────────────────────────────────────
 const publicDir = path.resolve(__dirname, "../public");
-app.use(express.static(publicDir));
-app.get("/", (_req, res) => {
+// Static assets (images etc) — cacheable
+app.use(express.static(publicDir, { index: false }));
+// HTML pages — always fresh (no Cloudflare cache)
+const noCacheHtml = (_req: any, res: any, next: any) => {
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    next();
+};
+app.get("/", noCacheHtml, (_req, res) => {
     res.sendFile(path.join(publicDir, "index.html"));
+});
+app.get("/privacy.html", noCacheHtml, (_req, res) => {
+    res.sendFile(path.join(publicDir, "privacy.html"));
+});
+app.get("/terms.html", noCacheHtml, (_req, res) => {
+    res.sendFile(path.join(publicDir, "terms.html"));
 });
 
 // ─── 404 ───────────────────────────────────────────────────────────────────────
