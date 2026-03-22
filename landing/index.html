@@ -872,6 +872,13 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   <p class="sec-lbl rv" data-i18n="pr_lbl">Pricing</p>
   <h2 class="sec-h rv" id="pricing-heading" data-i18n="pr_h">Simple, honest pricing.</h2>
   <p class="sec-sub rv" data-i18n="pr_sub">Start free. Pay only when you need more.</p>
+  <!-- Billing Toggle -->
+  <div style="display:flex;justify-content:center;margin-bottom:36px" class="rv">
+    <div id="billing-toggle" style="display:inline-flex;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:100px;padding:4px;gap:2px">
+      <button onclick="setBilling('monthly')" id="btn-monthly" class="billing-btn active" style="padding:8px 24px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.2s;font-family:Inter,sans-serif;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff">Monthly</button>
+      <button onclick="setBilling('annual')" id="btn-annual" class="billing-btn" style="padding:8px 24px;border-radius:100px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:.2s;font-family:Inter,sans-serif;background:transparent;color:rgba(255,255,255,.5)">Annual <span style="background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;padding:2px 8px;border-radius:100px;font-size:10px;margin-left:6px;font-weight:700">Save 10%</span></button>
+    </div>
+  </div>
   <div class="pricing-grid">
     <!-- FREE -->
     <div class="price-card rv">
@@ -886,14 +893,15 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       </ul>
       <button class="btn-outline" onclick="document.getElementById('hero-email').focus()" data-i18n="plan1_btn">Get Started →</button>
     </div>
-    <!-- PRO -->
+    <!-- PRO BASIC -->
     <div class="price-card pop rv" style="transition-delay:.1s">
       <span class="pop-badge" data-i18n="plan2_badge">Most Popular</span>
-      <div class="price-name" data-i18n="plan2_n">Pro</div>
-      <div class="price-val">$19.90</div>
-      <div class="price-per" data-i18n="plan2_per">/ month · cancel anytime</div>
+      <div class="price-name" data-i18n="plan2_n">Pro Basic</div>
+      <div class="price-val" data-price-monthly="$19.90" data-price-annual="$17.90">$19.90</div>
+      <div class="price-per" data-per-monthly="/ month · cancel anytime" data-per-annual="/ mo · billed $214.90/year" data-i18n="plan2_per">/ month · cancel anytime</div>
+      <div class="annual-savings" style="display:none;color:#4ade80;font-size:12px;font-weight:600;margin-top:4px">Save $23.90/year ✨</div>
       <ul class="price-feats">
-        <li data-i18n="plan2_f1">100 AI try-ons / month</li>
+        <li data-i18n="plan2_f1">50 AI try-ons / month</li>
         <li>All clothing categories (tops, pants, dress, shoes, glasses, accessories)</li>
         <li>🏠 Space Intelligence — furniture, electronics, plants, lighting</li>
         <li data-i18n="plan2_f3">Wishlist + Social Share</li>
@@ -905,15 +913,16 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       </ul>
       <button class="btn-filled" onclick="document.getElementById('hero-email').focus()" data-i18n="plan2_btn">Start Pro →</button>
     </div>
-    <!-- ELITE -->
+    <!-- PRO PLUS -->
     <div class="price-card rv" style="transition-delay:.2s;border-color:rgba(251,191,36,.3);background:linear-gradient(160deg,rgba(251,191,36,.05) 0%,rgba(124,58,237,.08) 100%)">
       <span class="pop-badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none" data-i18n="plan3_badge">⚡ Best Value</span>
-      <div class="price-name" data-i18n="plan3_n">Elite</div>
-      <div class="price-val" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$49.90</div>
-      <div class="price-per" data-i18n="plan3_per">/ month · cancel anytime</div>
+      <div class="price-name" data-i18n="plan3_n">Pro Plus</div>
+      <div class="price-val" data-price-monthly="$49.90" data-price-annual="$44.90" style="background:linear-gradient(135deg,#f59e0b,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">$49.90</div>
+      <div class="price-per" data-per-monthly="/ month · cancel anytime" data-per-annual="/ mo · billed $539.00/year" data-i18n="plan3_per">/ month · cancel anytime</div>
+      <div class="annual-savings" style="display:none;color:#4ade80;font-size:12px;font-weight:600;margin-top:4px">Save $59.80/year ✨</div>
       <ul class="price-feats">
-        <li><strong style="color:#fbbf24">Everything in Pro, plus:</strong></li>
-        <li data-i18n="plan3_f1">300 AI try-ons / month</li>
+        <li><strong style="color:#fbbf24">Everything in Pro Basic, plus:</strong></li>
+        <li data-i18n="plan3_f1">150 AI try-ons / month</li>
         <li data-i18n="plan3_f3">🧬 AI Avatar (digital twin from 3-5 photos)</li>
         <li data-i18n="plan3_f4">🌅 Scene Vibe Generator (AI background scenes)</li>
         <li data-i18n="plan3_f5">Full Pose Studio + custom pose requests</li>
@@ -921,7 +930,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
         <li>Early access to new features</li>
         <li data-i18n="plan3_f6">🎧 Dedicated concierge support</li>
       </ul>
-      <button class="btn-filled" style="background:linear-gradient(135deg,#f59e0b,#d97706)" onclick="document.getElementById('hero-email').focus()" data-i18n="plan3_btn">Go Elite →</button>
+      <button class="btn-filled" style="background:linear-gradient(135deg,#f59e0b,#d97706)" onclick="document.getElementById('hero-email').focus()" data-i18n="plan3_btn">Go Pro Plus →</button>
     </div>
     <!-- BUSINESS API -->
     <div class="price-card rv" style="transition-delay:.3s;border-color:rgba(52,211,153,.3);background:linear-gradient(160deg,rgba(52,211,153,.05) 0%,rgba(16,185,129,.06) 100%)">
@@ -957,40 +966,53 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       <p style="font-size:14px;color:rgba(255,255,255,.5)" data-i18n="cr_sub">Top up your credits instantly — no subscription needed.</p>
     </div>
     <div style="display:flex;flex-direction:column;gap:14px">
-      <!-- $4.99 -->
+      <!-- $9.99 / 20 -->
       <div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 24px;cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='rgba(124,58,237,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'" onclick="document.getElementById('hero-email').focus();document.getElementById('credits-modal').style.display='none'">
         <div style="background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:12px;padding:10px 16px;text-align:center;min-width:70px">
-          <div style="font-size:18px;font-weight:800;color:#fff">$4.99</div>
+          <div style="font-size:18px;font-weight:800;color:#fff">$9.99</div>
           <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px" data-i18n="cr1_qty">20 try-ons</div>
         </div>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px" data-i18n="cr1_n">Starter Pack</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.45)" data-i18n="cr1_p">Perfect for a quick session. $0.25 per try-on.</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.45)" data-i18n="cr1_p">Perfect for a quick session. $0.50 per try-on.</div>
         </div>
         <div style="color:#a78bfa;font-size:20px">→</div>
       </div>
-      <!-- $9.99 -->
-      <div style="display:flex;align-items:center;gap:16px;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.4);border-radius:16px;padding:20px 24px;cursor:pointer;transition:.2s;position:relative" onmouseover="this.style.borderColor='rgba(124,58,237,.7)'" onmouseout="this.style.borderColor='rgba(124,58,237,.4)'" onclick="document.getElementById('hero-email').focus();document.getElementById('credits-modal').style.display='none'">
-        <span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-size:10px;font-weight:700;padding:3px 12px;border-radius:100px" data-i18n="cr2_badge">BEST VALUE</span>
-        <div style="background:rgba(124,58,237,.25);border:1px solid rgba(124,58,237,.5);border-radius:12px;padding:10px 16px;text-align:center;min-width:70px">
-          <div style="font-size:18px;font-weight:800;color:#fff">$9.99</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px" data-i18n="cr2_qty">50 try-ons</div>
+      <!-- $19.99 / 40 -->
+      <div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 24px;cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='rgba(124,58,237,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'" onclick="document.getElementById('hero-email').focus();document.getElementById('credits-modal').style.display='none'">
+        <div style="background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:12px;padding:10px 16px;text-align:center;min-width:70px">
+          <div style="font-size:18px;font-weight:800;color:#fff">$19.99</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px" data-i18n="cr2_qty">40 try-ons</div>
         </div>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px" data-i18n="cr2_n">Value Pack</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.45)" data-i18n="cr2_p">Great for regular shoppers. $0.20 per try-on — save 20%.</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.45)" data-i18n="cr2_p">Great for regular shoppers. $0.50 per try-on.</div>
         </div>
         <div style="color:#a78bfa;font-size:20px">→</div>
       </div>
-      <!-- $19.90 -->
-      <div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 24px;cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='rgba(251,191,36,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'" onclick="document.getElementById('hero-email').focus();document.getElementById('credits-modal').style.display='none'">
-        <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:10px 16px;text-align:center;min-width:70px">
-          <div style="font-size:18px;font-weight:800;color:#fbbf24">$19.90</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px" data-i18n="cr3_qty">120 try-ons</div>
+      <!-- $49.90 / 130 -->
+      <div style="display:flex;align-items:center;gap:16px;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.4);border-radius:16px;padding:20px 24px;cursor:pointer;transition:.2s;position:relative" onmouseover="this.style.borderColor='rgba(124,58,237,.7)'" onmouseout="this.style.borderColor='rgba(124,58,237,.4)'" onclick="document.getElementById('hero-email').focus();document.getElementById('credits-modal').style.display='none'">
+        <span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-size:10px;font-weight:700;padding:3px 12px;border-radius:100px" data-i18n="cr3_badge">POPULAR</span>
+        <div style="background:rgba(124,58,237,.25);border:1px solid rgba(124,58,237,.5);border-radius:12px;padding:10px 16px;text-align:center;min-width:70px">
+          <div style="font-size:18px;font-weight:800;color:#fff">$49.90</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px" data-i18n="cr3_qty">130 try-ons</div>
         </div>
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px" data-i18n="cr3_n">Power Pack</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.45)" data-i18n="cr3_p">For power users. $0.17 per try-on — save 32%.</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.45)" data-i18n="cr3_p">For power users. $0.38 per try-on — save 24%.</div>
+        </div>
+        <div style="color:#a78bfa;font-size:20px">→</div>
+      </div>
+      <!-- $99 / 200 -->
+      <div style="display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 24px;cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='rgba(251,191,36,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.08)'" onclick="document.getElementById('hero-email').focus();document.getElementById('credits-modal').style.display='none'">
+        <span style="position:absolute;top:-10px;right:16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:10px;font-weight:700;padding:3px 12px;border-radius:100px">⚡ BEST VALUE</span>
+        <div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:10px 16px;text-align:center;min-width:70px">
+          <div style="font-size:18px;font-weight:800;color:#fbbf24">$99</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px" data-i18n="cr4_qty">200 try-ons</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px" data-i18n="cr4_n">Ultimate Pack</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.45)" data-i18n="cr4_p">Best value. $0.50 per try-on — save 34%.</div>
         </div>
         <div style="color:#fbbf24;font-size:20px">→</div>
       </div>
@@ -2772,6 +2794,25 @@ document.getElementById('signin-modal').addEventListener('click',function(e){if(
 function openAccount(section){ document.getElementById('account-modal').style.display='block'; document.body.style.overflow='hidden'; accSection(section||'profile'); loadAccountData(); }
 function closeAccount(){ document.getElementById('account-modal').style.display='none'; document.body.style.overflow=''; }
 
+
+function setBilling(mode) {
+  const m = document.getElementById('btn-monthly');
+  const a = document.getElementById('btn-annual');
+  const isAnnual = mode === 'annual';
+  m.style.background = isAnnual ? 'transparent' : 'linear-gradient(135deg,#7c3aed,#4f46e5)';
+  m.style.color = isAnnual ? 'rgba(255,255,255,.5)' : '#fff';
+  a.style.background = isAnnual ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'transparent';
+  a.style.color = isAnnual ? '#fff' : 'rgba(255,255,255,.5)';
+  document.querySelectorAll('[data-price-monthly]').forEach(el => {
+    el.textContent = isAnnual ? el.dataset.priceAnnual : el.dataset.priceMonthly;
+  });
+  document.querySelectorAll('[data-per-monthly]').forEach(el => {
+    el.textContent = isAnnual ? el.dataset.perAnnual : el.dataset.perMonthly;
+  });
+  document.querySelectorAll('.annual-savings').forEach(el => {
+    el.style.display = isAnnual ? 'block' : 'none';
+  });
+}
 
 function toggleFaq(btn){
   const item = btn.parentElement;
