@@ -34,6 +34,7 @@ import sizeRouter from "./routes/size";
 import oauthRouter from "./routes/oauth";
 import spaceRouter from "./routes/space";
 import privacyRouter from "./routes/privacy";
+import legalRouter from "./routes/legal";
 
 const app = express();
 
@@ -102,6 +103,7 @@ app.use("/size", sizeRouter);
 app.use("/auth/oauth", oauthRouter);
 app.use("/space", spaceRouter);
 app.use("/privacy", privacyRouter);
+app.use("/", legalRouter);
 
 // ─── 404 ───────────────────────────────────────────────────────────────────────
 app.use((_req, res) => {
