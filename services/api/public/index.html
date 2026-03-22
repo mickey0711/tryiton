@@ -174,7 +174,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
 /* ANIMS */
 @keyframes fiu{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.rv{opacity:0;transform:translateY(36px);transition:all .8s cubic-bezier(.22,1,.36,1)}
+.rv{opacity:0;transform:translateY(36px);transition:all .8s cubic-bezier(.22,1,.36,1);pointer-events:auto}
 .rv.in{opacity:1;transform:translateY(0)}
 /* RESPONSIVE */
 @media(max-width:1200px){.pricing-grid{grid-template-columns:repeat(2,1fr)}}
@@ -351,15 +351,15 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       <li><a href="#how">How it works</a></li>
       <li><a href="#pricing">Pricing</a></li>
       <li><a href="#download">Download</a></li>
-      <li><a href="#wishlist">Wishlist</a></li>
+      <li><a href="#wishlist" style="white-space:nowrap">Wishlist</a></li>
       <li><a href="#rewards">Rewards</a></li><li><a href="#blog">Blog</a></li>
       <li><a href="#contact">Contact</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li style="display:flex;align-items:center;gap:8px">
-        <a href="https://www.instagram.com" target="_blank" rel="noopener" class="nav-social" aria-label="Follow us on Instagram" title="Follow on Instagram">
+        <a href="https://www.instagram.com/tryit4u" target="_blank" rel="noopener" class="nav-social" aria-label="Follow us on Instagram" title="Follow on Instagram">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
         </a>
-        <a href="https://www.facebook.com" target="_blank" rel="noopener" class="nav-social" aria-label="Follow us on Facebook" title="Follow on Facebook">
+        <a href="https://www.facebook.com/tryit4u" target="_blank" rel="noopener" class="nav-social" aria-label="Follow us on Facebook" title="Follow on Facebook">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
         </a>
       </li>
@@ -742,7 +742,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
 
   <div style="text-align:center;margin-top:44px" class="rv">
     <p style="font-size:14px;color:rgba(255,255,255,.35);margin-bottom:20px">More categories rolling out throughout 2026 &mdash; Join the waitlist to get early access</p>
-    <button class="btn-filled" onclick="document.getElementById('hero-email').focus()" style="margin-right:12px">Join Waitlist →</button>
+    <button class="btn-filled" onclick="document.getElementById('waitlist').scrollIntoView({behavior:'smooth'})" style="margin-right:12px">Join Waitlist →</button>
     <button class="btn-outline" style="border-color:rgba(52,211,153,.4);color:#34d399" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Partner with Us</button>
   </div>
 </section>
@@ -914,7 +914,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
         <li data-i18n="plan1_f3">Zoom &amp; rotate controls</li>
         <li data-i18n="plan1_f4">Download result image</li>
       </ul>
-      <button class="btn-outline" onclick="document.getElementById('hero-email').focus()" data-i18n="plan1_btn">Get Started →</button>
+      <button class="btn-outline" onclick="openSignIn('register')" data-i18n="plan1_btn">Get Started →</button>
     </div>
     <!-- PRO BASIC -->
     <div class="price-card pop rv" style="transition-delay:.1s">
@@ -934,7 +934,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
         <li data-i18n="plan2_f6">Multi-photo profile (5 photos)</li>
         <li>Pose Studio (standing, walking, runway, sitting)</li>
       </ul>
-      <button class="btn-filled" onclick="document.getElementById('hero-email').focus()" data-i18n="plan2_btn">Start Pro →</button>
+      <button class="btn-filled" onclick="openSignIn('register')" data-i18n="plan2_btn">Start Pro →</button>
     </div>
     <!-- PRO PLUS -->
     <div class="price-card rv" style="transition-delay:.2s;border-color:rgba(251,191,36,.3);background:linear-gradient(160deg,rgba(251,191,36,.05) 0%,rgba(124,58,237,.08) 100%)">
@@ -953,7 +953,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
         <li>Early access to new features</li>
         <li data-i18n="plan3_f6">🎧 Dedicated concierge support</li>
       </ul>
-      <button class="btn-filled" style="background:linear-gradient(135deg,#f59e0b,#d97706)" onclick="document.getElementById('hero-email').focus()" data-i18n="plan3_btn">Go Pro Plus →</button>
+      <button class="btn-filled" style="background:linear-gradient(135deg,#f59e0b,#d97706)" onclick="openSignIn('register')" data-i18n="plan3_btn">Go Pro Plus →</button>
     </div>
     <!-- BUSINESS API -->
     <div class="price-card rv" style="transition-delay:.3s;border-color:rgba(52,211,153,.3);background:linear-gradient(160deg,rgba(52,211,153,.05) 0%,rgba(16,185,129,.06) 100%)">
@@ -1097,7 +1097,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
 
   <!-- CTA row -->
   <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap" class="rv">
-    <button class="btn-filled" style="background:linear-gradient(135deg,#10b981,#059669)" onclick="document.getElementById('hero-email').focus()">Start Saving Today →</button>
+    <button class="btn-filled" style="background:linear-gradient(135deg,#10b981,#059669)" onclick="document.getElementById('waitlist').scrollIntoView({behavior:'smooth'})" data-i18n="cta_btn">Start Saving Today →</button>
     <button class="btn-outline" style="border-color:rgba(52,211,153,.4);color:#34d399" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Become a Partner Brand</button>
   </div>
 </section>
@@ -1284,16 +1284,16 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       <p class="footer-tagline">The future of fashion shopping. Try anything on yourself before you buy it — from any store, on any device.</p>
       <div class="footer-social-label">Connect with us</div>
       <div class="social-row" aria-label="Social media links">
-        <a class="social-ico svg-ico" href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+        <a class="social-ico svg-ico" href="https://instagram.com/tryit4u" target="_blank" rel="noopener" aria-label="Instagram">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
         </a>
-        <a class="social-ico svg-ico" href="https://tiktok.com" target="_blank" rel="noopener" aria-label="TikTok">
+        <a class="social-ico svg-ico" href="https://tiktok.com/@tryit4u" target="_blank" rel="noopener" aria-label="TikTok">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
         </a>
         <a class="social-ico svg-ico" href="https://twitter.com" target="_blank" rel="noopener" aria-label="X / Twitter">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
         </a>
-        <a class="social-ico svg-ico" href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook">
+        <a class="social-ico svg-ico" href="https://facebook.com/tryit4u" target="_blank" rel="noopener" aria-label="Facebook">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
         </a>
         <a class="social-ico svg-ico" href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn">
@@ -3161,7 +3161,7 @@ if(currentLang !== 'en') setLang(currentLang);
       <p>To delete: Settings → Delete Account | Email: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a></p>
       <h3 style="color:#fff;margin:24px 0 8px;font-size:16px;border-left:3px solid #7c3aed;padding-left:12px">6. Data Retention</h3>
       <ul style="padding-left:18px;margin-bottom:16px"><li>Photos: deleted within 30 days of account deletion</li><li>Account data: 7 years (legal requirement)</li><li>Security logs: 90 days</li></ul>
-      <p style="margin-top:24px;color:rgba(255,255,255,.45);font-size:13px">Questions: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a> | TryItOn Ltd.</p>
+      <p style="margin-top:24px;color:rgba(255,255,255,.45);font-size:13px">Questions: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a> | TryIt4U AI Ltd.</p>
     </div>
     <!-- Terms of Service -->
     <div id="legal-terms" style="display:none;color:rgba(255,255,255,.8);font-family:Inter,sans-serif;line-height:1.7">
@@ -3213,7 +3213,7 @@ if(currentLang !== 'en') setLang(currentLang);
         <li><a href="https://support.mozilla.org/kb/enable-and-disable-cookies-website-preferences" target="_blank" rel="noopener" style="color:#a78bfa">Firefox</a></li>
         <li><a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471" target="_blank" rel="noopener" style="color:#a78bfa">Safari</a></li>
       </ul>
-      <p style="margin-top:24px;color:rgba(255,255,255,.45);font-size:13px">Questions: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a> | TryItOn Ltd.</p>
+      <p style="margin-top:24px;color:rgba(255,255,255,.45);font-size:13px">Questions: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a> | TryIt4U AI Ltd.</p>
     </div>
 
     <!-- Accessibility Statement -->
