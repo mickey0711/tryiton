@@ -18,16 +18,50 @@ function getStripe() {
     return stripe;
 }
 
-const PLANS: Record<string, { priceId: string; credits: number; label: string }> = {
-    pro_monthly: {
-        priceId: process.env.STRIPE_PRO_PRICE_ID ?? "price_placeholder_pro",
-        credits: 150,
-        label: "Pro — 150 try-ons/mo",
+const PLANS: Record<string, { priceId: string; credits: number; label: string; price: number; recurring: boolean }> = {
+    // ─── Subscriptions ────────────────────────────────────────────────────────
+    pro_basic: {
+        priceId: process.env.PADDLE_PRO_BASIC_PRICE_ID ?? "price_placeholder_pro_basic",
+        credits: 50,
+        label: "Pro Basic — 50 try-ons/mo",
+        price: 19.90,
+        recurring: true,
     },
+    pro_plus: {
+        priceId: process.env.PADDLE_PRO_PLUS_PRICE_ID ?? "price_placeholder_pro_plus",
+        credits: 150,
+        label: "Pro Plus — 150 try-ons/mo",
+        price: 49.90,
+        recurring: true,
+    },
+    // ─── Credit Packs ─────────────────────────────────────────────────────────
     credits_20: {
-        priceId: process.env.STRIPE_CREDITS_PRICE_ID ?? "price_placeholder_credits",
+        priceId: process.env.PADDLE_CREDITS_20_PRICE_ID ?? "price_placeholder_credits_20",
         credits: 20,
         label: "20 Credits Pack",
+        price: 9.99,
+        recurring: false,
+    },
+    credits_40: {
+        priceId: process.env.PADDLE_CREDITS_40_PRICE_ID ?? "price_placeholder_credits_40",
+        credits: 40,
+        label: "40 Credits Pack",
+        price: 19.99,
+        recurring: false,
+    },
+    credits_130: {
+        priceId: process.env.PADDLE_CREDITS_130_PRICE_ID ?? "price_placeholder_credits_130",
+        credits: 130,
+        label: "130 Credits Pack",
+        price: 49.90,
+        recurring: false,
+    },
+    credits_200: {
+        priceId: process.env.PADDLE_CREDITS_200_PRICE_ID ?? "price_placeholder_credits_200",
+        credits: 200,
+        label: "200 Credits Pack",
+        price: 99.00,
+        recurring: false,
     },
 };
 
@@ -53,7 +87,7 @@ router.post("/checkout", requireAuth, async (req, res, next) => {
 
         const session = await s.checkout.sessions.create({
             customer_email: email,
-            mode: plan === "pro_monthly" ? "subscription" : "payment",
+            mode: config.recurring ? "subscription" : "payment",
             line_items: [{ price: config.priceId, quantity: 1 }],
             success_url: `${process.env.WEB_APP_URL ?? "http://localhost:3000"}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.WEB_APP_URL ?? "http://localhost:3000"}/payment/cancel`,
