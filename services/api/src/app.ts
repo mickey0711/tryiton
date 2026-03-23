@@ -37,6 +37,7 @@ import spaceRouter from "./routes/space";
 import privacyRouter from "./routes/privacy";
 import legalRouter from "./routes/legal";
 import adminRouter from "./routes/admin";
+import whatsappRouter from "./routes/whatsapp";
 
 const app = express();
 
@@ -117,6 +118,7 @@ app.use("/auth/oauth", oauthRouter);
 app.use("/space", spaceRouter);
 app.use("/privacy", privacyRouter);
 app.use("/admin", adminRouter);
+app.use("/whatsapp", whatsappRouter);
 app.use("/", legalRouter);
 
 // ─── Landing page (served from /public) ─────────────────────────────────────
@@ -138,6 +140,12 @@ app.get("/privacy.html", noCacheHtml, (_req, res) => {
 });
 app.get("/terms.html", noCacheHtml, (_req, res) => {
     res.sendFile(path.join(publicDir, "terms.html"));
+});
+app.get("/refund", noCacheHtml, (_req, res) => {
+    res.sendFile(path.join(publicDir, "refund.html"));
+});
+app.get("/refund.html", noCacheHtml, (_req, res) => {
+    res.sendFile(path.join(publicDir, "refund.html"));
 });
 
 // ─── 404 ───────────────────────────────────────────────────────────────────────
