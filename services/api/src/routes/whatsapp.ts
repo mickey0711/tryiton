@@ -1,17 +1,6 @@
 import { Router, Request, Response } from "express";
-import twilio from "twilio";
-import OpenAI from "openai";
 
 const router = Router();
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
 
 // System prompt for the AI bot
 const SYSTEM_PROMPT = `You are a friendly AI assistant for TryIt4U — the world's first AI virtual try-on app.
@@ -34,7 +23,9 @@ Instructions:
 
 // POST /whatsapp/webhook — receives messages from Twilio
 router.post("/webhook", async (req: Request, res: Response) => {
-  const twiml = new twilio.twiml.MessagingResponse();
+  // Lazy import — avoids startup crash if keys aren't set yet
+  const twilioModule = await import("twilio");
+  const twiml = new twilioModule.default.twiml.MessagingResponse();
 
   try {
     const incomingMsg = req.body.Body as string;
@@ -42,13 +33,17 @@ router.post("/webhook", async (req: Request, res: Response) => {
 
     console.log(`[WhatsApp] Message from ${from}: ${incomingMsg}`);
 
-    if (!incomingMsg) {
+    const openaiKey = process.env.OPENAI_API_KEY;
+    if (!incomingMsg || !openaiKey) {
       twiml.message("Hi! 👋 How can I help you with TryIt4U today?");
       res.type("text/xml").send(twiml.toString());
       return;
     }
 
-    // Get AI response
+    // Lazy OpenAI client
+    const { default: OpenAI } = await import("openai");
+    const openai = new OpenAI({ apiKey: openaiKey });
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -75,7 +70,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
 });
 
 // GET /whatsapp/webhook — Twilio verification
-router.get("/webhook", (req: Request, res: Response) => {
+router.get("/webhook", (_req: Request, res: Response) => {
   res.status(200).send("WhatsApp webhook active ✅");
 });
 
