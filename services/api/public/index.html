@@ -211,6 +211,18 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   .rw-link-row{flex-direction:column}
   .rw-link-url{word-break:break-all;font-size:13px}
 }
+/* Hamburger — mobile nav */
+.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;background:none;border:none;cursor:pointer;padding:6px;z-index:200;flex-shrink:0}
+.hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,.75);border-radius:2px;transition:.3s}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+@media(max-width:900px){
+  .hamburger{display:flex}
+  .nav-links.mobile-open{display:flex;flex-direction:column;position:fixed;inset:0;background:rgba(5,5,8,.97);z-index:150;align-items:center;justify-content:center;gap:36px;padding:100px 24px 40px;backdrop-filter:blur(20px)}
+  .nav-links.mobile-open a{font-size:22px;font-weight:600;color:rgba(255,255,255,.75)}
+  .nav-links.mobile-open li:last-child{display:none}
+}
 @media(max-width:600px){
   h1{letter-spacing:-1px}
   .sec{padding:48px 14px}
@@ -365,6 +377,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       </li>
     </ul>
   </div>
+  <button class="hamburger" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button>
   <div class="nav-right">
     <!-- Language Picker -->
     <div style="position:relative" id="lang-wrap">
@@ -2791,8 +2804,26 @@ function toggleFaq(btn){
   const isOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
   if(!isOpen) item.classList.add('open');
-  btn.setAttribute('aria-expanded', !isOpen);
 }
+
+function toggleMobileNav(){
+  const btn=document.getElementById('hamburger-btn');
+  const links=document.querySelector('.nav-links');
+  const isOpen=btn.classList.toggle('open');
+  links.classList.toggle('mobile-open',isOpen);
+  btn.setAttribute('aria-expanded',isOpen);
+  document.body.style.overflow=isOpen?'hidden':'';
+}
+document.querySelectorAll('.nav-links a').forEach(a=>{
+  a.addEventListener('click',()=>{
+    const btn=document.getElementById('hamburger-btn');
+    if(btn&&btn.classList.contains('open')){
+      btn.classList.remove('open');
+      document.querySelector('.nav-links').classList.remove('mobile-open');
+      document.body.style.overflow='';
+    }
+  });
+});
 
 function selectCat(cat){
   const cats=['fashion','furniture','electronics','garden','lighting','kitchen','plants','beauty'];
