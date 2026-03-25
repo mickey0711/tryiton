@@ -15,8 +15,9 @@ import { MultiPhotoScreen } from "./screens/MultiPhotoScreen";
 import { SizeAdvisorScreen } from "./screens/SizeAdvisorScreen";
 import { SpaceUploadScreen } from "./screens/SpaceUploadScreen";
 import { SpaceResultScreen } from "./screens/SpaceResultScreen";
+import { AIChatScreen } from "./screens/AIChatScreen";
 
-export type Screen = "onboarding" | "ready" | "loading" | "result" | "outfit" | "vibe" | "price" | "pose" | "wishlist" | "settings" | "photos" | "size" | "space-upload" | "space-result";
+export type Screen = "onboarding" | "ready" | "loading" | "result" | "outfit" | "vibe" | "price" | "pose" | "wishlist" | "settings" | "photos" | "size" | "space-upload" | "space-result" | "chat";
 
 // ─── Error Boundary ────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
@@ -386,6 +387,7 @@ function App() {
                     onBack={() => setScreen("ready")}
                     onSceneVibe={() => setScreen("vibe")}
                     onPriceCompare={() => setScreen("price")}
+                    onAIChat={() => setScreen("chat")}
                     onSocialShare={async () => {
                         const url = jobResult.resultUrl ?? "";
                         const shareData = { title: "My Try-On — TryIt4U", text: "Look how this fits on me! 👗✨", url };
@@ -398,6 +400,13 @@ function App() {
                         } catch { /* user cancelled */ }
                     }}
                     onViewWishlist={() => setScreen("wishlist")}
+                />
+            )}
+            {screen === "chat" && (
+                <AIChatScreen
+                    category={detectedCategory}
+                    fitScore={jobResult?.fitScore ?? null}
+                    onBack={() => setScreen(jobResult ? "result" : "ready")}
                 />
             )}
             {screen === "outfit" && (

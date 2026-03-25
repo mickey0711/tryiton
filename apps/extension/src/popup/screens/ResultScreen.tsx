@@ -9,6 +9,7 @@ interface Props {
     onPriceCompare: () => void;
     onSocialShare: () => void;
     onViewWishlist: () => void;
+    onAIChat: () => void;
 }
 
 function scoreColor(score: number): string {
@@ -183,7 +184,7 @@ function ZoomableImage({ src, alt }: { src: string; alt: string }) {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export function ResultScreen({ result, onRegenerate, onBack, onSceneVibe, onPriceCompare, onSocialShare, onViewWishlist }: Props) {
+export function ResultScreen({ result, onRegenerate, onBack, onSceneVibe, onPriceCompare, onSocialShare, onViewWishlist, onAIChat }: Props) {
     const [showBefore, setShowBefore] = useState(false);
     const [saved, setSaved] = useState(false);
     const [addedToOutfit, setAddedToOutfit] = useState(false);
@@ -381,6 +382,14 @@ export function ResultScreen({ result, onRegenerate, onBack, onSceneVibe, onPric
                     </button>
                 )}
             </div>
+
+            <button
+                className="btn btn-primary"
+                style={{ width: "100%", fontSize: 13, padding: "10px", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", marginBottom: 2 }}
+                onClick={onAIChat}
+            >
+                💬 Ask AI Stylist
+            </button>
 
             <button className="btn btn-ghost" onClick={onRegenerate} style={{ fontSize: 12, opacity: 0.7 }}>🔄 Try a different look</button>
 

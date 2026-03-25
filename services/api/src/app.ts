@@ -39,6 +39,7 @@ import legalRouter from "./routes/legal";
 import adminRouter from "./routes/admin";
 import whatsappRouter from "./routes/whatsapp";
 import messengerRouter from "./routes/messenger";
+import chatRouter from "./routes/chat";
 
 const app = express();
 
@@ -121,6 +122,7 @@ app.use("/privacy", privacyRouter);
 app.use("/admin", adminRouter);
 app.use("/whatsapp", whatsappRouter);
 app.use("/messenger", messengerRouter);
+app.use("/chat", chatRouter);
 app.use("/", legalRouter);
 
 // ─── Landing page (served from /public) ─────────────────────────────────────
