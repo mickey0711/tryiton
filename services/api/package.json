@@ -21,6 +21,7 @@
     "express-rate-limit": "^7.3.1",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.14",
     "openai": "^6.32.0",
     "pg": "^8.12.0",

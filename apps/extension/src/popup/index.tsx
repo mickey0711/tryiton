@@ -16,8 +16,9 @@ import { SizeAdvisorScreen } from "./screens/SizeAdvisorScreen";
 import { SpaceUploadScreen } from "./screens/SpaceUploadScreen";
 import { SpaceResultScreen } from "./screens/SpaceResultScreen";
 import { AIChatScreen } from "./screens/AIChatScreen";
+import { AtmosphereScreen } from "./screens/AtmosphereScreen";
 
-export type Screen = "onboarding" | "ready" | "loading" | "result" | "outfit" | "vibe" | "price" | "pose" | "wishlist" | "settings" | "photos" | "size" | "space-upload" | "space-result" | "chat";
+export type Screen = "onboarding" | "ready" | "loading" | "result" | "outfit" | "vibe" | "price" | "pose" | "wishlist" | "settings" | "photos" | "size" | "space-upload" | "space-result" | "chat" | "atmosphere";
 
 // ─── Error Boundary ────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
@@ -64,6 +65,7 @@ function App() {
     // ── Space Intelligence state ────────────────────────────────────────────────────
     const [spaceCategory, setSpaceCategory] = useState<string>("furniture");
     const [spaceResult, setSpaceResult] = useState<{ resultUrl: string; advisorText: string; fitScore: number; category: string; productSrc: string | null } | null>(null);
+    const [atmosphereRoomB64, setAtmosphereRoomB64] = useState<string | null>(null);
 
     // Load saved profile photo, product, and credits
     useEffect(() => {
@@ -492,6 +494,7 @@ function App() {
                     onBack={() => setScreen("space-upload")}
                     onWishlist={() => setScreen("wishlist")}
                     onPriceCompare={() => setScreen("price")}
+                    onAskAI={() => { setAtmosphereRoomB64(spaceResult.resultUrl); setScreen("atmosphere"); }}
                     onShare={async () => {
                         try {
                             const url = spaceResult.resultUrl ?? "";
@@ -501,6 +504,18 @@ function App() {
                                 await navigator.clipboard.writeText(url);
                             }
                         } catch { /* cancelled */ }
+                    }}
+                />
+            )}
+            {screen === "atmosphere" && atmosphereRoomB64 && (
+                <AtmosphereScreen
+                    roomImageB64={atmosphereRoomB64}
+                    onBack={() => setScreen("space-result")}
+                    onResult={(resultUrl, style) => {
+                        if (spaceResult) {
+                            setSpaceResult({ ...spaceResult, resultUrl, advisorText: `Atmosphere transformed to ${style} style ✨` });
+                        }
+                        setScreen("space-result");
                     }}
                 />
             )}

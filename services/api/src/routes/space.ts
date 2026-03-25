@@ -164,4 +164,84 @@ router.post("/analyze", async (req: Request, res: Response, next: NextFunction) 
     }
 });
 
+// ── POST /space/atmosphere ────────────────────────────────────────────────────
+// Restyle a room image into a chosen atmosphere/style using pix2pix AI
+
+const ATMOSPHERE_STYLES: Record<string, { prompt: string; label: string }> = {
+    modern:       { label: "Modern", prompt: "transform to modern minimalist interior design, clean lines, neutral palette, contemporary furniture, bright natural light" },
+    cozy:         { label: "Cozy",   prompt: "transform to cozy warm interior, warm lighting, soft textures, cushions, candles, hygge style, amber tones" },
+    scandinavian: { label: "Scandi", prompt: "transform to Scandinavian interior design, white walls, light wood, minimalist, functional, Nordic style" },
+    bohemian:     { label: "Boho",   prompt: "transform to bohemian eclectic interior, colorful patterns, plants, rattan, layered textiles, artistic and free-spirited" },
+    industrial:   { label: "Industrial", prompt: "transform to industrial loft interior design, exposed brick, metal accents, dark tones, Edison bulbs, raw materials" },
+    luxe:         { label: "Luxe",   prompt: "transform to luxury interior design, marble, gold accents, velvet, high-end finishes, elegant and sophisticated" },
+};
+
+router.post("/atmosphere", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { room_image, style } = req.body as {
+            room_image: string;
+            style: string;
+        };
+
+        if (!room_image) throw new AppError("BAD_REQUEST", "room_image is required", 400);
+        if (!style || !ATMOSPHERE_STYLES[style]) {
+            throw new AppError("BAD_REQUEST", `style must be one of: ${Object.keys(ATMOSPHERE_STYLES).join(", ")}`, 400);
+        }
+
+        const atmStyle = ATMOSPHERE_STYLES[style];
+        const replicateToken = process.env.REPLICATE_API_TOKEN;
+
+        if (replicateToken) {
+            try {
+                const prompt = `Photorealistic interior photo: ${atmStyle.prompt}. Keep all room dimensions, layout, windows, and doors identical. High quality, 4K, professional interior photography.`;
+                const negPrompt = "blurry, distorted, cartoon, drawing, low quality, unrealistic, different room shape";
+
+                const response = await fetch("https://api.replicate.com/v1/predictions", {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${replicateToken}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        version: "854e8727697a057c525cdb45ab037f64ecca770a1769cc52287c2e56472a247b",
+                        input: {
+                            image: room_image,
+                            prompt,
+                            negative_prompt: negPrompt,
+                            num_inference_steps: 25,
+                            image_guidance_scale: 1.2,
+                            guidance_scale: 8,
+                            num_outputs: 1,
+                        },
+                    }),
+                });
+
+                if (!response.ok) throw new Error(`Replicate error ${response.status}`);
+                const prediction = await response.json();
+
+                const start = Date.now();
+                while (Date.now() - start < 65_000) {
+                    await sleep(2500);
+                    const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+                        headers: { Authorization: `Bearer ${replicateToken}` },
+                    });
+                    const polled = await pollRes.json();
+                    if (polled.status === "succeeded") {
+                        const resultUrl = Array.isArray(polled.output) ? polled.output[0] : polled.output;
+                        return res.json({ result_image: resultUrl, style, style_label: atmStyle.label, ai_powered: true });
+                    }
+                    if (polled.status === "failed" || polled.status === "canceled") throw new Error("AI failed");
+                }
+                throw new Error("Timeout");
+            } catch (aiErr: any) {
+                console.warn("[/space/atmosphere] AI failed, returning original:", aiErr.message);
+            }
+        }
+
+        // Fallback — return original image
+        res.json({ result_image: room_image, style, style_label: atmStyle.label, ai_powered: false });
+    } catch (err) {
+        next(err);
+    }
+});
+
+export { ATMOSPHERE_STYLES };
 export default router;
+
