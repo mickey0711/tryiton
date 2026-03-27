@@ -1,93 +1,117 @@
+/**
+ * Payments — powered by Lemon Squeezy
+ *
+ * ENV vars required:
+ *   LEMONSQUEEZY_API_KEY        – API key from LS dashboard
+ *   LEMONSQUEEZY_STORE_ID       – numeric store ID
+ *   LEMONSQUEEZY_WEBHOOK_SECRET – webhook signing secret
+ *   LS_VARIANT_PRO_BASIC        – variant ID for Pro Basic monthly
+ *   LS_VARIANT_PRO_PLUS         – variant ID for Pro Plus monthly
+ *   LS_VARIANT_PRO_BASIC_ANNUAL – variant ID for Pro Basic annual
+ *   LS_VARIANT_PRO_PLUS_ANNUAL  – variant ID for Pro Plus annual
+ *   LS_VARIANT_CREDITS_20       – variant ID for 20-credit pack
+ *   LS_VARIANT_CREDITS_40       – variant ID for 40-credit pack
+ *   LS_VARIANT_CREDITS_130      – variant ID for 130-credit pack
+ *   LS_VARIANT_CREDITS_200      – variant ID for 200-credit pack
+ */
+
 import { Router } from "express";
+import crypto from "crypto";
 import { db } from "../db/client";
 import { requireAuth, AuthRequest } from "../middleware/auth";
 import { logger } from "../config/logger";
 
 const router = Router();
 
-// Stripe is loaded lazily — only if STRIPE_SECRET_KEY is set
-let stripe: any = null;
-function getStripe() {
-    if (!stripe) {
-        const key = process.env.STRIPE_SECRET_KEY;
-        if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const Stripe = require("stripe");
-        stripe = new Stripe(key, { apiVersion: "2024-04-10" });
-    }
-    return stripe;
-}
+const LS_API = "https://api.lemonsqueezy.com/v1";
+const p = process.env;
+
+// ─── Plans catalogue ─────────────────────────────────────────────────────────
 
 const PLANS: Record<string, {
-    priceId: string; credits: number; label: string;
-    price: number; recurring: boolean;
+    variantId: () => string;
+    credits: number;
+    label: string;
+    price: number;
+    recurring: boolean;
     billing: "monthly" | "annual" | "one_time";
     recommended?: boolean;
     badge?: string;
     creditsPerMonth?: number;
-    monthlyEquivalent?: number;   // effective $/mo shown to user
-    savingsAmount?: number;       // total saved vs monthly × 12
+    monthlyEquivalent?: number;
+    savingsAmount?: number;
 }> = {
-    // ─── Monthly Subscriptions ────────────────────────────────────────────────
     pro_basic: {
-        priceId: process.env.PADDLE_PRO_BASIC_PRICE_ID ?? "price_placeholder_pro_basic",
+        variantId: () => p.LS_VARIANT_PRO_BASIC ?? "",
         credits: 50, label: "Pro Basic — 50 try-ons/mo",
         price: 19.90, recurring: true, billing: "monthly",
     },
     pro_plus: {
-        priceId: process.env.PADDLE_PRO_PLUS_PRICE_ID ?? "price_placeholder_pro_plus",
+        variantId: () => p.LS_VARIANT_PRO_PLUS ?? "",
         credits: 150, label: "Pro Plus — 150 try-ons/mo",
         price: 49.90, recurring: true, billing: "monthly",
     },
-    // ─── Annual Subscriptions (10% off) ───────────────────────────────────────
     pro_basic_annual: {
-        priceId: process.env.PADDLE_PRO_BASIC_ANNUAL_PRICE_ID ?? "price_placeholder_pro_basic_annual",
-        credits: 600,               // 50/mo × 12
-        creditsPerMonth: 50,
+        variantId: () => p.LS_VARIANT_PRO_BASIC_ANNUAL ?? "",
+        credits: 600, creditsPerMonth: 50,
         label: "Pro Basic Annual — 50 try-ons/mo",
-        price: 214.90,             // total/year — $19.90 × 12 × 0.9
-        monthlyEquivalent: 17.90,  // $214.90 ÷ 12
-        savingsAmount: 23.90,      // $19.90 × 12 − $214.90
+        price: 214.90, monthlyEquivalent: 17.90, savingsAmount: 23.90,
         recurring: true, billing: "annual",
-        badge: "הכי משתלם — חיסכון 10%",
+        badge: "Save 10%",
     },
     pro_plus_annual: {
-        priceId: process.env.PADDLE_PRO_PLUS_ANNUAL_PRICE_ID ?? "price_placeholder_pro_plus_annual",
-        credits: 1800,             // 150/mo × 12
-        creditsPerMonth: 150,
+        variantId: () => p.LS_VARIANT_PRO_PLUS_ANNUAL ?? "",
+        credits: 1800, creditsPerMonth: 150,
         label: "Pro Plus Annual — 150 try-ons/mo",
-        price: 539.00,             // total/year — $49.90 × 12 × 0.9
-        monthlyEquivalent: 44.90,  // $539.00 ÷ 12
-        savingsAmount: 59.80,      // $49.90 × 12 − $539.00
+        price: 539.00, monthlyEquivalent: 44.90, savingsAmount: 59.80,
         recurring: true, billing: "annual",
-        recommended: true,
-        badge: "הכי משתלם — חיסכון 10%",
+        recommended: true, badge: "Best Value — Save 10%",
     },
-    // ─── Credit Packs ─────────────────────────────────────────────────────────
     credits_20: {
-        priceId: process.env.PADDLE_CREDITS_20_PRICE_ID ?? "price_placeholder_credits_20",
+        variantId: () => p.LS_VARIANT_CREDITS_20 ?? "",
         credits: 20, label: "20 Credits Pack",
         price: 9.99, recurring: false, billing: "one_time",
     },
     credits_40: {
-        priceId: process.env.PADDLE_CREDITS_40_PRICE_ID ?? "price_placeholder_credits_40",
+        variantId: () => p.LS_VARIANT_CREDITS_40 ?? "",
         credits: 40, label: "40 Credits Pack",
         price: 19.99, recurring: false, billing: "one_time",
     },
     credits_130: {
-        priceId: process.env.PADDLE_CREDITS_130_PRICE_ID ?? "price_placeholder_credits_130",
+        variantId: () => p.LS_VARIANT_CREDITS_130 ?? "",
         credits: 130, label: "130 Credits Pack",
         price: 49.90, recurring: false, billing: "one_time",
     },
     credits_200: {
-        priceId: process.env.PADDLE_CREDITS_200_PRICE_ID ?? "price_placeholder_credits_200",
+        variantId: () => p.LS_VARIANT_CREDITS_200 ?? "",
         credits: 200, label: "200 Credits Pack",
         price: 99.00, recurring: false, billing: "one_time",
-        badge: "הכי משתלם",
+        badge: "Best Value",
     },
 };
 
-// ─── Create Checkout Session ─────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+async function lsRequest(method: string, path: string, body?: object) {
+    const apiKey = p.LEMONSQUEEZY_API_KEY;
+    if (!apiKey) throw new Error("LEMONSQUEEZY_API_KEY not configured");
+    const res = await fetch(`${LS_API}${path}`, {
+        method,
+        headers: {
+            Accept: "application/vnd.api+json",
+            "Content-Type": "application/vnd.api+json",
+            Authorization: `Bearer ${apiKey}`,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(`Lemon Squeezy API ${res.status}: ${JSON.stringify(err)}`);
+    }
+    return res.json();
+}
+
+// ─── POST /payments/checkout ──────────────────────────────────────────────────
 
 router.post("/checkout", requireAuth, async (req, res, next) => {
     try {
@@ -99,73 +123,98 @@ router.post("/checkout", requireAuth, async (req, res, next) => {
         }
 
         const config = PLANS[plan];
-        const s = getStripe();
+        const variantId = config.variantId();
+        if (!variantId) {
+            return res.status(503).json({ error: "PLAN_NOT_CONFIGURED", message: "Payment plan not yet configured" });
+        }
 
-        // Get user email
-        const { rows } = await db.query<{ email: string }>(
-            `SELECT email FROM users WHERE id = $1`, [userId]
+        const { rows } = await db.query<{ email: string; full_name: string }>(
+            `SELECT email, full_name FROM users WHERE id = $1`, [userId]
         );
-        const email = rows[0]?.email;
+        const user = rows[0];
+        const storeId = p.LEMONSQUEEZY_STORE_ID;
+        if (!storeId) throw new Error("LEMONSQUEEZY_STORE_ID not configured");
 
-        const session = await s.checkout.sessions.create({
-            customer_email: email,
-            mode: config.recurring ? "subscription" : "payment",
-            line_items: [{ price: config.priceId, quantity: 1 }],
-            success_url: `${process.env.WEB_APP_URL ?? "http://localhost:3000"}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.WEB_APP_URL ?? "http://localhost:3000"}/payment/cancel`,
-            metadata: { userId, plan, credits: String(config.credits) },
+        const appUrl = p.WEB_APP_URL ?? "http://localhost:3000";
+
+        const checkout = await lsRequest("POST", "/checkouts", {
+            data: {
+                type: "checkouts",
+                attributes: {
+                    checkout_options: { embed: false },
+                    checkout_data: {
+                        email: user?.email,
+                        name: user?.full_name,
+                        custom: { userId, plan, credits: String(config.credits) },
+                    },
+                    product_options: {
+                        redirect_url: `${appUrl}/payment/success`,
+                    },
+                },
+                relationships: {
+                    store: { data: { type: "stores", id: storeId } },
+                    variant: { data: { type: "variants", id: variantId } },
+                },
+            },
         });
 
-        // Log event
+        const checkoutUrl = checkout.data?.attributes?.url;
+
         await db.query(
             `INSERT INTO events(user_id, event_type, payload) VALUES($1, 'checkout_start', $2)`,
-            [userId, JSON.stringify({ plan, sessionId: session.id })]
+            [userId, JSON.stringify({ plan, checkoutId: checkout.data?.id })]
         );
 
-        res.json({ url: session.url, session_id: session.id });
+        res.json({ url: checkoutUrl, checkout_id: checkout.data?.id });
     } catch (err) { next(err); }
 });
 
-// ─── Stripe Webhook ──────────────────────────────────────────────────────────
+// ─── POST /payments/webhook ───────────────────────────────────────────────────
 
 router.post("/webhook", async (req, res) => {
-    const sig = req.headers["stripe-signature"] as string;
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!webhookSecret) return res.status(500).json({ error: "Webhook secret not configured" });
+    // For webhooks, express.raw() must be used — see app.ts
+    const secret = p.LEMONSQUEEZY_WEBHOOK_SECRET;
+    if (!secret) return res.status(500).json({ error: "Webhook secret not configured" });
 
-    let event: any;
-    try {
-        const s = getStripe();
-        // For webhook, we need the raw body — ensure express.raw() is used on this route
-        event = s.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } catch (err: any) {
-        logger.warn({ err: err.message }, "Webhook signature verification failed");
+    const signature = req.headers["x-signature"] as string;
+    const hmac = crypto.createHmac("sha256", secret).update(req.body).digest("hex");
+    if (hmac !== signature) {
+        logger.warn("Lemon Squeezy webhook: invalid signature");
         return res.status(400).json({ error: "Invalid signature" });
     }
 
+    let payload: any;
     try {
-        switch (event.type) {
-            case "checkout.session.completed": {
-                const session = event.data.object;
-                const { userId, plan, credits } = session.metadata ?? {};
+        payload = JSON.parse(req.body.toString());
+    } catch {
+        return res.status(400).json({ error: "Invalid JSON" });
+    }
+
+    const eventName: string = payload.meta?.event_name ?? "";
+    const custom: Record<string, string> = payload.meta?.custom_data ?? {};
+    const { userId, plan, credits } = custom;
+
+    try {
+        switch (eventName) {
+            case "order_created":
+            case "subscription_created": {
                 if (userId && credits) {
                     const numCredits = parseInt(credits);
+                    const newPlan = plan?.startsWith("pro") ? "pro" : undefined;
                     await db.query(
                         `UPDATE users SET credits = credits + $1, plan = COALESCE($2, plan), updated_at = NOW() WHERE id = $3`,
-                        [numCredits, plan === "pro_monthly" ? "pro" : null, userId]
+                        [numCredits, newPlan ?? null, userId]
                     );
                     await db.query(
                         `INSERT INTO events(user_id, event_type, payload) VALUES($1, 'payment_success', $2)`,
-                        [userId, JSON.stringify({ plan, credits: numCredits, sessionId: session.id, amount: session.amount_total })]
+                        [userId, JSON.stringify({ plan, credits: numCredits, event: eventName, orderId: payload.data?.id })]
                     );
-                    logger.info({ userId, plan, credits: numCredits }, "Payment processed — credits added");
+                    logger.info({ userId, plan, credits: numCredits }, "✅ Payment processed — credits added");
                 }
                 break;
             }
-            case "customer.subscription.deleted": {
-                // Downgrade to free
-                const sub = event.data.object;
-                const { userId } = sub.metadata ?? {};
+            case "subscription_expired":
+            case "subscription_cancelled": {
                 if (userId) {
                     await db.query(
                         `UPDATE users SET plan = 'free', updated_at = NOW() WHERE id = $1`,
@@ -177,13 +226,13 @@ router.post("/webhook", async (req, res) => {
             }
         }
     } catch (err) {
-        logger.error({ err, eventType: event.type }, "Webhook handler error");
+        logger.error({ err, eventName }, "Webhook handler error");
     }
 
     res.json({ received: true });
 });
 
-// ─── Get current credits + plan ──────────────────────────────────────────────
+// ─── GET /payments/status ─────────────────────────────────────────────────────
 
 router.get("/status", requireAuth, async (req, res, next) => {
     try {
@@ -192,7 +241,10 @@ router.get("/status", requireAuth, async (req, res, next) => {
             `SELECT credits, plan FROM users WHERE id = $1`, [userId]
         );
         if (!rows.length) return res.status(404).json({ error: "User not found" });
-        res.json({ credits: rows[0].credits, plan: rows[0].plan, plans: PLANS });
+        const plansPublic = Object.fromEntries(
+            Object.entries(PLANS).map(([k, v]) => [k, { ...v, variantId: undefined }])
+        );
+        res.json({ credits: rows[0].credits, plan: rows[0].plan, plans: plansPublic });
     } catch (err) { next(err); }
 });
 
