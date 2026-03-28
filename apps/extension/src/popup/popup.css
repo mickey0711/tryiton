@@ -81,16 +81,17 @@
 body {
   font-family: 'Inter', system-ui, sans-serif;
   color: var(--text);
-  width: 380px;
-  height: 680px;
+  width: 520px;
+  height: 760px;
   overflow: hidden;
   background: #0d0c18;
   border-radius: 16px;
+  font-size: 15px;
 }
 
 .app {
-  width: 380px;
-  height: 680px;
+  width: 520px;
+  height: 760px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -110,8 +111,8 @@ body {
 .screen {
   display: flex;
   flex-direction: column;
-  padding: 16px 18px;
-  gap: 11px;
+  padding: 20px 22px;
+  gap: 13px;
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
@@ -145,11 +146,11 @@ body {
 
 /* ── Buttons ─────────────────────────────────────────────────────── */
 .btn {
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-radius: var(--radius-sm);
   border: none;
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -213,9 +214,9 @@ body {
   border-color: var(--primary);
   background: rgba(99,102,241,0.08);
 }
-.upload-zone .icon { font-size: 36px; margin-bottom: 8px; }
-.upload-zone h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-.upload-zone p { font-size: 12px; color: var(--text-muted); }
+.upload-zone .icon { font-size: 44px; margin-bottom: 10px; }
+.upload-zone h3 { font-size: 17px; font-weight: 600; margin-bottom: 5px; }
+.upload-zone p { font-size: 13px; color: var(--text-muted); }
 
 /* ── Camera preview ──────────────────────────────────────────────── */
 .camera-container {
@@ -257,14 +258,14 @@ body {
 /* ── Product preview ─────────────────────────────────────────────── */
 .product-preview {
   width: 100%;
-  height: 160px;
+  height: 200px;
   border-radius: var(--radius-sm);
   object-fit: contain;
   background: var(--surface-3);
 }
 .product-preview-placeholder {
   width: 100%;
-  height: 160px;
+  height: 200px;
   border-radius: var(--radius-sm);
   background: var(--surface-3);
   display: flex;
@@ -296,7 +297,7 @@ body {
   width: 100%;
   border-radius: var(--radius);
   object-fit: contain;
-  max-height: 300px;
+  max-height: 380px;
 }
 
 .fit-score {
@@ -317,7 +318,7 @@ body {
   background: linear-gradient(90deg, #22c55e, #4ade80);
 }
 .fit-score-num {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--success);
 }
@@ -439,11 +440,11 @@ select.input {
   opacity: 0.75;
 }
 .cat-chip-icon {
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1;
 }
 .cat-chip-txt {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
   text-align: center;

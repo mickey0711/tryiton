@@ -40,6 +40,7 @@ import adminRouter from "./routes/admin";
 import whatsappRouter from "./routes/whatsapp";
 import messengerRouter from "./routes/messenger";
 import chatRouter from "./routes/chat";
+import tryonDirectRouter from "./routes/tryonDirect";
 
 const app = express();
 
@@ -123,6 +124,7 @@ app.use("/admin", adminRouter);
 app.use("/whatsapp", whatsappRouter);
 app.use("/messenger", messengerRouter);
 app.use("/chat", chatRouter);
+app.use("/fit/tryon-direct", tryonDirectRouter);
 app.use("/", legalRouter);
 
 // ─── Landing page (served from /public) ─────────────────────────────────────

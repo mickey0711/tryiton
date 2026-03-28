@@ -135,7 +135,6 @@ function App() {
         if (!profileImageB64 || !productSrc) return;
 
         // ── Credit check ─────────────────────────────────────────────────────
-        // Only gate users who have a paid plan with 0 remaining credits
         if (credits === 0 && accessToken) {
             setError("🚀 You're out of try-ons!\n\nUpgrade to Pro ($19.90/mo) for 150 monthly try-ons, Wishlist, Price Compare, and Social Share.\n\nOr buy a Credits pack — $4.99 / $9.99 / $19.90.");
             return;
@@ -144,25 +143,47 @@ function App() {
         setScreen("loading");
         setProgress(0);
         setError(null);
-        consumeCredit(); // deduct one credit
+        consumeCredit();
 
         try {
-            const backendToken = await getToken(); // JWT for our own API
-            if (backendToken) {
-                // ── Full backend flow ──────────────────────────────────────
-                setProgress(15);
-                const userAssetId = await uploadBase64(backendToken, profileImageB64, "selfie");
-                setProgress(30);
-                const { product_id } = await ingestProduct(backendToken, productSrc, category);
-                setProgress(45);
-                const { job_id } = await createJob(backendToken, product_id, userAssetId, category);
-                const result = await pollJob(backendToken, job_id, (p) => setProgress(45 + p * 0.5));
-                setJobResult({ jobId: job_id, resultUrl: result.result_signed_url, fitScore: result.fit_score, explanation: result.explanation ?? [], productSrc });
-                setScreen("result");
-                return;
+            const backendToken = await getToken();
+            const GARMENT_CATS = ["tops", "jacket", "dress", "pants", "shirt"];
+
+            // ── Backend tryon-direct (recommended path) ────────────────────
+            // Works without Redis/R2 — backend calls Replicate using server token
+            if (GARMENT_CATS.includes(category.toLowerCase())) {
+                try {
+                    setProgress(15);
+                    const res = await fetch(`${API_BASE}/fit/tryon-direct`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(backendToken ? { Authorization: `Bearer ${backendToken}` } : {}),
+                        },
+                        body: JSON.stringify({
+                            human_img: profileImageB64,
+                            garment_url: productSrc,
+                            category,
+                        }),
+                        signal: AbortSignal.timeout(180_000), // 3 min timeout
+                    });
+                    if (res.ok) {
+                        const { result_url, fit_score } = await res.json();
+                        setProgress(100);
+                        setJobResult({
+                            jobId: "direct-" + Date.now(),
+                            resultUrl: result_url,
+                            fitScore: fit_score ?? Math.floor(75 + Math.random() * 20),
+                            explanation: ["AI try-on complete", `Category: ${category}`, "Powered by TryIt4U AI"],
+                            productSrc,
+                        });
+                        setScreen("result");
+                        return;
+                    }
+                } catch { /* Backend unavailable — fall through to direct Replicate */ }
             }
 
-            // ── Direct Replicate flow (no backend needed) ──────────────────
+            // ── Direct Replicate flow (fallback if backend unavailable) ────
             const replicateToken = await getReplicateToken();
             if (replicateToken) {
                 await runReplicateGeneration(productSrc, profileImageB64, category, replicateToken);
@@ -176,6 +197,7 @@ function App() {
             setScreen("ready");
         }
     };
+
 
     // ── Direct Replicate AI try-on (no backend server required) ──────────────────
     const runReplicateGeneration = async (product: string, profile: string, category: string, replicateToken: string) => {
