@@ -235,8 +235,13 @@ function App() {
             }),
         });
         if (!predRes.ok) {
-            const errBody = await predRes.text();
-            throw new Error(`Replicate error ${predRes.status}: ${errBody.slice(0, 150)}`);
+            const friendly: Record<number, string> = {
+                502: "AI server is temporarily overloaded. Please try again in a moment.",
+                503: "AI server is temporarily unavailable. Please try again.",
+                429: "Too many requests — please wait a moment and try again.",
+                401: "AI token invalid. Please check your settings.",
+            };
+            throw new Error(friendly[predRes.status] ?? `AI service error (${predRes.status}). Please try again.`);
         }
         const prediction = await predRes.json();
         const pollUrl = prediction.urls?.get;
