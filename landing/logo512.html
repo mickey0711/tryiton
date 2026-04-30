@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TryItOn Logo 1024x1024</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      gap: 24px;
+    }
+    .logo-container {
+      width: 512px;
+      height: 512px;
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      transform-origin: top center;
+    }
+    canvas {
+      display: block;
+      border-radius: 20px;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+    }
+    button {
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.85; }
+    .hint {
+      color: rgba(255,255,255,0.45);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="logo-container">
+  <canvas id="logoCanvas" width="1024" height="1024" style="width:512px;height:512px;"></canvas>
+</div>
+
+<div class="controls">
+  <button onclick="downloadPNG()">⬇ Download PNG (1024×1024)</button>
+  <button onclick="downloadSVG()">Copy SVG</button>
+</div>
+<p class="hint">Right-click the logo → Save image as… or use the download button</p>
+
+<script>
+const canvas = document.getElementById('logoCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawLogo() {
+  const W = 1024, H = 1024;
+  ctx.clearRect(0, 0, W, H);
+
+  // ── Background ──────────────────────────────────────────────────────────────
+  const bgGrad = ctx.createRadialGradient(512, 400, 60, 512, 512, 680);
+  bgGrad.addColorStop(0,   '#0f0b1f');
+  bgGrad.addColorStop(0.6, '#080611');
+  bgGrad.addColorStop(1,   '#050508');
+  ctx.fillStyle = bgGrad;
+  roundRect(ctx, 0, 0, W, H, 0);
+  ctx.fill();
+
+  // ── Subtle glow behind icon ──────────────────────────────────────────────────
+  const glowGrad = ctx.createRadialGradient(512, 440, 0, 512, 440, 420);
+  glowGrad.addColorStop(0,   'rgba(124, 58, 237, 0.22)');
+  glowGrad.addColorStop(0.5, 'rgba(79, 70, 229, 0.10)');
+  glowGrad.addColorStop(1,   'rgba(236, 72, 153, 0.00)');
+  ctx.fillStyle = glowGrad;
+  ctx.beginPath();
+  ctx.arc(512, 440, 420, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ── Hanger + T-shirt silhouette ──────────────────────────────────────────────
+  // Drawn in a 560×560 region centered at (512, 416)
+  const ox = 512, oy = 416;  // icon center
+  const scale = 2.30;
+
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(scale, scale);
+
+  // --- Shirt body fill (gradient) ---
+  const shirtGrad = ctx.createLinearGradient(-100, -60, 100, 132);
+  shirtGrad.addColorStop(0,   '#9333ea');
+  shirtGrad.addColorStop(0.4, '#6d28d9');
+  shirtGrad.addColorStop(0.75,'#4f46e5');
+  shirtGrad.addColorStop(1,   '#ec4899');
+
+  // T-shirt path (simplified, clean)
+  ctx.beginPath();
+  // Neckline center top
+  ctx.moveTo(0, -58);
+  // Right shoulder curve up to collar
+  ctx.bezierCurveTo(18, -60, 32, -68, 38, -72);
+  // Right sleeve tip top
+  ctx.lineTo(105, -68);
+  // Right sleeve outer curve
+  ctx.bezierCurveTo(112, -64, 114, -52, 108, -42);
+  // Right sleeve bottom inner
+  ctx.lineTo(72, -28);
+  // Right armpit
+  ctx.bezierCurveTo(64, -18, 60, -8, 60, 0);
+  // Right body side going down
+  ctx.lineTo(62, 120);
+  // Bottom right
+  ctx.bezierCurveTo(62, 128, 56, 132, 48, 132);
+  // Bottom edge
+  ctx.lineTo(-48, 132);
+  // Bottom left
+  ctx.bezierCurveTo(-56, 132, -62, 128, -62, 120);
+  // Left body side
+  ctx.lineTo(-60, 0);
+  // Left armpit
+  ctx.bezierCurveTo(-60, -8, -64, -18, -72, -28);
+  // Left sleeve bottom inner
+  ctx.lineTo(-108, -42);
+  // Left sleeve outer
+  ctx.bezierCurveTo(-114, -52, -112, -64, -105, -68);
+  // Left sleeve tip top
+  ctx.lineTo(-38, -72);
+  // Left shoulder to collar
+  ctx.bezierCurveTo(-32, -68, -18, -60, 0, -58);
+  ctx.closePath();
+
+  ctx.fillStyle = shirtGrad;
+  ctx.fill();
+
+  // Shirt body subtle stroke
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 0.65;
+  ctx.stroke();
+
+  // --- Neckline cutout ---
+  ctx.beginPath();
+  ctx.ellipse(0, -60, 26, 16, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#050508';
+  ctx.fill();
+
+  // --- Hanger hook & bar ---
+  // Hook
+  ctx.beginPath();
+  ctx.moveTo(0, -76);
+  ctx.bezierCurveTo(0, -90, 12, -98, 20, -94);
+  ctx.bezierCurveTo(28, -90, 28, -80, 20, -78);
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.lineWidth = 2.0;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Hanger bar (horizontal bar at top of shirt)
+  ctx.beginPath();
+  ctx.moveTo(-32, -72);
+  ctx.lineTo(0, -80);
+  ctx.lineTo(32, -72);
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  ctx.restore();
+
+  // ── Shimmer / AI sparkles ──────────────────────────────────────────────────
+  drawSparkle(ctx, 736, 236, 36, 'rgba(255,255,255,0.90)');
+  drawSparkle(ctx, 256, 336, 22, 'rgba(236,72,153,0.85)');
+  drawSparkle(ctx, 590, 176, 14, 'rgba(167,139,250,0.80)');
+  drawSparkle(ctx, 780, 360, 10, 'rgba(255,255,255,0.60)');
+  drawSparkle(ctx, 310, 236, 8,  'rgba(255,255,255,0.50)');
+  drawSparkle(ctx, 660, 712, 12, 'rgba(167,139,250,0.55)');
+
+  // ── Wordmark ──────────────────────────────────────────────────────────────
+  ctx.save();
+
+  const textGrad = ctx.createLinearGradient(260, 0, 764, 0);
+  textGrad.addColorStop(0,   '#c084fc');
+  textGrad.addColorStop(0.45, '#818cf8');
+  textGrad.addColorStop(1,   '#f472b6');
+
+  ctx.font = 'bold 116px -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.shadowColor = 'rgba(124, 58, 237, 0.55)';
+  ctx.shadowBlur = 48;
+  ctx.fillStyle = textGrad;
+  ctx.fillText('TryItOn', 512, 792);
+  ctx.shadowBlur = 0;
+
+  // Tagline
+  ctx.font = '500 38px -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
+  ctx.fillStyle = 'rgba(196, 181, 253, 0.65)';
+  ctx.fillText('AI FASHION · VIRTUAL TRY-ON', 512, 892);
+
+  ctx.restore();
+
+  // ── Bottom subtle divider line ──────────────────────────────────────────
+  const lineGrad = ctx.createLinearGradient(260, 0, 764, 0);
+  lineGrad.addColorStop(0,   'rgba(124,58,237,0)');
+  lineGrad.addColorStop(0.35,'rgba(124,58,237,0.5)');
+  lineGrad.addColorStop(0.65,'rgba(79,70,229,0.5)');
+  lineGrad.addColorStop(1,   'rgba(236,72,153,0)');
+  ctx.beginPath();
+  ctx.moveTo(260, 944);
+  ctx.lineTo(764, 944);
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function drawSparkle(ctx, x, y, size, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = size * 2.5;
+
+  // 4-pointed star
+  for (let i = 0; i < 4; i++) {
+    ctx.save();
+    ctx.rotate((i * Math.PI) / 2);
+    ctx.beginPath();
+    ctx.moveTo(0, -size);
+    ctx.quadraticCurveTo(size * 0.2, -size * 0.2, 0, 0);
+    ctx.quadraticCurveTo(-size * 0.2, -size * 0.2, 0, -size);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(0, 0, size * 0.22, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ── Download ─────────────────────────────────────────────────────────────────
+function downloadPNG() {
+  const link = document.createElement('a');
+  link.download = 'tryiton_logo_1024.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function downloadSVG() {
+  // Provide SVG equivalent in clipboard
+  const svg = generateSVG();
+  navigator.clipboard.writeText(svg).then(() => {
+    alert('SVG copied to clipboard!');
+  }).catch(() => {
+    const w = window.open('', '_blank');
+    w.document.write('<pre style="background:#000;color:#fff;padding:20px;font-size:12px">' + svg.replace(/</g,'&lt;') + '</pre>');
+  });
+}
+
+function generateSVG() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="39%" r="66%">
+      <stop offset="0%" stop-color="#0f0b1f"/>
+      <stop offset="60%" stop-color="#080611"/>
+      <stop offset="100%" stop-color="#050508"/>
+    </radialGradient>
+    <linearGradient id="shirt" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9333ea"/>
+      <stop offset="40%" stop-color="#6d28d9"/>
+      <stop offset="75%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    <linearGradient id="text" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c084fc"/>
+      <stop offset="45%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#f472b6"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" fill="url(#bg)" rx="0"/>
+
+  <!-- Glow -->
+  <radialGradient id="glow-bg" cx="50%" cy="43%" r="41%">
+    <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.22"/>
+    <stop offset="50%" stop-color="#4f46e5" stop-opacity="0.10"/>
+    <stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>
+  </radialGradient>
+  <ellipse cx="256" cy="220" rx="210" ry="210" fill="url(#glow-bg)"/>
+
+  <!-- T-Shirt -->
+  <g transform="translate(256,208) scale(1.15)">
+    <path d="M0,-58 C18,-60 32,-68 38,-72 L105,-68 C112,-64 114,-52 108,-42 L72,-28 C64,-18 60,-8 60,0 L62,120 C62,128 56,132 48,132 L-48,132 C-56,132 -62,128 -62,120 L-60,0 C-60,-8 -64,-18 -72,-28 L-108,-42 C-114,-52 -112,-64 -105,-68 L-38,-72 C-32,-68 -18,-60 0,-58 Z"
+          fill="url(#shirt)" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+    <ellipse cx="0" cy="-60" rx="26" ry="16" fill="#050508"/>
+    <!-- Hook -->
+    <path d="M0,-76 C0,-90 12,-98 20,-94 C28,-90 28,-80 20,-78"
+          stroke="rgba(255,255,255,0.85)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <!-- Hanger bar -->
+    <path d="M-32,-72 L0,-80 L32,-72"
+          stroke="rgba(255,255,255,0.70)" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Sparkles -->
+  <g filter="url(#glow)">
+    <text x="368" y="126" font-size="24" fill="white" text-anchor="middle" opacity="0.9">✦</text>
+    <text x="128" y="174" font-size="15" fill="#ec4899" text-anchor="middle" opacity="0.85">✦</text>
+    <text x="295" y="93" font-size="10" fill="#a78bfa" text-anchor="middle" opacity="0.8">✦</text>
+    <text x="390" y="185" font-size="7" fill="white" text-anchor="middle" opacity="0.6">✦</text>
+    <text x="155" y="122" font-size="6" fill="white" text-anchor="middle" opacity="0.5">✦</text>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="256" y="396" font-family="-apple-system, Helvetica Neue, Arial, sans-serif"
+        font-weight="700" font-size="58" text-anchor="middle" dominant-baseline="middle"
+        fill="url(#text)" filter="url(#glow)">TryItOn</text>
+
+  <!-- Tagline -->
+  <text x="256" y="446" font-family="-apple-system, Helvetica Neue, Arial, sans-serif"
+        font-weight="500" font-size="14" text-anchor="middle" dominant-baseline="middle"
+        fill="rgba(196,181,253,0.65)" letter-spacing="2">AI FASHION · VIRTUAL TRY-ON</text>
+
+  <!-- Bottom line -->
+  <line x1="130" y1="472" x2="382" y2="472" stroke="url(#text)" stroke-width="1" opacity="0.4"/>
+</svg>`;
+}
+
+// ── Render on load ────────────────────────────────────────────────────────────
+drawLogo();
+</script>
+</body>
+</html>

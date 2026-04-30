@@ -204,3 +204,201 @@
     color: var(--text-muted);
     line-height: 1.5;
 }
+
+/* Nav links (sign in + register) */
+.navLinks {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.registerBtn {
+    display: inline-block;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white !important;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 9px 20px;
+    border-radius: 99px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+}
+
+.registerBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.6);
+}
+
+/* Hero dual CTA */
+.ctaGroup {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.ctaSecondary {
+    display: inline-block;
+    color: #a5b4fc;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 15px 28px;
+    border-radius: 99px;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    background: rgba(99, 102, 241, 0.08);
+    transition: all 0.2s;
+}
+
+.ctaSecondary:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.6);
+    transform: translateY(-2px);
+}
+
+/* Brand logos section */
+.brandsSection {
+    max-width: 900px;
+    width: 100%;
+    text-align: center;
+    margin: 0 0 70px;
+}
+
+.brandsLabel {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.brandsGrid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+}
+
+.brandCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+    width: 100px;
+    transition: all 0.22s;
+    text-decoration: none;
+}
+
+.brandCard:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.brandLogo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: white;
+    padding: 2px;
+}
+
+.brandName {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+/* Sign-up CTA section */
+.signupSection {
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    margin: 60px 0;
+    padding: 56px 40px;
+    background: var(--surface-2);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 24px;
+    box-shadow: 0 0 60px rgba(99, 102, 241, 0.08);
+}
+
+.signupTitle {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.signupSub {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    line-height: 1.6;
+}
+
+/* Footer */
+.footer {
+    max-width: 900px;
+    width: 100%;
+    text-align: center;
+    padding: 32px 0 0;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.8;
+}
+
+.footer a {
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.footer a:hover {
+    color: #a5b4fc;
+}
+
+/* Mobile tweaks */
+@media (max-width: 640px) {
+    .brandsGrid {
+        gap: 10px;
+    }
+
+    .brandCard {
+        width: 82px;
+        padding: 12px 10px;
+    }
+
+    .ctaGroup {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .cta,
+    .ctaSecondary {
+        width: 100%;
+        text-align: center;
+    }
+
+    .signupSection {
+        padding: 36px 20px;
+    }
+
+    .navLinks {
+        gap: 8px;
+    }
+
+    .registerBtn {
+        font-size: 13px;
+        padding: 8px 14px;
+    }
+}

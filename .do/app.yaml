@@ -2,13 +2,38 @@ name: tryiton
 region: nyc
 
 services:
+  # ── Next.js Web App ─────────────────────────────────────────
+  - name: web
+    source_dir: /
+    dockerfile_path: apps/web/Dockerfile
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /
+    envs:
+      - key: NEXT_PUBLIC_API_URL
+        value: ${api.PUBLIC_URL}
+      - key: NODE_ENV
+        value: production
+    health_check:
+      http_path: /
+      period_seconds: 60
+
+  # ── Node/Express API ─────────────────────────────────────────
   - name: api
     source_dir: services/api
     http_port: 8080
     instance_count: 1
     instance_size_slug: basic-xxs
     run_command: npm start
-    build_command: npm install
+    build_command: npm install && npm run build
+    routes:
+      - path: /api
+      - path: /auth
+      - path: /oauth
+      - path: /health
+      - path: /me
     envs:
       - key: NODE_ENV
         value: production
@@ -23,23 +48,44 @@ services:
       - key: RESEND_API_KEY
         scope: RUN_TIME
         type: SECRET
-      - key: CHROME_EXTENSION_URL
-        value: https://chrome.google.com/webstore/detail/tryiton/YOUR_EXTENSION_ID
+      - key: AWS_ACCESS_KEY_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: AWS_SECRET_ACCESS_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: AWS_ENDPOINT_URL
+        value: https://a117d08dfc6a118c4e149b33f69139ea.r2.cloudflarestorage.com
+      - key: AWS_S3_BUCKET
+        value: tryiton-assets
       - key: EMAIL_FROM
         value: "TryIt4U <noreply@tryit4u.ai>"
+      - key: CHROME_EXTENSION_URL
+        value: https://chrome.google.com/webstore/detail/tryiton/YOUR_EXTENSION_ID
       - key: GOOGLE_CLIENT_ID
         value: 777217128855-n7uns4h3b9ocn7nkspmuj46hiv4sdmmn.apps.googleusercontent.com
+      - key: GOOGLE_CLIENT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: GOOGLE_REDIRECT_URI
+        value: https://tryit4u.ai/oauth/google/callback
+      - key: FACEBOOK_APP_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: FACEBOOK_APP_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: FACEBOOK_REDIRECT_URI
+        value: https://tryit4u.ai/oauth/facebook/callback
+      - key: WEB_APP_URL
+        value: https://tryit4u.ai
+      - key: CORS_ORIGINS
+        value: https://tryit4u.ai,chrome-extension://
+      - key: JWT_EXPIRES_IN
+        value: 7d
     health_check:
       http_path: /health
       period_seconds: 30
-
-static_sites:
-  - name: landing
-    source_dir: landing
-    index_document: index.html
-    error_document: index.html
-    routes:
-      - path: /
 
 databases:
   - name: tryiton-db
@@ -47,3 +93,9 @@ databases:
     version: "15"
     size: db-s-dev-database
     num_nodes: 1
+
+domains:
+  - domain: tryit4u.ai
+    type: PRIMARY
+  - domain: www.tryit4u.ai
+    type: ALIAS
