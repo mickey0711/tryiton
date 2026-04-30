@@ -1,6 +1,5 @@
 "use client";
-// Static export: share page is rendered client-side.
-// OG/SEO tags are handled dynamically via useEffect (meta tag injection).
+// Static export: share page reads shareId from ?id= query param (no dynamic segments needed)
 import { useEffect, useState } from "react";
 import { SharePageClient } from "./SharePageClient";
 
@@ -14,16 +13,23 @@ interface ShareData {
     created_at: string;
 }
 
-export default function SharePage({ params }: { params: { shareId: string } }) {
+export default function SharePage() {
+    const [shareId, setShareId] = useState<string | null>(null);
     const [data, setData]       = useState<ShareData | null>(null);
     const [loaded, setLoaded]   = useState(false);
 
     useEffect(() => {
-        fetch(`${API_BASE}/share/s/${params.shareId}`)
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get("id");
+        setShareId(id);
+
+        if (!id) { setLoaded(true); return; }
+
+        fetch(`${API_BASE}/share/s/${id}`)
             .then(r => r.ok ? r.json() : null)
             .then(d => { setData(d); setLoaded(true); })
             .catch(() => setLoaded(true));
-    }, [params.shareId]);
+    }, []);
 
     if (!loaded) return (
         <main style={{ minHeight: "100vh", display: "flex", alignItems: "center",
@@ -32,5 +38,5 @@ export default function SharePage({ params }: { params: { shareId: string } }) {
         </main>
     );
 
-    return <SharePageClient shareId={params.shareId} initialData={data} />;
+    return <SharePageClient shareId={shareId ?? ""} initialData={data} />;
 }
