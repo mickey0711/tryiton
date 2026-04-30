@@ -94,13 +94,9 @@ export default function HomePage() {
                         >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
-                                src={`https://logo.clearbit.com/${b.domain}`}
+                                src={`https://www.google.com/s2/favicons?domain=${b.domain}&sz=128`}
                                 alt={b.name}
                                 className={styles.brandLogo}
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src =
-                                        `https://www.google.com/s2/favicons?domain=${b.domain}&sz=64`;
-                                }}
                             />
                             <span className={styles.brandName}>{b.name}</span>
                         </a>
