@@ -1,10 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    output: "export",       // Static export — served from DO CDN
+    trailingSlash: false,   // /login not /login/
     images: {
+        unoptimized: true,  // Required for static export
         remotePatterns: [
-            { protocol: "http", hostname: "localhost" },
+            { protocol: "http",  hostname: "localhost" },
             { protocol: "https", hostname: "*.amazonaws.com" },
             { protocol: "https", hostname: "*.s3.amazonaws.com" },
+            { protocol: "https", hostname: "logo.clearbit.com" },
         ],
     },
     env: {
