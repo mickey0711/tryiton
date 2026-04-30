@@ -1,0 +1,7 @@
+# Rewrite extensionless paths → .html files (DO CDN doesn't do extension negotiation)
+/login          /login.html         200
+/register       /register.html      200
+/saved          /saved.html         200
+/account        /account.html       200
+/s              /s.html             200
+/auth/success   /auth/success.html  200

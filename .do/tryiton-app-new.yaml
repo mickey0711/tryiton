@@ -16,6 +16,12 @@ features:
 
 ingress:
   rules:
+  # Next.js static assets (must be first)
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /_next
   # Next.js pages (static site)
   - component:
       name: web

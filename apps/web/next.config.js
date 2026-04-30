@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: "export",       // Static export — served from DO CDN
-    trailingSlash: false,   // generates login.html — DO CDN resolves /login → login.html
+    trailingSlash: false,   // generates login.html — _redirects rewrites /login → /login.html
     images: {
         unoptimized: true,  // Required for static export
         remotePatterns: [
