@@ -66,7 +66,7 @@ export function SharePageClient({ shareId, initialData }: Props) {
             <div className={styles.card}>
                 <div className={styles.imageWrap}>
                     <img
-                        src={d.result_url}
+                        src={d.result_url ?? undefined}
                         alt={`Virtual try-on: ${d.product_title ?? "product"}`}
                         className={styles.resultImg}
                     />
