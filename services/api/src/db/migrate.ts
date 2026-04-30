@@ -212,6 +212,7 @@ const MIGRATIONS = [
   CREATE INDEX IF NOT EXISTS oauth_providers_user_idx ON oauth_providers(user_id);
     `,
     // 008: UTM tracking + marketing campaigns table
+
     `
   ALTER TABLE newsletter_subscribers
     ADD COLUMN IF NOT EXISTS utm_source   TEXT,
@@ -244,6 +245,15 @@ const MIGRATIONS = [
     active   BOOLEAN NOT NULL DEFAULT TRUE,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
+    `,
+
+    // 009: Email verification token expiry + assets updated_at
+    `
+  ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS email_verify_token_expires_at TIMESTAMPTZ;
+
+  ALTER TABLE assets
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
     `,
 ];
 

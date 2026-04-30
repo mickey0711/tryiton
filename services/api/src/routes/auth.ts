@@ -191,6 +191,7 @@ router.post("/register", async (req, res, next) => {
 
         const passwordHash = hashPassword(password);
         const verifyToken = crypto.randomBytes(32).toString("hex");
+        const verifyTokenExpiresAt = new Date(Date.now() + 24 * 3600 * 1000); // 24 hours
         const country = (req.body.country as string | undefined)?.trim() ?? null;
 
         // Credits per plan at registration (free users start on free plan)
@@ -199,10 +200,10 @@ router.post("/register", async (req, res, next) => {
 
         // Create user
         const result = await db.query<{ id: string }>(
-            `INSERT INTO users(email, full_name, phone, country, password_hash, email_verified, email_verify_token, plan, credits)
-             VALUES($1, $2, $3, $4, $5, FALSE, $6, 'free', $7)
+            `INSERT INTO users(email, full_name, phone, country, password_hash, email_verified, email_verify_token, email_verify_token_expires_at, plan, credits)
+             VALUES($1, $2, $3, $4, $5, FALSE, $6, $7, 'free', $8)
              RETURNING id`,
-            [email.toLowerCase(), full_name.trim(), phone?.trim() ?? null, country, passwordHash, verifyToken, startCredits]
+            [email.toLowerCase(), full_name.trim(), phone?.trim() ?? null, country, passwordHash, verifyToken, verifyTokenExpiresAt, startCredits]
         );
         const userId = result.rows[0].id;
 
@@ -233,14 +234,16 @@ router.get("/verify-email", async (req, res, next) => {
         if (!token) throw new AppError("BAD_REQUEST", "Token required", 400);
 
         const result = await db.query<{ id: string; email: string; full_name: string }>(
-            `UPDATE users SET email_verified = TRUE, email_verify_token = NULL, updated_at = NOW()
-             WHERE email_verify_token = $1 AND email_verified = FALSE
+            `UPDATE users SET email_verified = TRUE, email_verify_token = NULL, email_verify_token_expires_at = NULL, updated_at = NOW()
+             WHERE email_verify_token = $1
+               AND email_verified = FALSE
+               AND (email_verify_token_expires_at IS NULL OR email_verify_token_expires_at > NOW())
              RETURNING id, email, full_name`,
             [token]
         );
 
         if (!result.rows.length) {
-            throw new AppError("NOT_FOUND", "Invalid or already used verification link", 404);
+            throw new AppError("NOT_FOUND", "Invalid, expired, or already used verification link", 404);
         }
 
         const user = result.rows[0];
@@ -373,21 +376,21 @@ router.post("/forgot-password", async (req, res, next) => {
         const { email } = req.body as { email?: string };
         if (!email) throw new AppError("VALIDATION_ERROR", "email required", 400);
 
+        const resetToken = crypto.randomBytes(32).toString("hex");
+        const resetExpiry = new Date(Date.now() + 3600 * 1000); // 1 hour
         const result = await db.query<{ id: string; full_name: string }>(
-            `UPDATE users SET email_verify_token = $2, updated_at = NOW()
+            `UPDATE users
+             SET email_verify_token = $2,
+                 email_verify_token_expires_at = $3,
+                 updated_at = NOW()
              WHERE email = $1 AND email_verified = TRUE
              RETURNING id, full_name`,
-            [email.toLowerCase(), crypto.randomBytes(32).toString("hex")]
+            [email.toLowerCase(), resetToken, resetExpiry]
         );
 
         // Always return ok (don't leak if email exists)
         if (result.rows.length > 0) {
-            const { email_verify_token } = (await db.query<{ email_verify_token: string }>(
-                `SELECT email_verify_token FROM users WHERE id = $1`,
-                [result.rows[0].id]
-            )).rows[0];
-
-            const resetUrl = `${process.env.WEB_APP_URL ?? "http://localhost:3000"}/reset-password?token=${email_verify_token}`;
+            const resetUrl = `${process.env.WEB_APP_URL ?? "http://localhost:3000"}/reset-password?token=${resetToken}`;
             const apiKey = process.env.RESEND_API_KEY;
             if (apiKey) {
                 await fetch("https://api.resend.com/emails", {

@@ -1,0 +1,173 @@
+alerts:
+- rule: DEPLOYMENT_FAILED
+- rule: DOMAIN_FAILED
+
+databases:
+- engine: PG
+  name: db
+  version: "17"
+
+domains:
+- domain: tryit4u.ai
+  type: PRIMARY
+
+features:
+- buildpack-stack=ubuntu-22
+
+ingress:
+  rules:
+  # Next.js pages (static site)
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /login
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /register
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /saved
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /account
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /s
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /auth
+  # Everything else → Express (original landing page + API)
+  - component:
+      name: tryiton
+    match:
+      path:
+        prefix: /
+
+name: tryiton-app
+region: fra
+
+static_sites:
+- build_command: |
+    cd apps/web && npm install && npm run build
+  environment_slug: node-js
+  envs:
+  - key: NEXT_PUBLIC_API_URL
+    scope: BUILD_TIME
+    value: https://tryit4u.ai
+  github:
+    branch: main
+    deploy_on_push: true
+    repo: mickey0711/tryiton
+  name: web
+  output_dir: apps/web/out
+  source_dir: /
+
+services:
+- build_command: |
+    npm install --include=dev
+  environment_slug: node-js
+  envs:
+  - key: JWT_SECRET
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:nuxQILyAKveitSqzK/UvOt2/6SinwqlX:oWWWqM2BOlsyH+SrESWMzrNcNHlwzOwqfEhmJDYldtIZl6u2IYCcxUzL+sX6yQiaLg==]
+  - key: RESEND_API_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:o0URBz17dPsq9sIKXb3J/EvO65rY6Zy9:ZoGLQkAC70zDqjCdBZmT/Hy9e8x4qgnRfUz7Y3nAw8xiEy0+0/3B5cATtX0Z0c7Er1wlAg==]
+  - key: NODE_ENV
+    scope: RUN_AND_BUILD_TIME
+    value: production
+  - key: PORT
+    scope: RUN_AND_BUILD_TIME
+    value: "8080"
+  - key: GOOGLE_CLIENT_ID
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:ZyL9IxDmoexlA345q8ST4KieP2KXjxGz:3boc4lPVWTUDvpd7V1yHVvuy3Hg6kGPmjSGx4odvs3SL33DF7E7YyenAoNPONkpXhOZTAmn6QkmLm9tBWHqBDyqS2IKFdD/3vRoC2GTmIFeftvkxTePwiLw=]
+  - key: DATABASE_URL
+    scope: RUN_AND_BUILD_TIME
+    value: ${db.DATABASE_URL}
+  - key: NODE_TLS_REJECT_UNAUTHORIZED
+    scope: RUN_AND_BUILD_TIME
+    value: "0"
+  - key: REPLICATE_API_TOKEN
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:mJCZCnZB93iu8bVNHiMQ1Xx7QUTBKMbu:hfFGsLYMWCukVDCaVPVJZQ/PNX+X+ZAwzrglMgdGfavyH0S2sR8iVEC7k/7hHmzBxVSqoyEpF/c=]
+  - key: GOOGLE_CLIENT_SECRET
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:LPTAnQEHsfnfwwHyQ6qzG4xZOEmQu9a8:xgNL7Np8lsRldGMc0YrsfZ08qOio1wZkNR2Vwv2U/YmlUD62TTip7CzRR18xXX12C6rQ]
+  - key: CORS_ORIGINS
+    scope: RUN_AND_BUILD_TIME
+    value: "chrome-extension://,https://tryiton-app-f32z6.ondigitalocean.app,https://tryit4u.ai"
+  - key: WEB_APP_URL
+    scope: RUN_AND_BUILD_TIME
+    value: https://tryit4u.ai
+  - key: PADDLE_API_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:MYTebFXAEiVpQG/Aj3ixna/cOcZ+P+Vz:CPYNvHH8heyblGfTAwphpPIIpWhs+iELC+PuXS1JK4QjbieUgyjbfo65eUiRMFSKvEYBgZy1BdO8kw/cRuNO07W8cnZVBR4SZCv4bilq9TufgLrNkw==]
+  - key: PADDLE_PRO_BASIC_PRICE_ID
+    scope: RUN_AND_BUILD_TIME
+    value: pri_01kmbd65wst8prs3905pzsy9ff
+  - key: PADDLE_PRO_PLUS_PRICE_ID
+    scope: RUN_AND_BUILD_TIME
+    value: pri_01kmbd66p89xbntbm97df8qbeq
+  - key: PADDLE_PRO_BASIC_ANNUAL_PRICE_ID
+    scope: RUN_AND_BUILD_TIME
+    value: pri_01kmbd67afgrzbrah61jbhn6e2
+  - key: PADDLE_PRO_PLUS_ANNUAL_PRICE_ID
+    scope: RUN_AND_BUILD_TIME
+    value: pri_01kmbd67ygqsn2eps0p2nt608f
+  - key: PADDLE_CREDITS_20_PRICE_ID
+    scope: RUN_AND_BUILD_TIME
+    value: pri_01kmbd68k2jxdmchsma91ezje2
+  - key: PADDLE_CREDITS_40_PRICE_ID
+    scope: RUN_AND_BUILD_TIME
+    value: pri_01kmbd69741r81qn92ryjty612
+  - key: PADDLE_CREDITS_130_PRICE_ID
+    scope: RUN_AND_BUILD_TIME
+    value: pri_01kmbd69tx9m30071ag8n96yrf
+  - key: PADDLE_CREDITS_200_PRICE_ID
+    scope: RUN_AND_BUILD_TIME
+    value: pri_01kmbd6aqknx18ythvw7jfrvt5
+  - key: TWILIO_ACCOUNT_SID
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:W4YX9rLrRXWbCEbtOSe3SAjCEf+CnBpM:nwXdQ84kx+0mC9mefymTe3UfMAcnguGL3XI4fS3HbDCtM8C9FWeuPxGgdsLhMyHeSKg=]
+  - key: TWILIO_AUTH_TOKEN
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:+4ggKcPuvTq+IzLC4c4CnIO7E/9ZhXxf:8O+4bdkmQo349KZsAVL4spuLUyNs8tyYR8afRD21uvnH4PA128LBLajuekCt18lb]
+  - key: OPENAI_API_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:VIaF/x1S4BuB7jdvrOjK3NW2wVfM1a0h:ztAGorerABMH2ukotXRnMn74wX+YNvkD1Tsq6BSRLPHRY9r5e/UFF7SiHmwjdG2eKak1jObPrp1LEAyu7Byz4qOvRi9VFMWF1rduhb+0lPgsnYcpzHpVUqj/hWVpMyVsmSxNSVqIzOxNtRhE+M4+g0GGNpFb6gKhs/U3TVrKoobtTAVsYEvGaL34DWvHEn2DAJ+oBYjQOkovyOGqtcl+yUfx2UUbNITGA/emxaeQQHbIc2lF]
+  - key: MESSENGER_PAGE_ACCESS_TOKEN
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: EV[1:5+BsDqodwMj7xR8C72lz4dNIsvWMj+RQ:MM1EHZD5FMfPECXutqYeh+A9Y4leQmiITWfLOFuD+dGcjcVGJ/BLCkEf/BhtlAtnMGDIf6GEDOBIsgTOykJR5p8g1bQmSRe9JSMhlvcpWGEzESZnqOEkXFnbc6VZTjMzxygcEXUKb39GLxqvSHEcxXC5pYY35i5I1USKqnMpUZCjsvF2+Ye8sdakEi7QEd47r7tHraRW36kem+E63FJm3DcKiZvh7//w3CSIsNo9uGhueUPfOMLILsPTEL7x81glfroMPHDB4Tg4CbZTLA7x3q35gcvcTy/WeJyaRJrkfA==]
+  github:
+    branch: main
+    deploy_on_push: true
+    repo: mickey0711/tryiton
+  http_port: 8080
+  instance_count: 1
+  instance_size_slug: apps-s-1vcpu-0.5gb
+  name: tryiton
+  run_command: |
+    node_modules/.bin/tsx services/api/src/server.ts
+  source_dir: /

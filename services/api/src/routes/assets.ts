@@ -39,13 +39,26 @@ router.post("/confirm", async (req, res, next) => {
         const body = ConfirmAssetReq.parse(req.body);
         const userId = (req as AuthRequest).userId;
 
+        // Security: verify the s3_key belongs to this user (presign always uses raw/{userId}/...)
+        if (!body.s3_key.startsWith(`raw/${userId}/`)) {
+            throw new AppError("FORBIDDEN", "Asset key does not belong to this user", 403);
+        }
+
+        // ON CONFLICT: only update if the existing row also belongs to this user
+        // This prevents a malicious user from claiming another user's asset
         const result = await db.query<{ id: string }>(
             `INSERT INTO assets(user_id, s3_key, type, sha256, width, height, mime)
        VALUES($1, $2, $3, $4, $5, $6, $7)
-       ON CONFLICT(s3_key) DO UPDATE SET updated_at = NOW()
+       ON CONFLICT(s3_key) DO UPDATE
+         SET updated_at = NOW()
+         WHERE assets.user_id = $1
        RETURNING id`,
             [userId, body.s3_key, body.type, body.sha256, body.width, body.height, body.mime]
         );
+
+        if (!result.rows.length) {
+            throw new AppError("FORBIDDEN", "Asset conflict — key owned by another user", 403);
+        }
 
         res.status(201).json({ id: result.rows[0].id, s3_key: body.s3_key, type: body.type });
     } catch (err) {

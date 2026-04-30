@@ -10,11 +10,40 @@ import { getResultSignedUrl } from "./assets";
 const router = Router();
 router.use(requireAuth);
 
+// ── Per-user rate limiter: max 10 jobs per minute ─────────────────────────────
+const jobRateMap = new Map<string, { count: number; resetAt: number }>();
+const JOB_RATE_LIMIT = 10;
+const JOB_RATE_WINDOW_MS = 60_000;
+
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, val] of jobRateMap) {
+        if (now > val.resetAt) jobRateMap.delete(key);
+    }
+}, 60_000);
+
+function checkJobRateLimit(userId: string): void {
+    const now = Date.now();
+    const entry = jobRateMap.get(userId) ?? { count: 0, resetAt: now + JOB_RATE_WINDOW_MS };
+    if (now > entry.resetAt) {
+        entry.count = 0;
+        entry.resetAt = now + JOB_RATE_WINDOW_MS;
+    }
+    entry.count += 1;
+    jobRateMap.set(userId, entry);
+    if (entry.count > JOB_RATE_LIMIT) {
+        throw new AppError("TOO_MANY_REQUESTS", "Too many jobs. Please wait a minute.", 429);
+    }
+}
+
 // POST /fit/jobs — create a generation job
 router.post("/", async (req, res, next) => {
     try {
         const body = CreateJobReq.parse(req.body);
         const userId = (req as AuthRequest).userId;
+
+        // Rate limit check
+        checkJobRateLimit(userId);
 
         // Fetch user asset S3 keys
         const assetRes = await db.query<{ id: string; s3_key: string; type: string }>(
