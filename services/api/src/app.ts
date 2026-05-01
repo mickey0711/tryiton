@@ -127,17 +127,20 @@ app.use("/chat", chatRouter);
 app.use("/fit/tryon-direct", tryonDirectRouter);
 app.use("/", legalRouter);
 
-// ─── Landing page (served from /public) ─────────────────────────────────────
+// ─── Static files (images, _next/static/ JS/CSS chunks, etc.) ────────────────
 const publicDir = path.resolve(__dirname, "../public");
-// Static assets (images etc) — cacheable
+// Serve all static assets including _next/ — cacheable
 app.use(express.static(publicDir, { index: false }));
-// HTML pages — always fresh (no Cloudflare cache)
+
+// ─── HTML pages — no-cache headers ───────────────────────────────────────────
 const noCacheHtml = (_req: any, res: any, next: any) => {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
     next();
 };
+
+// Express landing page
 app.get("/", noCacheHtml, (_req, res) => {
     res.sendFile(path.join(publicDir, "index.html"));
 });
@@ -152,6 +155,27 @@ app.get("/refund", noCacheHtml, (_req, res) => {
 });
 app.get("/refund.html", noCacheHtml, (_req, res) => {
     res.sendFile(path.join(publicDir, "refund.html"));
+});
+
+// Next.js app pages (pre-built HTML, served fresh so users always get latest)
+const nextPages: Record<string, string> = {
+    "/login":         "login.html",
+    "/login.html":    "login.html",
+    "/register":      "register.html",
+    "/register.html": "register.html",
+    "/saved":         "saved.html",
+    "/saved.html":    "saved.html",
+    "/account":       "account.html",
+    "/account.html":  "account.html",
+    "/s":             "s.html",
+    "/s.html":        "s.html",
+    "/auth/success":        "auth/success.html",
+    "/auth/success.html":   "auth/success.html",
+};
+Object.entries(nextPages).forEach(([route, file]) => {
+    app.get(route, noCacheHtml, (_req, res) => {
+        res.sendFile(path.join(publicDir, file));
+    });
 });
 
 // ─── 404 ───────────────────────────────────────────────────────────────────────
