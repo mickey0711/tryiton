@@ -1511,9 +1511,13 @@ function toggleEmailReveal(){
   el.textContent = emailRevealed ? currentUser.email : '••••••••••••••••••••';
 }
 
+// Unified token helper — checks both email/pass token key and OAuth key
+function _authToken(){ return localStorage.getItem('tryiton_token') || localStorage.getItem('accessToken'); }
+
 async function handleSignOut(){
   // Clear all stored auth data
   localStorage.removeItem('tryiton_token');
+  localStorage.removeItem('accessToken');
   localStorage.removeItem('tryiton_refresh');
   localStorage.removeItem('tryiton_user');
   currentUser = null;
@@ -1536,7 +1540,7 @@ function openSection(s){
 
 // Load user from token on page load
 async function initUserMenu(){
-  const token = localStorage.getItem('tryiton_token');
+  const token = _authToken();
   if(!token) return;
   try {
     const res = await fetch(API_BASE + '/me', {
@@ -1548,6 +1552,7 @@ async function initUserMenu(){
     } else {
       // Token expired — clear it
       localStorage.removeItem('tryiton_token');
+      localStorage.removeItem('accessToken');
     }
   } catch(e) {
     console.warn('User auth check failed:', e);
@@ -1565,7 +1570,7 @@ async function copyRef(){
   // Try to get real code from API if user is logged in
   let link='https://tryit4u.ai/ref/join-AB12';
   try{
-    const token=localStorage.getItem('tryiton_token');
+    const token=_authToken();
     if(token){
       const res=await fetch(API_BASE+'/referral/my-code',{headers:{Authorization:'Bearer '+token}});
       if(res.ok){
@@ -2459,6 +2464,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click'
         <div id="acc-nav-history" onclick="accSection('history')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">🕒 Try-On History</div>
         <div id="acc-nav-wishlist" onclick="accSection('wishlist')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">❤️ Wishlist</div>
         <div id="acc-nav-billing" onclick="accSection('billing')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">💳 Billing</div>
+        <div id="acc-nav-address" onclick="accSection('address')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">📦 My Address</div>
         <div id="acc-nav-settings" onclick="accSection('settings')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">⚙️ Settings</div>
         <div style="padding:20px 20px 0">
           <button onclick="handleSignOut();closeAccount()" style="width:100%;padding:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;color:#f87171;font-size:12px;font-family:Inter,sans-serif;cursor:pointer">Sign Out</button>
@@ -2585,13 +2591,62 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click'
           <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:14px;padding:20px;margin-bottom:20px">
             <div style="font-size:12px;color:#a78bfa;font-weight:600;font-family:Inter,sans-serif;margin-bottom:6px" data-en="Current Plan" data-he="מנוי נוכחי">Current Plan</div>
             <div id="acc-plan-disp" style="font-size:20px;font-weight:700;color:#fff;font-family:Inter,sans-serif">Loading...</div>
+            <div id="acc-sub-status" style="font-size:13px;color:rgba(255,255,255,.5);font-family:Inter,sans-serif;margin-top:4px"></div>
+            <div id="acc-sub-expiry" style="font-size:12px;color:rgba(255,255,255,.35);font-family:Inter,sans-serif;margin-top:2px"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+            <button id="upgrade-btn-pro_basic" onclick="startUpgrade('pro_basic')" style="padding:11px 20px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:10px;color:#34d399;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">🚀 Pro Basic ₪69/mo</button>
+            <button id="upgrade-btn-pro_plus" onclick="startUpgrade('pro_plus')" style="padding:11px 20px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:10px;color:#fbbf24;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">⚡ Pro Plus ₪149/mo</button>
+            <button id="upgrade-btn-pro_basic_annual" onclick="startUpgrade('pro_basic_annual')" style="padding:11px 20px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:10px;color:#a78bfa;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">🚀 Annual ₪745/yr</button>
+            <button id="upgrade-btn-pro_plus_annual" onclick="startUpgrade('pro_plus_annual')" style="padding:11px 20px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:10px;color:#fbbf24;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">⚡ Annual ₪1,609/yr</button>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;margin-bottom:16px">
+            <div style="font-size:12px;color:rgba(255,255,255,.4);font-weight:600;font-family:Inter,sans-serif;margin-bottom:8px">Payment History</div>
+            <div id="acc-billing-history" style="font-size:13px;color:rgba(255,255,255,.35);font-family:Inter,sans-serif">Loading...</div>
           </div>
           <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;margin-bottom:16px">
             <div style="font-size:12px;color:rgba(255,255,255,.4);font-weight:600;font-family:Inter,sans-serif;margin-bottom:8px">Important</div>
             <p style="font-size:13px;color:rgba(255,255,255,.6);font-family:Inter,sans-serif;line-height:1.6">• Monthly billing from your registration date<br>• Cancel anytime — no refund for current period<br>• We never store your credit card details</p>
           </div>
-          <button onclick="window.location.href='#pricing'" style="padding:11px 24px;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);border-radius:10px;color:#a78bfa;font-size:14px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer;margin-right:10px">Upgrade Plan</button>
           <button onclick="confirmCancel()" style="padding:11px 24px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;color:#f87171;font-size:14px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">Cancel Subscription</button>
+        </div>
+        <!-- Address -->
+        <div id="acc-address" style="display:none">
+          <h2 style="font-size:20px;font-weight:700;color:#fff;margin-bottom:24px">Delivery Address</h2>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">Address Line 1</label>
+              <input id="addr-line1" type="text" placeholder="Street address" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">Address Line 2</label>
+              <input id="addr-line2" type="text" placeholder="Apartment, suite, floor (optional)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">City</label>
+                <input id="addr-city" type="text" placeholder="City" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+              </div>
+              <div>
+                <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">ZIP / Postal Code</label>
+                <input id="addr-zip" type="text" placeholder="ZIP code" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">State / Region</label>
+                <input id="addr-state" type="text" placeholder="State" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+              </div>
+              <div>
+                <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">Country</label>
+                <input id="addr-country" type="text" placeholder="Country" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+              <button onclick="saveAddress()" style="padding:10px 22px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">Save Address</button>
+              <span id="acc-addr-save-ok" style="display:none;color:#34d399;font-size:13px;font-family:Inter,sans-serif">✓ Saved!</span>
+            </div>
+          </div>
         </div>
         <!-- Settings -->
         <div id="acc-settings" style="display:none">
@@ -2832,12 +2887,13 @@ function selectCat(cat){
 
 function accSection(s){
 
-  ['profile','photos','history','wishlist','billing','settings'].forEach(sec=>{
+  ['profile','photos','history','wishlist','billing','address','settings'].forEach(sec=>{
     const panel = document.getElementById('acc-'+sec);
     if(panel) panel.style.display=sec===s?'block':'none';
     const nav=document.getElementById('acc-nav-'+sec);
     if(nav){nav.style.color=sec===s?'#a78bfa':'rgba(255,255,255,.5)';nav.style.background=sec===s?'rgba(124,58,237,.15)':'transparent';nav.style.borderLeftColor=sec===s?'#7c3aed':'transparent';}
   });
+  if(s==='address') loadAddressForm();
 }
 
 async function loadAccountData(){
@@ -2871,7 +2927,7 @@ async function loadAccountData(){
   }
 
   // Also try backend if token exists
-  const token=localStorage.getItem('tryiton_token');
+  const token=_authToken();
   if(!token) return;
   try{
     const res=await fetch(API_BASE+'/me',{headers:{Authorization:'Bearer '+token}});
@@ -2882,12 +2938,12 @@ async function loadAccountData(){
     const em=document.getElementById('acc-email-disp'); if(em) em.value=user.email||'';
     const ph=document.getElementById('acc-phone'); if(ph) ph.value=user.phone||'';
 
-    // Plan badge + billing display
+    // Plan badge + billing display (ILS pricing)
     const planMeta = {
       admin:  { label:'✨ Admin',  color:'#a78bfa', bg:'rgba(124,58,237,.25)', border:'rgba(124,58,237,.5)',  billing:'Unlimited — Admin' },
-      elite:  { label:'⚡ Elite',  color:'#fbbf24', bg:'rgba(251,191,36,.2)',  border:'rgba(251,191,36,.4)',  billing:'Elite — 300 try-ons/month · $49.90/mo' },
-      pro:    { label:'🚀 Pro',    color:'#34d399', bg:'rgba(52,211,153,.15)', border:'rgba(52,211,153,.35)', billing:'Pro — 100 try-ons/month · $19.90/mo' },
-      free:   { label:'FREE',      color:'#a78bfa', bg:'rgba(124,58,237,.15)', border:'rgba(124,58,237,.3)',  billing:'Free — 5 try-ons one-time' },
+      elite:  { label:'⚡ Pro Plus',color:'#fbbf24', bg:'rgba(251,191,36,.2)',  border:'rgba(251,191,36,.4)',  billing:'Pro Plus — 150 try-ons/month · ₪149/mo' },
+      pro:    { label:'🚀 Pro Basic',color:'#34d399', bg:'rgba(52,211,153,.15)', border:'rgba(52,211,153,.35)', billing:'Pro Basic — 50 try-ons/month · ₪69/mo' },
+      free:   { label:'FREE',       color:'#a78bfa', bg:'rgba(124,58,237,.15)', border:'rgba(124,58,237,.3)',  billing:'Free — 5 try-ons one-time' },
     };
     const meta = planMeta[user.plan] || planMeta.free;
     const badge = document.getElementById('acc-plan-badge');
@@ -2900,11 +2956,16 @@ async function loadAccountData(){
     const sc = document.getElementById('acc-stat-credits');
     if(sc) sc.textContent = credits === -1 ? '∞' : credits;
 
+    // Tryon count stat
+    const st = document.getElementById('acc-stat-tryons');
+    if(st && user.tryon_count != null) st.textContent = user.tryon_count;
+
     setAvatar(user);
 
-    // Load job history
+    // Load all sections in parallel
     loadJobHistory(token);
-  }catch(e){}
+    loadBillingSection(token, user);
+  }catch(e){ console.warn('loadAccountData error',e); }
 }
 
 async function loadJobHistory(token){
@@ -2930,7 +2991,7 @@ async function loadJobHistory(token){
 }
 
 async function saveProfile(){
-  const token=localStorage.getItem('tryiton_token');
+  const token=_authToken();
   if(!token)return;
   const full_name=document.getElementById('acc-fullname').value.trim();
   const phone=document.getElementById('acc-phone').value.trim();
@@ -2941,16 +3002,22 @@ async function saveProfile(){
   }catch(e){}
 }
 
-function confirmCancel(){
-  if(confirm('Your subscription will remain active until the end of the current billing period and will not renew. Continue?')){
-    alert('Subscription will end at the close of the current period. No further charge.');
-  }
+async function confirmCancel(){
+  if(!confirm('Your subscription will remain active until the end of the current billing period and will not renew. Continue?')) return;
+  const token=_authToken();
+  if(!token){ openSignIn(); return; }
+  try{
+    const r=await fetch(API_BASE+'/payplus/cancel',{method:'POST',headers:{Authorization:'Bearer '+token}});
+    const d=await r.json();
+    if(r.ok){ alert('Subscription cancelled. Access continues until end of billing period.'); loadAccountData(); }
+    else{ alert('Error: '+(d.message||'Could not cancel. Please contact support.')); }
+  }catch(e){ alert('Could not connect. Please try again.'); }
 }
 
 function confirmDelete(){
   const conf=prompt('Type DELETE to permanently delete your account:');
   if(conf==='DELETE'){
-    const token=localStorage.getItem('tryiton_token');
+    const token=_authToken();
     fetch(API_BASE+'/me',{method:'DELETE',headers:{Authorization:'Bearer '+token}})
       .then(()=>{ handleSignOut(); closeAccount(); alert('Account deleted. Goodbye!'); })
       .catch(()=>alert('Error — please try again.'));
@@ -2966,8 +3033,99 @@ async function sendPassReset(){
 
 document.getElementById('account-modal').addEventListener('click',function(e){if(e.target===this)closeAccount();});
 
-// Update openSection to use account modal
-function openSection(s){ closeUserMenu(); if(!localStorage.getItem('tryiton_token')){openSignIn();return;} openAccount(s); }
+// Update openSection to use account modal — checks both token keys
+function openSection(s){ closeUserMenu(); if(!_authToken()){openSignIn();return;} openAccount(s); }
+
+// ─── PayPlus checkout ────────────────────────────────────────────────────────
+async function startUpgrade(planId){
+  const token=_authToken();
+  if(!token){ openSignIn(); return; }
+  const btn=document.getElementById('upgrade-btn-'+planId);
+  if(btn){ btn.textContent='Loading…'; btn.disabled=true; }
+  try{
+    const r=await fetch(API_BASE+'/payplus/create-session',{method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
+      body:JSON.stringify({plan_id:planId})});
+    const d=await r.json();
+    if(d.url){ window.location.href=d.url; }
+    else{ alert('Payment error: '+(d.message||'Unknown error')); }
+  }catch(e){ alert('Could not connect to payment system. Please try again.'); }
+  finally{ if(btn){ btn.textContent='Upgrade'; btn.disabled=false; } }
+}
+
+// ─── Save delivery address ────────────────────────────────────────────────────
+async function saveAddress(){
+  const token=_authToken();
+  if(!token) return;
+  const g=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
+  const address={line1:g('addr-line1'),line2:g('addr-line2'),city:g('addr-city'),zip:g('addr-zip'),state:g('addr-state'),country:g('addr-country')};
+  try{
+    const r=await fetch(API_BASE+'/me/address',{method:'PUT',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
+      body:JSON.stringify(address)});
+    if(r.ok){
+      const ok=document.getElementById('acc-addr-save-ok');
+      if(ok){ ok.style.display='inline'; setTimeout(()=>ok.style.display='none',3000); }
+    } else { alert('Could not save address. Please try again.'); }
+  }catch(e){ alert('Could not connect. Please try again.'); }
+}
+
+// ─── Load billing section (subscription + payment history) ───────────────────
+async function loadBillingSection(token, user){
+  // Subscription status
+  const subStatus=document.getElementById('acc-sub-status');
+  const subExpiry=document.getElementById('acc-sub-expiry');
+  if(subStatus){
+    if(user.plan==='free' || !user.payplus_plan){
+      subStatus.textContent='No active subscription';
+    } else {
+      subStatus.textContent=user.payplus_plan.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase())+' — Active';
+    }
+  }
+  if(subExpiry && user.subscription_expires_at){
+    subExpiry.textContent='Renews '+new Date(user.subscription_expires_at).toLocaleDateString();
+  }
+  // Payment history
+  try{
+    const r=await fetch(API_BASE+'/me/billing',{headers:{Authorization:'Bearer '+token}});
+    if(!r.ok) return;
+    const {payments}=await r.json();
+    const hist=document.getElementById('acc-billing-history');
+    if(!hist) return;
+    if(!payments||!payments.length){ hist.textContent='No payment history yet.'; return; }
+    hist.textContent=''; // clear "Loading..." text
+    payments.forEach(p=>{
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-family:Inter,sans-serif;font-size:13px';
+      const date=new Date(p.created_at).toLocaleDateString();
+      const amt=p.currency==='ILS'?'₪'+p.amount:'$'+p.amount;
+      const planName=p.plan.replace(/_/g,' ');
+      const statusMark=p.status==='completed'?'✓':'⏳';
+      const d=document.createElement('span'); d.style.color='rgba(255,255,255,.6)'; d.textContent=date;
+      const n=document.createElement('span'); n.style.color='#fff'; n.textContent=planName;
+      const a=document.createElement('span'); a.style.color='#34d399'; a.textContent=amt;
+      const s=document.createElement('span'); s.textContent=statusMark;
+      row.appendChild(d); row.appendChild(n); row.appendChild(a); row.appendChild(s);
+      hist.appendChild(row);
+    });
+  }catch(e){ const h=document.getElementById('acc-billing-history'); if(h) h.textContent='Could not load history.'; }
+}
+
+// ─── Load address form ────────────────────────────────────────────────────────
+async function loadAddressForm(){
+  const token=_authToken();
+  if(!token) return;
+  try{
+    const r=await fetch(API_BASE+'/me/address',{headers:{Authorization:'Bearer '+token}});
+    if(!r.ok) return;
+    const {address}=await r.json();
+    if(!address) return;
+    const set=(id,val)=>{ const el=document.getElementById(id); if(el&&val) el.value=val; };
+    set('addr-line1',address.line1); set('addr-line2',address.line2);
+    set('addr-city',address.city);   set('addr-zip',address.zip);
+    set('addr-state',address.state); set('addr-country',address.country);
+  }catch(e){}
+}
 
 // ── Language Toggle + i18n ───────────────────────────────────────────────────
 const I18N = {
