@@ -161,14 +161,29 @@ function App() {
             const GARMENT_CATS = ["tops", "jacket", "dress", "pants", "shirt"];
 
             // ── Backend tryon-direct (recommended path) ────────────────────
-            // Works without Redis/R2 — backend calls Replicate using server token
+            // Works without Redis/R2 — backend calls Replicate using server token.
+            // Async flow: POST returns prediction_id immediately, extension polls.
+            // Garment fetched as base64 to bypass Amazon/Zara CDN restrictions.
             if (GARMENT_CATS.includes(category.toLowerCase())) {
                 try {
-                    setProgress(15);
-                    // Animate progress while waiting for AI (Replicate takes 30-90s)
-                    const progressTimer = setInterval(() => {
-                        setProgress(p => p < 85 ? p + Math.random() * 3 : p);
-                    }, 2000);
+                    setProgress(10);
+
+                    // Step 1: Fetch garment image as base64 via service worker
+                    // (bypasses CDN restrictions on Amazon, Zara, H&M, etc.)
+                    let garmentData = productSrc!;
+                    try {
+                        const blobResp: any = await new Promise((resolve) => {
+                            chrome.runtime.sendMessage(
+                                { type: "FETCH_IMAGE_BLOB", url: productSrc },
+                                (r: any) => { void chrome.runtime.lastError; resolve(r); }
+                            );
+                        });
+                        if (blobResp?.ok && blobResp.data) garmentData = blobResp.data;
+                    } catch { /* keep original URL as fallback */ }
+
+                    setProgress(18);
+
+                    // Step 2: POST to backend — returns immediately with prediction_id
                     const res = await fetch(`${API_BASE}/fit/tryon-direct`, {
                         method: "POST",
                         headers: {
@@ -177,28 +192,74 @@ function App() {
                         },
                         body: JSON.stringify({
                             human_img: profileImageB64,
-                            garment_url: productSrc,
+                            garment_url: garmentData,
                             category,
                         }),
-                        signal: AbortSignal.timeout(180_000), // 3 min timeout
+                        signal: AbortSignal.timeout(30_000), // 30s for the initial POST only
                     });
-                    clearInterval(progressTimer);
-                    if (res.ok) {
-                        const { result_url, fit_score } = await res.json();
+
+                    if (!res.ok) {
+                        const errData = await res.json().catch(() => ({}));
+                        throw new Error(errData.message ?? `Server error (${res.status})`);
+                    }
+
+                    const initData = await res.json();
+
+                    // Fast path: Replicate finished within the 5 s wait window
+                    if (initData.result_url) {
                         setProgress(100);
                         setJobResult({
                             jobId: "direct-" + Date.now(),
-                            resultUrl: result_url,
-                            fitScore: fit_score ?? Math.floor(75 + Math.random() * 20),
+                            resultUrl: initData.result_url,
+                            fitScore: initData.fit_score ?? Math.floor(75 + Math.random() * 20),
                             explanation: ["AI try-on complete", `Category: ${category}`, "Powered by TryIt4U AI"],
                             productSrc,
                         });
                         setScreen("result");
                         return;
                     }
-                    // Non-OK response — show the error message from server
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.message ?? `Server error (${res.status})`);
+
+                    // Slow path: poll prediction status from extension (client-side)
+                    const predictionId = initData.prediction_id;
+                    if (!predictionId) throw new Error(initData.message ?? "AI service error");
+
+                    setProgress(22);
+                    for (let i = 0; i < 60; i++) {
+                        await new Promise((r) => setTimeout(r, 3000));
+                        // Smooth progress animation: 22 → 92 over 60 iterations
+                        setProgress(Math.min(92, 22 + i * 1.2));
+
+                        const pollRes = await fetch(
+                            `${API_BASE}/fit/tryon-direct/poll/${predictionId}`,
+                            {
+                                headers: backendToken ? { Authorization: `Bearer ${backendToken}` } : {},
+                                signal: AbortSignal.timeout(10_000),
+                            }
+                        );
+                        if (!pollRes.ok) continue; // transient network error — keep polling
+
+                        const pollData = await pollRes.json();
+
+                        if (pollData.status === "succeeded") {
+                            setProgress(100);
+                            setJobResult({
+                                jobId: "direct-" + predictionId,
+                                resultUrl: pollData.result_url,
+                                fitScore: pollData.fit_score ?? Math.floor(75 + Math.random() * 20),
+                                explanation: ["AI try-on complete", `Category: ${category}`, "Powered by TryIt4U AI"],
+                                productSrc,
+                            });
+                            setScreen("result");
+                            return;
+                        }
+
+                        if (pollData.status === "failed") {
+                            throw new Error(pollData.message ?? "AI generation failed. Please try again.");
+                        }
+                        // status === "processing" — keep polling
+                    }
+                    throw new Error("AI generation timed out. The model is busy — please try again in a moment.");
+
                 } catch (err: any) {
                     if (err?.name === "TimeoutError") {
                         throw new Error("AI generation timed out. The model is busy — please try again in a moment.");

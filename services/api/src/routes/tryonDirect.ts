@@ -1,12 +1,12 @@
 /**
- * POST /fit/tryon-direct
+ * POST /fit/tryon-direct        — create Replicate prediction, return immediately
+ * GET  /fit/tryon-direct/poll/:id — proxy single status check to Replicate
  *
- * Lightweight endpoint — accepts human photo (base64 or URL) + garment URL,
- * calls Replicate IDM-VTON using backend env token, polls, returns result.
- * Auth optional — works for both logged-in and anonymous users.
+ * Async design avoids DO App Platform's 30-second proxy timeout:
+ * the POST returns in <2 s, the client polls /poll/:id every 3 s.
  */
 
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response } from "express";
 import { logger } from "../config/logger";
 
 const router = Router();
@@ -15,35 +15,17 @@ const REPLICATE_API = "https://api.replicate.com/v1";
 const IDMVTON_VERSION = "0513734a452173b8173e907e3a59d19a36266e55b48528559432bd21c7d7e985";
 
 const garmentSlot: Record<string, string> = {
-    tops: "upper_body",
+    tops:   "upper_body",
     jacket: "upper_body",
-    shirt: "upper_body",
-    dress: "dresses",
-    pants: "lower_body",
-    jeans: "lower_body",
-    skirt: "lower_body",
+    shirt:  "upper_body",
+    dress:  "dresses",
+    pants:  "lower_body",
+    jeans:  "lower_body",
+    skirt:  "lower_body",
 };
 
-async function replicatePoll(predictionId: string, token: string): Promise<string> {
-    const pollUrl = `${REPLICATE_API}/predictions/${predictionId}`;
-    for (let i = 0; i < 60; i++) {
-        await new Promise((r) => setTimeout(r, 3000));
-        const res = await fetch(pollUrl, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (data.status === "succeeded") {
-            const output = data.output;
-            return Array.isArray(output) ? output[0] : output;
-        }
-        if (data.status === "failed" || data.status === "canceled") {
-            throw new Error("AI generation failed. Please try again.");
-        }
-    }
-    throw new Error("AI generation timed out. Please try again.");
-}
-
-router.post("/", async (req: Request, res: Response, next: NextFunction) => {
+// ─── POST / — create prediction ───────────────────────────────────────────────
+router.post("/", async (req: Request, res: Response) => {
     try {
         const { human_img, garment_url, category = "tops" } = req.body as {
             human_img: string;
@@ -52,16 +34,23 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         };
 
         if (!human_img || !garment_url) {
-            return res.status(400).json({ error: "MISSING_PARAMS", message: "human_img and garment_url are required" });
+            return res.status(400).json({
+                error: "MISSING_PARAMS",
+                message: "human_img and garment_url are required",
+            });
         }
 
         const token = process.env.REPLICATE_API_TOKEN;
         if (!token) {
-            return res.status(503).json({ error: "NOT_CONFIGURED", message: "AI service not configured" });
+            return res.status(503).json({
+                error: "NOT_CONFIGURED",
+                message: "AI service not configured",
+            });
         }
 
         const slot = garmentSlot[category.toLowerCase()] ?? "upper_body";
 
+        // Create prediction — ask Replicate to wait up to 5 s (fast warm model path)
         const predRes = await fetch(`${REPLICATE_API}/predictions`, {
             method: "POST",
             headers: {
@@ -90,52 +79,106 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
                 402: "AI quota exceeded.",
                 401: "AI service misconfigured.",
             };
-            const status = predRes.status;
+            logger.error({ status: predRes.status }, "Replicate create prediction failed");
             return res.status(503).json({
                 error: "REPLICATE_ERROR",
-                message: friendly[status] ?? `AI service error (${status}).`,
+                message: friendly[predRes.status] ?? `AI service error (${predRes.status}).`,
             });
         }
 
         const prediction = await predRes.json();
-        logger.info({ predictionId: prediction.id, status: prediction.status }, "Replicate prediction created");
+        logger.info({ predictionId: prediction.id, status: prediction.status }, "Prediction created");
 
-        // Handle immediate failure from Replicate
+        // Check for immediate error
         if (prediction.error) {
-            logger.error({ predictionError: prediction.error }, "Replicate returned error in prediction body");
             return res.status(503).json({
                 error: "REPLICATE_ERROR",
                 message: `AI model error: ${prediction.error}`,
             });
         }
+
+        // Fast path: Replicate already finished within the 5 s wait window
+        if (prediction.status === "succeeded") {
+            const output = prediction.output;
+            const resultUrl = Array.isArray(output) ? output[0] : output;
+            return res.json({
+                result_url: resultUrl,
+                fit_score: Math.floor(75 + Math.random() * 20),
+            });
+        }
+
         if (prediction.status === "failed" || prediction.status === "canceled") {
             return res.status(503).json({
                 error: "REPLICATE_ERROR",
                 message: prediction.error ?? "AI generation failed immediately. Please try again.",
             });
         }
+
         if (!prediction.id) {
-            logger.error({ prediction }, "Replicate prediction missing id");
             return res.status(503).json({
                 error: "REPLICATE_ERROR",
-                message: "AI service returned an unexpected response. Please try again.",
+                message: "AI service returned an unexpected response.",
             });
         }
 
-        // If Replicate returned result immediately (Prefer: wait)
-        if (prediction.status === "succeeded") {
-            const output = prediction.output;
-            const resultUrl = Array.isArray(output) ? output[0] : output;
-            logger.info({ predictionId: prediction.id, category }, "Try-on completed immediately");
-            return res.json({ result_url: resultUrl, fit_score: Math.floor(75 + Math.random() * 20) });
+        // Slow path: still processing — return prediction_id for client-side polling
+        return res.json({
+            prediction_id: prediction.id,
+            status: "processing",
+        });
+
+    } catch (err: any) {
+        logger.error({ errMsg: err?.message }, "tryon-direct POST error");
+        return res.status(500).json({
+            error: "INTERNAL_ERROR",
+            message: err?.message ?? "An unexpected error occurred",
+        });
+    }
+});
+
+// ─── GET /poll/:predictionId — single status check (client polls this) ─────────
+router.get("/poll/:predictionId", async (req: Request, res: Response) => {
+    try {
+        const { predictionId } = req.params;
+        const token = process.env.REPLICATE_API_TOKEN;
+        if (!token) {
+            return res.status(503).json({ error: "NOT_CONFIGURED", message: "AI service not configured" });
         }
 
-        // Poll for result
-        const resultUrl = await replicatePoll(prediction.id, token);
-        logger.info({ predictionId: prediction.id, category }, "Try-on completed via poll");
-        res.json({ result_url: resultUrl, fit_score: Math.floor(75 + Math.random() * 20) });
+        const pollRes = await fetch(`${REPLICATE_API}/predictions/${predictionId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!pollRes.ok) {
+            return res.status(503).json({ error: "REPLICATE_ERROR", message: `Poll failed (${pollRes.status})` });
+        }
+
+        const data = await pollRes.json();
+
+        if (data.status === "succeeded") {
+            const output = data.output;
+            const resultUrl = Array.isArray(output) ? output[0] : output;
+            logger.info({ predictionId }, "Poll: succeeded");
+            return res.json({
+                status: "succeeded",
+                result_url: resultUrl,
+                fit_score: Math.floor(75 + Math.random() * 20),
+            });
+        }
+
+        if (data.status === "failed" || data.status === "canceled") {
+            logger.warn({ predictionId, error: data.error }, "Poll: failed");
+            return res.json({
+                status: "failed",
+                message: data.error ?? "AI generation failed. Please try again.",
+            });
+        }
+
+        // Still processing
+        return res.json({ status: data.status ?? "processing" });
+
     } catch (err: any) {
-        logger.error({ errMsg: err?.message, stack: err?.stack }, "tryon-direct unhandled error");
+        logger.error({ errMsg: err?.message }, "tryon-direct poll error");
         return res.status(500).json({
             error: "INTERNAL_ERROR",
             message: err?.message ?? "An unexpected error occurred",
