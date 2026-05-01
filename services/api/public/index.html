@@ -2726,7 +2726,7 @@ async function handleGoogleCredential(response){
 
   // Try backend exchange — if it fails, log in client-side with Google profile data
   try{
-    const res = await fetch(API_BASE+'/auth/google/exchange', {
+    const res = await fetch(API_BASE+'/auth/oauth/google/exchange', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({id_token: response.credential})
@@ -3033,8 +3033,8 @@ async function sendPassReset(){
 
 document.getElementById('account-modal').addEventListener('click',function(e){if(e.target===this)closeAccount();});
 
-// Update openSection to use account modal — checks both token keys
-function openSection(s){ closeUserMenu(); if(!_authToken()){openSignIn();return;} openAccount(s); }
+// Update openSection to use account modal — checks token keys + Google-only fallback
+function openSection(s){ closeUserMenu(); if(!_authToken()&&!localStorage.getItem('tryiton_google_user')){openSignIn();return;} openAccount(s); }
 
 // ─── PayPlus checkout ────────────────────────────────────────────────────────
 async function startUpgrade(planId){
