@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 
-const API_BASE = "https://tryiton-app-f32z6.ondigitalocean.app";
+const API_BASE = "https://tryit4u.ai";
 
 interface Props {
     onProfileSaved: (b64: string, measurements?: BodyMeasurements) => void;
@@ -195,6 +195,7 @@ export function OnboardingScreen({ onProfileSaved, onLogin }: Props) {
         const file = e.target.files?.[0];
         if (!file) return;
         if (!file.type.startsWith("image/")) return setError("Please select an image file.");
+        setError(null); // clear any previous auth error
         const reader = new FileReader();
         reader.onload = (ev) => {
             setPreview(ev.target?.result as string);

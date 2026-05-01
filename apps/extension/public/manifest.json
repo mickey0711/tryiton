@@ -11,7 +11,8 @@
     "permissions": [
         "activeTab",
         "storage",
-        "identity"
+        "identity",
+        "camera"
     ],
     "oauth2": {
         "client_id": "777217128855-n7uns4h3b9ocn7nkspmuj46hiv4sdmmn.apps.googleusercontent.com",

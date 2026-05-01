@@ -154,6 +154,10 @@ function App() {
             if (GARMENT_CATS.includes(category.toLowerCase())) {
                 try {
                     setProgress(15);
+                    // Animate progress while waiting for AI (Replicate takes 30-90s)
+                    const progressTimer = setInterval(() => {
+                        setProgress(p => p < 85 ? p + Math.random() * 3 : p);
+                    }, 2000);
                     const res = await fetch(`${API_BASE}/fit/tryon-direct`, {
                         method: "POST",
                         headers: {
@@ -167,6 +171,7 @@ function App() {
                         }),
                         signal: AbortSignal.timeout(180_000), // 3 min timeout
                     });
+                    clearInterval(progressTimer);
                     if (res.ok) {
                         const { result_url, fit_score } = await res.json();
                         setProgress(100);
@@ -180,7 +185,15 @@ function App() {
                         setScreen("result");
                         return;
                     }
-                } catch { /* Backend unavailable — fall through to direct Replicate */ }
+                    // Non-OK response — show the error message from server
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.message ?? `Server error (${res.status})`);
+                } catch (err: any) {
+                    if (err?.name === "TimeoutError") {
+                        throw new Error("AI generation timed out. The model is busy — please try again in a moment.");
+                    }
+                    throw err;
+                }
             }
 
             // ── Direct Replicate flow (fallback if backend unavailable) ────

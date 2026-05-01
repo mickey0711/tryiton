@@ -368,6 +368,28 @@ function startManualSelection() {
     setTimeout(cleanup, 15_000); // auto-cancel after 15s
 }
 
+// ─── Website → Extension token bridge ─────────────────────────────────────────
+// If user is logged in on tryit4u.ai, sync the JWT token to chrome.storage
+// so the extension popup can use it without requiring a separate sign-in.
+function syncWebsiteToken() {
+    try {
+        const token = localStorage.getItem("tryiton_token") || localStorage.getItem("accessToken");
+        if (!token) return;
+        chrome.storage.local.get(["accessToken"], (data: any) => {
+            if (chrome.runtime.lastError) return;
+            // Only sync if extension doesn't already have a token (avoid overwriting)
+            if (!data.accessToken && token) {
+                chrome.storage.local.set({ accessToken: token });
+            }
+        });
+    } catch { /* page may not have localStorage */ }
+}
+// Sync on load and when storage changes (e.g. user logs in while popup is open)
+syncWebsiteToken();
+window.addEventListener("storage", (e) => {
+    if (e.key === "tryiton_token" || e.key === "accessToken") syncWebsiteToken();
+});
+
 // ─── Init ──────────────────────────────────────────────────────────────────────
 
 // Inject button after short delay (wait for page render)
