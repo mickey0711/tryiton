@@ -12,7 +12,6 @@ if (process.env.SENTRY_DSN) {
 
 import express from "express";
 import path from "path";
-import fs from "fs";
 import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
@@ -56,11 +55,14 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+            // Allow onclick/onmouseover attributes — landing page uses them extensively
+            scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https:"],
             connectSrc: ["'self'", "https:"],
+            frameSrc: ["'self'", "https://accounts.google.com"],
         },
     },
 }));
@@ -112,20 +114,6 @@ app.use(express.static(publicDir, { index: false }));
 // so the browser's /_next/static/chunks/... arrives here as /static/chunks/...
 // Second static root points at publicDir/_next so these stripped paths resolve.
 app.use(express.static(path.join(publicDir, "_next"), { index: false }));
-
-// ─── Debug endpoint (temporary — remove after confirming _next serving works) ─
-app.get("/debug-public", (_req, res) => {
-    const chunksDir = path.join(publicDir, "_next", "static", "chunks");
-    res.json({
-        publicDir,
-        __dirname,
-        cwd: process.cwd(),
-        publicExists: fs.existsSync(publicDir),
-        nextExists: fs.existsSync(path.join(publicDir, "_next")),
-        files: fs.existsSync(publicDir) ? fs.readdirSync(publicDir) : [],
-        chunkSample: fs.existsSync(chunksDir) ? fs.readdirSync(chunksDir).slice(0, 5) : [],
-    });
-});
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
 app.use("/health", healthRouter);
