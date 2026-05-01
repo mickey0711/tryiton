@@ -497,61 +497,60 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   </div>
 </section>
 
-<!-- LOGOS — BUG-01 FIX: text badges, no broken external images -->
+<!-- LOGOS — actual brand logos via Clearbit -->
 <div class="logos" aria-label="Supported stores" id="stores">
   <p class="logos-lbl" data-i18n="logos_lbl">Works with the world's top brands &amp; stores</p>
   <style>
-    .mq-logo{display:inline-flex;align-items:center;justify-content:center;padding:6px 14px;margin:0 6px;border:1px solid rgba(255,255,255,.12);border-radius:100px;font-size:13px;font-weight:700;color:rgba(255,255,255,.65);letter-spacing:.5px;white-space:nowrap;text-decoration:none;transition:.2s;background:rgba(255,255,255,.04)}
-    .mq-logo:hover{border-color:rgba(124,58,237,.5);color:#a78bfa;background:rgba(124,58,237,.08)}
+    .mq-logo{display:inline-flex;align-items:center;justify-content:center;padding:0 20px;margin:0 4px;height:56px;text-decoration:none;transition:.25s;opacity:.6;filter:brightness(0) invert(1);flex-shrink:0}
+    .mq-logo:hover{opacity:1;transform:scale(1.08);filter:brightness(0) invert(1) drop-shadow(0 2px 12px rgba(167,139,250,.6))}
+    .mq-logo img{height:28px;width:auto;max-width:110px;object-fit:contain;display:block}
+    .mq-logo.tall img{height:36px}
+    .mq-logo.wide img{max-width:140px}
   </style>
   <div class="mq-track-wrap" aria-hidden="true">
     <div class="mq-track">
-      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener">ZARA</a>
-      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener">H&amp;M</a>
-      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener">ASOS</a>
-      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener">NIKE</a>
-      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener">adidas</a>
-      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener">amazon</a>
-      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener">SHEIN</a>
-      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener">Mango</a>
-      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener">UNIQLO</a>
-      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener">Levi's</a>
-      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener">PUMA</a>
-      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener">GAP</a>
-      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener">Vans</a>
-      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener">Converse</a>
-      <a class="mq-logo" href="https://aloyoga.com" target="_blank" rel="noopener">Alo Yoga</a>
-      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener">lululemon</a>
-      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener">Nordstrom</a>
-      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener">etsy</a>
-      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener">FARFETCH</a>
-      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener">Zalando</a>
-      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener">GUCCI</a>
-      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener">Ralph Lauren</a>
-      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener">Calvin Klein</a>
-      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener">HUGO BOSS</a>
-      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener">The North Face</a>
-      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener">New Balance</a>
-      <a class="mq-logo" href="https://revolve.com" target="_blank" rel="noopener">REVOLVE</a>
-      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener">eBay</a>
-      <a class="mq-logo" href="https://aliexpress.com" target="_blank" rel="noopener">AliExpress</a>
-      <a class="mq-logo" href="https://forever21.com" target="_blank" rel="noopener">Forever 21</a>
-      <!-- duplicate set for seamless scroll -->
-      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener">ZARA</a>
-      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener">H&amp;M</a>
-      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener">ASOS</a>
-      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener">NIKE</a>
-      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener">adidas</a>
-      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener">amazon</a>
-      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener">SHEIN</a>
-      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener">Mango</a>
-      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener">UNIQLO</a>
-      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener">Levi's</a>
-      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener">PUMA</a>
-      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener">GAP</a>
-      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener">Vans</a>
-      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener">GUCCI</a>
-      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener">Ralph Lauren</a>
+      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/zara.com" alt="ZARA" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/hm.com" alt="H&M" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/asos.com" alt="ASOS" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/nike.com" alt="Nike" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/adidas.com" alt="Adidas" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo wide" href="https://amazon.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/amazon.com" alt="Amazon" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/shein.com" alt="SHEIN" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/mango.com" alt="Mango" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/uniqlo.com" alt="UNIQLO" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://levi.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/levi.com" alt="Levi's" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/puma.com" alt="PUMA" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/gap.com" alt="GAP" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/vans.com" alt="Vans" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/converse.com" alt="Converse" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/lululemon.com" alt="lululemon" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/nordstrom.com" alt="Nordstrom" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/etsy.com" alt="Etsy" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/farfetch.com" alt="FARFETCH" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/zalando.com" alt="Zalando" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/gucci.com" alt="Gucci" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo wide" href="https://ralphlauren.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/ralphlauren.com" alt="Ralph Lauren" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo wide" href="https://calvinklein.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/calvinklein.com" alt="Calvin Klein" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo wide" href="https://hugoboss.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/hugoboss.com" alt="HUGO BOSS" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo wide" href="https://thenorthface.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/thenorthface.com" alt="The North Face" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo wide" href="https://newbalance.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/newbalance.com" alt="New Balance" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/ebay.com" alt="eBay" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <!-- duplicate set for seamless infinite scroll -->
+      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/zara.com" alt="ZARA" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/hm.com" alt="H&M" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/asos.com" alt="ASOS" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/nike.com" alt="Nike" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/adidas.com" alt="Adidas" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo wide" href="https://amazon.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/amazon.com" alt="Amazon" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/shein.com" alt="SHEIN" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/mango.com" alt="Mango" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/uniqlo.com" alt="UNIQLO" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://levi.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/levi.com" alt="Levi's" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/puma.com" alt="PUMA" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/gap.com" alt="GAP" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/gucci.com" alt="Gucci" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo wide" href="https://ralphlauren.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/ralphlauren.com" alt="Ralph Lauren" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
+      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener"><img src="https://logo.clearbit.com/farfetch.com" alt="FARFETCH" loading="lazy" onerror="this.parentElement.style.display='none'"></a>
     </div>
   </div>
   <p class="logos-count" data-i18n="logos_count">Works on <b>500+ stores</b> worldwide &mdash; anywhere you shop</p>
