@@ -202,6 +202,21 @@ services:
     scope: RUN_AND_BUILD_TIME
     type: SECRET
     value: EV[1:5+BsDqodwMj7xR8C72lz4dNIsvWMj+RQ:MM1EHZD5FMfPECXutqYeh+A9Y4leQmiITWfLOFuD+dGcjcVGJ/BLCkEf/BhtlAtnMGDIf6GEDOBIsgTOykJR5p8g1bQmSRe9JSMhlvcpWGEzESZnqOEkXFnbc6VZTjMzxygcEXUKb39GLxqvSHEcxXC5pYY35i5I1USKqnMpUZCjsvF2+Ye8sdakEi7QEd47r7tHraRW36kem+E63FJm3DcKiZvh7//w3CSIsNo9uGhueUPfOMLILsPTEL7x81glfroMPHDB4Tg4CbZTLA7x3q35gcvcTy/WeJyaRJrkfA==]
+  # ─── PayPlus (set values in DO dashboard after receiving credentials) ────
+  - key: PAYPLUS_API_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: REPLACE_WITH_PAYPLUS_API_KEY
+  - key: PAYPLUS_SECRET_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+    value: REPLACE_WITH_PAYPLUS_SECRET_KEY
+  - key: PAYPLUS_TERMINAL_UID
+    scope: RUN_AND_BUILD_TIME
+    value: REPLACE_WITH_PAYPLUS_TERMINAL_UID
+  - key: PAYPLUS_PAGE_UID
+    scope: RUN_AND_BUILD_TIME
+    value: REPLACE_WITH_PAYPLUS_PAGE_UID
   github:
     branch: main
     deploy_on_push: true

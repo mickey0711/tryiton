@@ -41,6 +41,7 @@ import whatsappRouter from "./routes/whatsapp";
 import messengerRouter from "./routes/messenger";
 import chatRouter from "./routes/chat";
 import tryonDirectRouter from "./routes/tryonDirect";
+import payplusRouter from "./routes/payplus";
 
 const app = express();
 
@@ -93,8 +94,9 @@ app.use(
 );
 
 // ─── Body parsing ──────────────────────────────────────────────────────────────
-// Stripe webhook needs raw body — mount it BEFORE json parsing
+// Webhook routes need raw body for HMAC signature verification — BEFORE json()
 app.use("/payments/webhook", express.raw({ type: "application/json" }));
+app.use("/payplus/webhook",  express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
@@ -137,6 +139,7 @@ app.use("/whatsapp", whatsappRouter);
 app.use("/messenger", messengerRouter);
 app.use("/chat", chatRouter);
 app.use("/fit/tryon-direct", tryonDirectRouter);
+app.use("/payplus", payplusRouter);
 app.use("/", legalRouter);
 
 // ─── HTML pages — no-cache headers ───────────────────────────────────────────

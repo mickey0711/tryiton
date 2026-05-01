@@ -255,6 +255,32 @@ const MIGRATIONS = [
   ALTER TABLE assets
     ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
     `,
+
+    // 010: Address, PayPlus billing, payments history
+    `
+  ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS address          JSONB    DEFAULT '{}',
+    ADD COLUMN IF NOT EXISTS payplus_customer_id   TEXT,
+    ADD COLUMN IF NOT EXISTS payplus_subscription_id TEXT,
+    ADD COLUMN IF NOT EXISTS payplus_plan          TEXT,
+    ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
+
+  CREATE TABLE IF NOT EXISTS payments (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider        TEXT NOT NULL DEFAULT 'payplus',
+    transaction_id  TEXT,
+    subscription_id TEXT,
+    plan            TEXT NOT NULL,
+    amount          NUMERIC NOT NULL,
+    currency        TEXT NOT NULL DEFAULT 'ILS',
+    status          TEXT NOT NULL DEFAULT 'pending',
+    payload         JSONB DEFAULT '{}',
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+  CREATE INDEX IF NOT EXISTS payments_user_idx ON payments(user_id);
+  CREATE INDEX IF NOT EXISTS payments_txn_idx  ON payments(transaction_id);
+    `,
 ];
 
 export async function runMigrations() {
