@@ -12,6 +12,7 @@ if (process.env.SENTRY_DSN) {
 
 import express from "express";
 import path from "path";
+import fs from "fs";
 import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
@@ -103,6 +104,25 @@ app.use(
     })
 );
 
+// ─── Static files (images, _next/static/ JS/CSS chunks, etc.) ────────────────
+// MUST be before route handlers — otherwise /_next requests fall through to 404
+const publicDir = path.resolve(__dirname, "../public");
+app.use(express.static(publicDir, { index: false }));
+
+// ─── Debug endpoint (temporary — remove after confirming _next serving works) ─
+app.get("/debug-public", (_req, res) => {
+    const chunksDir = path.join(publicDir, "_next", "static", "chunks");
+    res.json({
+        publicDir,
+        __dirname,
+        cwd: process.cwd(),
+        publicExists: fs.existsSync(publicDir),
+        nextExists: fs.existsSync(path.join(publicDir, "_next")),
+        files: fs.existsSync(publicDir) ? fs.readdirSync(publicDir) : [],
+        chunkSample: fs.existsSync(chunksDir) ? fs.readdirSync(chunksDir).slice(0, 5) : [],
+    });
+});
+
 // ─── Routes ────────────────────────────────────────────────────────────────────
 app.use("/health", healthRouter);
 app.use("/auth", authRouter);
@@ -126,11 +146,6 @@ app.use("/messenger", messengerRouter);
 app.use("/chat", chatRouter);
 app.use("/fit/tryon-direct", tryonDirectRouter);
 app.use("/", legalRouter);
-
-// ─── Static files (images, _next/static/ JS/CSS chunks, etc.) ────────────────
-const publicDir = path.resolve(__dirname, "../public");
-// Serve all static assets including _next/ — cacheable
-app.use(express.static(publicDir, { index: false }));
 
 // ─── HTML pages — no-cache headers ───────────────────────────────────────────
 const noCacheHtml = (_req: any, res: any, next: any) => {
