@@ -108,6 +108,10 @@ app.use(
 // MUST be before route handlers — otherwise /_next requests fall through to 404
 const publicDir = path.resolve(__dirname, "../public");
 app.use(express.static(publicDir, { index: false }));
+// DO App Platform ingress strips the /_next prefix before forwarding to this service,
+// so the browser's /_next/static/chunks/... arrives here as /static/chunks/...
+// Second static root points at publicDir/_next so these stripped paths resolve.
+app.use(express.static(path.join(publicDir, "_next"), { index: false }));
 
 // ─── Debug endpoint (temporary — remove after confirming _next serving works) ─
 app.get("/debug-public", (_req, res) => {
