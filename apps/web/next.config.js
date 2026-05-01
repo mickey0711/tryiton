@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+// Rebuild trigger: force fresh DO CDN upload of all page HTML files
 const nextConfig = {
     output: "export",       // Static export — served from DO CDN
     trailingSlash: false,   // generates login.html — _redirects rewrites /login → /login.html
