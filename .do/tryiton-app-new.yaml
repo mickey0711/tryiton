@@ -16,9 +16,9 @@ features:
 
 ingress:
   rules:
-  # Next.js static assets (must be first)
+  # Next.js static assets — served from Express (DO CDN doesn't upload _next/static/)
   - component:
-      name: web
+      name: tryiton
     match:
       path:
         prefix: /_next
@@ -53,6 +53,42 @@ ingress:
     match:
       path:
         prefix: /auth
+  # .html versions of Next.js pages (CDN path-segment prefix won't match /login.html via /login rule)
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /login.html
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /register.html
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /saved.html
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /account.html
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /s.html
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /auth/success.html
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /404.html
   # Everything else → Express (original landing page + API)
   - component:
       name: tryiton
@@ -81,7 +117,7 @@ static_sites:
 
 services:
 - build_command: |
-    npm install --include=dev
+    npm install --include=dev && cd apps/web && npm install && npm run build && cd ../.. && mkdir -p services/api/public && cp -r apps/web/out/_next services/api/public/
   environment_slug: node-js
   envs:
   - key: JWT_SECRET
