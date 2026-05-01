@@ -1526,17 +1526,7 @@ async function handleSignOut(){
   closeUserMenu();
 }
 
-function openSection(s){
-  closeUserMenu();
-  const routes = {
-    profile:  '/account/profile',
-    billing:  '/account/billing',
-    address:  '/account/address',
-    photos:   '/account/photos',
-    settings: '/account/settings',
-  };
-  if(routes[s]) window.location.href = routes[s];
-}
+// openSection defined later in the file — do not duplicate here
 
 // Load user from token on page load
 async function initUserMenu(){
