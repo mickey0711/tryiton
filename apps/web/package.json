@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev -p 3000",
-        "build": "if [ -d '../../services/api/public/_next' ]; then mkdir -p out && cp -r ../../services/api/public/. out/ && echo 'Used pre-built assets from services/api/public'; else next build; fi",
+        "build": "if [ -d '../../services/api/public/_next' ]; then mkdir -p out && for f in login.html register.html saved.html account.html s.html; do cp ../../services/api/public/$f out/$f; done && cp -r ../../services/api/public/auth out/ && cp -r ../../services/api/public/_next out/ && cp spa-shell.html out/index.html && echo 'Used pre-built assets'; else next build; fi",
         "start": "next start"
     },
     "dependencies": {
