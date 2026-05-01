@@ -20,6 +20,17 @@ import { AtmosphereScreen } from "./screens/AtmosphereScreen";
 
 export type Screen = "onboarding" | "ready" | "loading" | "result" | "outfit" | "vibe" | "price" | "pose" | "wishlist" | "settings" | "photos" | "size" | "space-upload" | "space-result" | "chat" | "atmosphere";
 
+// ─── Side-panel mode: redirect window.close() → postMessage to content script ──
+// When popup.html is loaded as an iframe by content-script (left side panel),
+// window.close() would try to close the browser tab — bad. Instead we post a
+// TRYITON_CLOSE_PANEL message that the content script catches and removes the panel.
+if (window !== window.top) {
+    window.close = () => {
+        try { window.parent.postMessage({ type: "TRYITON_CLOSE_PANEL" }, "*"); }
+        catch { /* parent may be gone */ }
+    };
+}
+
 // ─── Error Boundary ────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component<{ children: React.ReactNode }, { error: Error | null }> {
     state = { error: null };

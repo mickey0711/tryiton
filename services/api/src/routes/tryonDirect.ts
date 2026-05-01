@@ -98,6 +98,29 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         }
 
         const prediction = await predRes.json();
+        logger.info({ predictionId: prediction.id, status: prediction.status }, "Replicate prediction created");
+
+        // Handle immediate failure from Replicate
+        if (prediction.error) {
+            logger.error({ predictionError: prediction.error }, "Replicate returned error in prediction body");
+            return res.status(503).json({
+                error: "REPLICATE_ERROR",
+                message: `AI model error: ${prediction.error}`,
+            });
+        }
+        if (prediction.status === "failed" || prediction.status === "canceled") {
+            return res.status(503).json({
+                error: "REPLICATE_ERROR",
+                message: prediction.error ?? "AI generation failed immediately. Please try again.",
+            });
+        }
+        if (!prediction.id) {
+            logger.error({ prediction }, "Replicate prediction missing id");
+            return res.status(503).json({
+                error: "REPLICATE_ERROR",
+                message: "AI service returned an unexpected response. Please try again.",
+            });
+        }
 
         // If Replicate returned result immediately (Prefer: wait)
         if (prediction.status === "succeeded") {
@@ -111,8 +134,12 @@ router.post("/", async (req: Request, res: Response, next: NextFunction) => {
         const resultUrl = await replicatePoll(prediction.id, token);
         logger.info({ predictionId: prediction.id, category }, "Try-on completed via poll");
         res.json({ result_url: resultUrl, fit_score: Math.floor(75 + Math.random() * 20) });
-    } catch (err) {
-        next(err);
+    } catch (err: any) {
+        logger.error({ errMsg: err?.message, stack: err?.stack }, "tryon-direct unhandled error");
+        return res.status(500).json({
+            error: "INTERNAL_ERROR",
+            message: err?.message ?? "An unexpected error occurred",
+        });
     }
 });
 

@@ -4,6 +4,8 @@
 const API_BASE = "https://tryit4u.ai";
 const BUTTON_ID = "tryiton-floating-btn";
 const OVERLAY_ID = "tryiton-select-overlay";
+const PANEL_ID = "tryiton-side-panel";
+const PANEL_STYLES_ID = "tryiton-panel-styles";
 
 
 // ─── Product Image Scoring ─────────────────────────────────────────────────────
@@ -220,6 +222,126 @@ const CAT_INFO: Record<TryOnCategory, { icon: string; label: string }> = {
     other:       { icon: "📦", label: "Other" },
 };
 
+// ─── Side Panel ────────────────────────────────────────────────────────────────
+
+function ensurePanelStyles() {
+    if (document.getElementById(PANEL_STYLES_ID)) return;
+    const style = document.createElement("style");
+    style.id = PANEL_STYLES_ID;
+    style.textContent = `
+        @keyframes tryiton-slide-in {
+            from { transform: translateY(-50%) translateX(-105%); opacity: 0; }
+            to   { transform: translateY(-50%) translateX(0);     opacity: 1; }
+        }
+        @keyframes tryiton-slide-out {
+            from { transform: translateY(-50%) translateX(0);     opacity: 1; }
+            to   { transform: translateY(-50%) translateX(-105%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function setBtnLabel(text: string) {
+    const btn = document.getElementById(BUTTON_ID) as HTMLElement | null;
+    if (!btn) return;
+    const lbl = btn.querySelector(".tryiton-label") as HTMLElement | null;
+    if (lbl) lbl.textContent = text;
+}
+
+function defaultBtnLabel(): string {
+    const cat = getCachedCategory();
+    const info = CAT_INFO[cat];
+    const isSpace = ["furniture","electronics","lighting","plants","garden","kitchen"].includes(cat);
+    return isSpace ? "Place in Space" : `Try on ${info.label}`;
+}
+
+function closePanel() {
+    const panel = document.getElementById(PANEL_ID) as HTMLElement | null;
+    if (!panel) return;
+    panel.style.animation = "tryiton-slide-out 0.22s ease-in forwards";
+    setTimeout(() => panel.remove(), 240);
+    setBtnLabel(defaultBtnLabel());
+}
+
+function openPanel(src: string, category: string, specs: object) {
+    // If already open — close it (toggle)
+    if (document.getElementById(PANEL_ID)) {
+        closePanel();
+        return;
+    }
+
+    ensurePanelStyles();
+
+    // Notify background so popup finds the product on load
+    try {
+        chrome.runtime.sendMessage({ type: "PRODUCT_DETECTED", src, category, specs });
+    } catch { /* extension context invalidated */ }
+
+    const panel = document.createElement("div");
+    panel.id = PANEL_ID;
+    panel.style.cssText = [
+        "position:fixed",
+        "left:0",
+        "top:50%",
+        "transform:translateY(-50%)",
+        "width:400px",
+        "height:min(760px,100vh)",
+        "z-index:2147483646",
+        "border-radius:0 20px 20px 0",
+        "box-shadow:8px 0 48px rgba(0,0,0,0.75),0 0 0 1px rgba(99,102,241,0.35)",
+        "overflow:hidden",
+        "background:#0d0c18",
+        "animation:tryiton-slide-in 0.25s ease-out forwards",
+    ].join(";");
+
+    // Iframe fills the panel completely — border-radius clipped by overflow:hidden
+    const iframe = document.createElement("iframe");
+    iframe.src = chrome.runtime.getURL("popup.html");
+    iframe.allow = "camera; microphone";
+    iframe.style.cssText = "width:100%;height:100%;border:none;display:block;background:transparent;";
+    panel.appendChild(iframe);
+
+    // Floating close button (overlaid top-right of panel)
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "✕";
+    closeBtn.setAttribute("aria-label", "Close TryItOn panel");
+    closeBtn.style.cssText = [
+        "position:absolute",
+        "top:10px",
+        "right:10px",
+        "z-index:10",
+        "width:26px",
+        "height:26px",
+        "border-radius:50%",
+        "background:rgba(255,255,255,0.12)",
+        "border:1px solid rgba(255,255,255,0.18)",
+        "color:white",
+        "font-size:12px",
+        "cursor:pointer",
+        "display:flex",
+        "align-items:center",
+        "justify-content:center",
+        "backdrop-filter:blur(6px)",
+        "pointer-events:auto",
+        "line-height:1",
+        "padding:0",
+    ].join(";");
+    closeBtn.addEventListener("click", closePanel);
+    panel.appendChild(closeBtn);
+
+    document.body.appendChild(panel);
+    setBtnLabel("✕ Close");
+
+    // Listen for close message posted from inside the iframe (window.close override)
+    const handleMsg = (e: MessageEvent) => {
+        if (e.data?.type === "TRYITON_CLOSE_PANEL") {
+            window.removeEventListener("message", handleMsg);
+            closePanel();
+        }
+    };
+    window.addEventListener("message", handleMsg);
+}
+
 // ─── Floating Button ───────────────────────────────────────────────────────────
 
 function createButton() {
@@ -231,10 +353,17 @@ function createButton() {
 
     const btn = document.createElement("div");
     btn.id = BUTTON_ID;
-    btn.innerHTML = `
-    <div class="tryiton-icon">${info.icon}</div>
-    <span class="tryiton-label">${isSpace ? `Place in Space` : `Try on ${info.label}`}</span>
-  `;
+
+    const iconEl = document.createElement("div");
+    iconEl.className = "tryiton-icon";
+    iconEl.textContent = info.icon;
+
+    const labelEl = document.createElement("span");
+    labelEl.className = "tryiton-label";
+    labelEl.textContent = isSpace ? "Place in Space" : `Try on ${info.label}`;
+
+    btn.appendChild(iconEl);
+    btn.appendChild(labelEl);
 
     Object.assign(btn.style, {
         position: "fixed",
@@ -277,11 +406,7 @@ function createButton() {
         const category = getCachedCategory();
         const specs = detectProductSpecs();
         if (src) {
-            try {
-                chrome.runtime.sendMessage({ type: "PRODUCT_DETECTED", src, category, specs });
-            } catch {
-                // Extension context invalidated after reload — user needs to refresh
-            }
+            openPanel(src, category, specs);
         } else {
             startManualSelection();
         }

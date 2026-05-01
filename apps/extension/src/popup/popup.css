@@ -81,7 +81,7 @@
 body {
   font-family: 'Inter', system-ui, sans-serif;
   color: var(--text);
-  width: 520px;
+  width: 400px;
   height: 760px;
   overflow: hidden;
   background: #0d0c18;
@@ -90,7 +90,7 @@ body {
 }
 
 .app {
-  width: 520px;
+  width: 400px;
   height: 760px;
   display: flex;
   flex-direction: column;
