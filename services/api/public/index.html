@@ -395,7 +395,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
     <div class="user-menu-wrap" id="user-menu-wrap">
       <!-- BUG-02 FIX: Sign In button directly in navbar, outside hidden dropdown -->
       <button id="nav-signin-btn" onclick="openSignIn('login')" aria-label="Sign In" style="display:flex;align-items:center;gap:6px;padding:7px 16px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);border-radius:100px;color:#a78bfa;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;transition:.2s" onmouseover="this.style.background='rgba(124,58,237,.3)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">🔑 Sign In</button>
-      <button class="user-avatar" id="user-avatar-btn" onclick="toggleUserMenu()" aria-label="User account menu" aria-haspopup="true" aria-expanded="false">
+      <button class="user-avatar" id="user-avatar-btn" onclick="toggleUserMenu()" aria-label="User account menu" aria-haspopup="true" aria-expanded="false" style="display:none">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       </button>
       <div class="user-dropdown" id="user-dropdown" role="menu" aria-label="User account menu">
@@ -1492,6 +1492,28 @@ function closeUserMenu(){
 
 function showLoggedIn(user){
   currentUser = user;
+  // Swap navbar: hide Sign In, show avatar button
+  const signinBtn = document.getElementById('nav-signin-btn');
+  const avatarBtn = document.getElementById('user-avatar-btn');
+  if(signinBtn) signinBtn.style.display = 'none';
+  if(avatarBtn){
+    avatarBtn.style.display = 'flex';
+    // Show initials or profile picture inside the avatar button
+    const initial = (user.full_name || user.name || user.email || '?')[0].toUpperCase();
+    if(user.picture){
+      avatarBtn.style.backgroundImage = 'url('+user.picture+')';
+      avatarBtn.style.backgroundSize = 'cover';
+      avatarBtn.style.backgroundPosition = 'center';
+      avatarBtn.innerHTML = '';
+    } else {
+      avatarBtn.style.backgroundImage = 'none';
+      avatarBtn.style.fontSize = '14px';
+      avatarBtn.style.fontWeight = '700';
+      avatarBtn.style.color = '#fff';
+      avatarBtn.textContent = initial;
+    }
+  }
+  // Update dropdown
   document.getElementById('ud-guest').style.display = 'none';
   document.getElementById('ud-loggedin').style.display = 'block';
   const maskedEl = document.getElementById('ud-email-masked');
@@ -1499,7 +1521,7 @@ function showLoggedIn(user){
   emailRevealed = false;
   const planEl = document.getElementById('ud-plan-name');
   if(planEl){
-    const planLabels = { admin:'✨ Admin — Unlimited', pro:'Pro Plan – Monthly', free:'Free Plan' };
+    const planLabels = { admin:'✨ Admin — Unlimited', elite:'⚡ Pro Plus — ₪149/mo', pro:'🚀 Pro Basic — ₪69/mo', free:'Free Plan' };
     planEl.textContent = planLabels[user.plan] || user.plan || 'Free Plan';
   }
 }
@@ -1520,7 +1542,17 @@ async function handleSignOut(){
   localStorage.removeItem('accessToken');
   localStorage.removeItem('tryiton_refresh');
   localStorage.removeItem('tryiton_user');
+  localStorage.removeItem('tryiton_google_user');
   currentUser = null;
+  // Restore navbar to guest state
+  const signinBtn = document.getElementById('nav-signin-btn');
+  const avatarBtn = document.getElementById('user-avatar-btn');
+  if(signinBtn) signinBtn.style.display = 'flex';
+  if(avatarBtn){
+    avatarBtn.style.display = 'none';
+    avatarBtn.style.backgroundImage = 'none';
+    avatarBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+  }
   document.getElementById('ud-guest').style.display = 'block';
   document.getElementById('ud-loggedin').style.display = 'none';
   closeUserMenu();
