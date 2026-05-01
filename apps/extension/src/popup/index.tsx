@@ -48,7 +48,7 @@ export interface JobResult {
     productSrc: string | null;
 }
 
-const API_BASE = "https://tryiton-app-f32z6.ondigitalocean.app";
+const API_BASE = "https://tryit4u.ai";
 
 function App() {
     const [screen, setScreen] = useState<Screen>("onboarding");
@@ -572,6 +572,10 @@ async function getReplicateToken(): Promise<string> {
 
 async function uploadBase64(token: string, b64: string, type: string): Promise<string> {
     const blob = b64ToBlob(b64);
+
+    // Compute actual SHA256 hash before uploading
+    const sha256 = await computeSHA256(blob);
+
     const presignRes = await fetch(`${API_BASE}/assets/presign`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -582,7 +586,7 @@ async function uploadBase64(token: string, b64: string, type: string): Promise<s
     const confirmRes = await fetch(`${API_BASE}/assets/confirm`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ s3_key, type, sha256: "placeholder", width: 512, height: 512, mime: "image/jpeg" }),
+        body: JSON.stringify({ s3_key, type, sha256, width: 512, height: 512, mime: "image/jpeg" }),
     });
     const { id } = await confirmRes.json();
     return id;
@@ -627,6 +631,13 @@ function b64ToBlob(b64: string): Blob {
     const buf = new Uint8Array(bytes.length);
     for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i);
     return new Blob([buf], { type: mime });
+}
+
+async function computeSHA256(blob: Blob): Promise<string> {
+    const arrayBuffer = await blob.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 // ─── Mount ─────────────────────────────────────────────────────────────────────

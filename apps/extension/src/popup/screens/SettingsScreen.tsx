@@ -12,7 +12,7 @@ interface UserStatus {
     referralUses: number;
 }
 
-const API_BASE = "http://localhost:8080";
+const API_BASE = "https://tryit4u.ai";
 
 export function SettingsScreen({ onBack, token }: Props) {
     const [status, setStatus]           = useState<UserStatus | null>(null);
@@ -120,10 +120,10 @@ export function SettingsScreen({ onBack, token }: Props) {
                                 <div style={{ fontSize: 22, fontWeight: 700, color: "#fbbf24" }}>{status?.credits ?? 0}</div>
                             </div>
                         </div>
-                        {status?.plan !== "pro" && (
+                        {status?.plan !== "pro" && status?.plan !== "elite" && (
                             <button className="btn btn-primary" style={{ fontSize: 11, padding: "8px 0" }}
-                                onClick={() => showToast("Upgrade coming soon — set up Stripe first")}>
-                                ⚡ Upgrade to Pro — $19.90/mo
+                                onClick={() => window.open("https://tryit4u.ai/account#billing", "_blank")}>
+                                ⚡ Upgrade to Pro — ₪69/mo
                             </button>
                         )}
                     </div>

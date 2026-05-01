@@ -1,7 +1,7 @@
 // Content Script — TryItOn
 // Injects floating "Will this fit me?" button, detects product image and category
 
-const API_BASE = "https://tryiton-app-f32z6.ondigitalocean.app";
+const API_BASE = "https://tryit4u.ai";
 const BUTTON_ID = "tryiton-floating-btn";
 const OVERLAY_ID = "tryiton-select-overlay";
 
