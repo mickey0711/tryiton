@@ -7,12 +7,26 @@
 // and must be set via the options/setup flow before use.
 
 chrome.runtime.onInstalled.addListener(() => {
+    // Disable the default popup so toolbar icon click fires onClicked instead
+    chrome.action.setPopup({ popup: "" });
     // Token is set via the popup settings or provisioned separately — not hardcoded
     chrome.storage.local.get(['replicateToken'], (result) => {
         if (!result.replicateToken) {
             console.warn('[TryItOn] Replicate token not set. Configure via extension options.');
         }
     });
+});
+
+// Also clear popup on service worker startup (persists across sessions)
+chrome.action.setPopup({ popup: "" });
+
+// ─── Toolbar icon click → toggle side panel on active tab ────────────────────
+chrome.action.onClicked.addListener((tab) => {
+    if (tab.id) {
+        chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_PANEL" }).catch(() => {
+            // Content script not injected yet on this page — ignore
+        });
+    }
 });
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -28,10 +42,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         lastProductSrc = msg.src;
         lastProductCategory = msg.category ?? "tops";
         lastProductSpecs = msg.specs ?? null;
-        // Try to open popup — may not be available in all contexts, ignore errors
-        if (chrome.action?.openPopup) {
-            chrome.action.openPopup().catch(() => { /* not available */ });
-        }
         sendResponse({ ok: true });
         return true;
     }

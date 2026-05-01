@@ -523,4 +523,14 @@ setTimeout(createButton, 1200);
 // Listen for messages from popup/background
 chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === "START_MANUAL_SELECT") startManualSelection();
+    if (msg.type === "TOGGLE_PANEL") {
+        const existing = document.getElementById(PANEL_ID);
+        if (existing) {
+            closePanel();
+        } else {
+            const category = getCachedCategory();
+            const specs = detectProductSpecs();
+            openPanel(chrome.runtime.getURL("popup.html"), category, specs);
+        }
+    }
 });

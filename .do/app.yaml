@@ -34,6 +34,24 @@ services:
       - path: /oauth
       - path: /health
       - path: /me
+      - path: /fit
+      - path: /assets
+      - path: /products
+      - path: /library
+      - path: /share
+      - path: /newsletter
+      - path: /referral
+      - path: /payments
+      - path: /payplus
+      - path: /prices
+      - path: /size
+      - path: /space
+      - path: /privacy
+      - path: /legal
+      - path: /admin
+      - path: /whatsapp
+      - path: /chat
+      - path: /messenger
     envs:
       - key: NODE_ENV
         value: production
@@ -83,6 +101,9 @@ services:
         value: https://tryit4u.ai,chrome-extension://
       - key: JWT_EXPIRES_IN
         value: 7d
+      - key: REPLICATE_API_TOKEN
+        scope: RUN_TIME
+        type: SECRET
     health_check:
       http_path: /health
       period_seconds: 30
