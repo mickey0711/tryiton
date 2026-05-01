@@ -53,11 +53,11 @@
   <!-- ─── HEBREW ─────────────────────────────────────────────────────────── -->
   <div id="lang-he" dir="rtl">
     <h1>מדיניות פרטיות</h1>
-    <p class="effective">בתוקף מ-21 במרץ 2025 | עודכן לאחרונה: 21 במרץ 2025</p>
+    <p class="effective">בתוקף מ-21 במרץ 2025 | עודכן לאחרונה: אפריל 2026</p>
 
     <div class="highlight">
-      <strong>📸 הבטחה עיקרית:</strong> תמונותיך ופרטיך האישיים שייכים לך בלבד. 
-      אנו אף פעם לא מוכרים, משתפים, או משתמשים בהם לצורכי פרסום, אימון מודלים, 
+      <strong>📸 הבטחה עיקרית:</strong> תמונותיך ופרטיך האישיים שייכים לך בלבד.
+      אנו אף פעם לא מוכרים, משתפים, או משתמשים בהם לצורכי פרסום, אימון מודלים,
       או כל מטרה אחרת מלבד מתן השירות שביקשת.
     </div>
 
@@ -70,11 +70,25 @@
       <tr><td>תמונת פרופיל</td><td>תמונת גוף/פנים שמועלית ע"י המשתמש</td><td>ביצוע try-on בלבד</td></tr>
       <tr><td>פרטי חשבון</td><td>שם, מייל, מספר טלפון</td><td>ניהול חשבון ותקשורת</td></tr>
       <tr><td>נתוני שימוש</td><td>מוצרים שנוסו, זמני שימוש</td><td>שיפור השירות</td></tr>
-      <tr><td>נתוני תשלום</td><td>לא נשמרים אצלנו — דרך Stripe בלבד</td><td>עיבוד תשלומים</td></tr>
+      <tr><td>נתוני תשלום</td><td>לא נשמרים אצלנו — דרך מעבד תשלומים מאובטח (PCI DSS)</td><td>עיבוד תשלומים</td></tr>
       <tr><td>Cookies</td><td>Session ו-Analytics אנונימי</td><td>שיפור חווית משתמש</td></tr>
     </table>
 
-    <h2>3. מה אנחנו לא עושים עם התמונות שלך</h2>
+    <h2>3. נתונים ביומטריים — תמונות פנים וגוף</h2>
+    <div class="highlight">
+      <strong>⚠️ מידע ביומטרי רגיש:</strong> תמונות הפנים והגוף שאתה מעלה עשויות להיחשב כנתונים ביומטריים לפי תקנות GDPR, וחוק BIPA (Illinois Biometric Information Privacy Act).
+    </div>
+    <p><strong>הסכמה מפורשת:</strong> עיבוד תמונות פנים/גוף מתבצע אך ורק לאחר הסכמתך המפורשת, לצורך מתן שירות ה-try-on בלבד.</p>
+    <p><strong>הגבלת מטרה:</strong> תמונות ביומטריות לא ישמשו לכל מטרה שאינה עיבוד ה-try-on שביקשת — לא לאימון מודלים, לא לזיהוי פנים, לא לפרסום.</p>
+    <p><strong>מדיניות מחיקה:</strong> כל נתון ביומטרי נמחק בתוך 30 יום ממחיקת החשבון, ולא יאוחר מ-3 שנים מתאריך העלאה אחרון, לפי המוקדם מביניהם. במקרה של בקשת מחיקה ידנית — תוך 30 יום.</p>
+    <ul>
+      <li>❌ לא מוכרים נתונים ביומטריים לצד שלישי</li>
+      <li>❌ לא מרוויחים כסף מנתונים ביומטריים</li>
+      <li>❌ לא נשמרים לאחר מחיקת החשבון</li>
+      <li>✅ ניתן לבקש מחיקה מיידית בכל עת: <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a></li>
+    </ul>
+
+    <h2>4. מה אנחנו לא עושים עם התמונות שלך</h2>
     <ul>
       <li>❌ לא מוכרים תמונות לצד שלישי כלשהו</li>
       <li>❌ לא משתמשים בתמונות לאימון מודלי AI ללא הסכמה מפורשת</li>
@@ -83,22 +97,23 @@
       <li>❌ לא שומרים תמונות לאחר מחיקת החשבון</li>
     </ul>
 
-    <h2>4. אחסון ואבטחה</h2>
-    <p>תמונות מוצפנות ומאוחסנות בשרתי Cloudflare R2 בתקן AES-256. גישה לתמונות מוגבלת בזמן ומחייבת אימות. כל תקשורת מוצפנת ב-TLS 1.3.</p>
+    <h2>5. אחסון ואבטחה</h2>
+    <p>תמונות מוצפנות ומאוחסנות בשרתי DigitalOcean Spaces + Cloudflare CDN בתקן AES-256. גישה לתמונות מוגבלת בזמן ומחייבת אימות. כל תקשורת מוצפנת ב-TLS 1.3.</p>
     <div class="highlight">
       <strong>🔒 אחסון מקומי:</strong> תמונת הפרופיל שלך נשמרת גם באופן מקומי בדפדפן שלך בלבד (chrome.storage.local) ואינה נשלחת לשום שרת ללא פעולה מפורשת שלך.
     </div>
 
-    <h2>5. שיתוף מידע עם צדדים שלישיים</h2>
+    <h2>6. שיתוף מידע עם צדדים שלישיים</h2>
     <table>
       <tr><th>ספק</th><th>מטרה</th><th>מה משותף</th></tr>
-      <tr><td>Stripe</td><td>עיבוד תשלומים</td><td>נתוני תשלום בלבד (ישירות)</td></tr>
-      <tr><td>Cloudflare R2</td><td>אחסון תמונות</td><td>תמונות מוצפנות</td></tr>
+      <tr><td>מעבד תשלומים מאובטח</td><td>עיבוד תשלומים</td><td>נתוני תשלום בלבד (ישירות)</td></tr>
+      <tr><td>DigitalOcean Spaces</td><td>אחסון תמונות</td><td>תמונות מוצפנות</td></tr>
       <tr><td>Replicate AI</td><td>עיבוד try-on</td><td>תמונה לעיבוד — לא נשמרת</td></tr>
       <tr><td>Resend</td><td>שליחת מיילים</td><td>כתובת מייל בלבד</td></tr>
+      <tr><td>OpenAI</td><td>צ'אט AI + יועץ מרחב</td><td>שאלות טקסט בלבד — ללא תמונות פרטיות</td></tr>
     </table>
 
-    <h2>6. זכויותיך (GDPR + חוק הגנת הפרטיות הישראלי)</h2>
+    <h2>7. זכויותיך (GDPR + CCPA)</h2>
     <ul>
       <li>✅ <strong>זכות עיון</strong> — ראה את כל הנתונים שנאספו עליך</li>
       <li>✅ <strong>זכות תיקון</strong> — תקן פרטים שגויים</li>
@@ -108,26 +123,40 @@
     </ul>
     <p>למחיקה מיידית: הגדרות → מחק חשבון, או שלח מייל ל: <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a></p>
 
-    <h2>7. שמירת מידע</h2>
+    <h2>8. זכויות תושבי קליפורניה (CCPA)</h2>
+    <p>תושבי קליפורניה זכאים לזכויות הבאות לפי California Consumer Privacy Act (CCPA):</p>
+    <ul>
+      <li>✅ <strong>זכות לדעת</strong> — לדעת אילו נתונים אישיים נאספו, לאיזה מטרה, ולמי הועברו</li>
+      <li>✅ <strong>זכות מחיקה</strong> — לבקש מחיקת נתונים אישיים שנאספו</li>
+      <li>✅ <strong>זכות סירוב למכירה</strong> — אנו אינם מוכרים נתונים אישיים. עם זאת, תוכל להפנות בקשה ל: <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a></li>
+      <li>✅ <strong>זכות אי-אפליה</strong> — לא תקבל שירות נחות בשל מימוש זכויותיך</li>
+    </ul>
+    <p>לשליחת בקשת CCPA: <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a> עם הכותרת "CCPA Request".</p>
+
+    <h2>9. שמירת מידע</h2>
     <ul>
       <li>תמונות: נשמרות כל עוד החשבון פעיל, נמחקות תוך 30 יום ממחיקת החשבון</li>
+      <li>נתונים אישיים: נשמרים לכל משך פעילות החשבון + 24 חודשים לאחר המחיקה לצורכי משפטיים</li>
       <li>נתוני חשבון: נשמרים 7 שנים לצורכי חשבונאות (חוק החשבונות)</li>
       <li>Logs: נשמרים 90 יום לצורכי אבטחה</li>
     </ul>
 
-    <h2>8. קטינים</h2>
-    <p>השירות אינו מיועד לבני פחות מ-16 שנים. אנו לא אוספים ביודעין מידע מקטינים. אם גילית שקטין נרשם — צור איתנו קשר מיד.</p>
+    <h2>10. קטינים</h2>
+    <p>השירות אינו מיועד לבני פחות מ-16 שנים. לתושבי ארה"ב: אנו אינם אוספים ביודעין מידע מילדים מתחת לגיל 13 בהתאם ל-COPPA (Children's Online Privacy Protection Act). אם גילית שילד מתחת לגיל 13 נרשם — צור איתנו קשר מיד ל: <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a> ונמחק את החשבון לאלתר.</p>
 
-    <h2>9. עוגיות (Cookies)</h2>
-    <p>אנו משתמשים בעוגיות חיוניות לתפעול האתר ובעוגיות אנליטיקה אנונימיות. תוכל לנהל העדפות עוגיות בכל עת.</p>
+    <h2>11. עוגיות (Cookies)</h2>
+    <p>אנו משתמשים בעוגיות חיוניות לתפעול האתר ובעוגיות אנליטיקה אנונימיות. תוכל לנהל העדפות עוגיות בכל עת. <a href="/cookies.html" style="color:var(--pl)">ראה מדיניות עוגיות מלאה</a>.</p>
 
-    <h2>10. שינויים במדיניות</h2>
+    <h2>12. Do Not Track</h2>
+    <p>אנו אינו מגיבים כרגע לאותות Do Not Track (DNT) מהדפדפן. ניתן לנהל העדפות מעקב דרך הגדרות הדפדפן שלך או דרך <a href="/cookies.html" style="color:var(--pl)">מדיניות העוגיות</a> שלנו.</p>
+
+    <h2>13. שינויים במדיניות</h2>
     <p>נודיע לך במייל על שינויים מהותיים 30 יום מראש. המשך שימוש בשירות לאחר מכן מהווה הסכמה.</p>
 
     <div class="contact-box">
       <strong>📧 יצירת קשר — פרטיות</strong><br><br>
       <p>ממונה הגנת הפרטיות: <a href="mailto:privacy@tryiton.ai">privacy@tryiton.ai</a></p>
-      <p>TryItOn Ltd. | ישראל</p>
+      <p>TryItOn Inc. | Delaware, USA</p>
       <p>זמן תגובה מרבי: 72 שעות</p>
     </div>
   </div>
@@ -135,11 +164,11 @@
   <!-- ─── ENGLISH ────────────────────────────────────────────────────────── -->
   <div id="lang-en" dir="ltr" style="display:none">
     <h1>Privacy Policy</h1>
-    <p class="effective">Effective: March 21, 2025 | Last updated: March 21, 2025</p>
+    <p class="effective">Effective: March 21, 2025 | Last updated: April 2026</p>
 
     <div class="highlight">
-      <strong>📸 Our Core Promise:</strong> Your photos and personal data belong to you alone. 
-      We never sell, share, or use them for advertising, AI model training, 
+      <strong>📸 Our Core Promise:</strong> Your photos and personal data belong to you alone.
+      We never sell, share, or use them for advertising, AI model training,
       or any purpose other than providing the service you requested.
     </div>
 
@@ -152,11 +181,25 @@
       <tr><td>Profile Photo</td><td>Body/face photo uploaded by user</td><td>Try-on processing only</td></tr>
       <tr><td>Account Details</td><td>Name, email, phone number</td><td>Account management</td></tr>
       <tr><td>Usage Data</td><td>Products tried, usage times</td><td>Service improvement</td></tr>
-      <tr><td>Payment Data</td><td>Not stored by us — via Stripe only</td><td>Payment processing</td></tr>
+      <tr><td>Payment Data</td><td>Not stored by us — via secure payment processor (PCI DSS)</td><td>Payment processing</td></tr>
       <tr><td>Cookies</td><td>Session and anonymous analytics</td><td>User experience</td></tr>
     </table>
 
-    <h2>3. What We Never Do With Your Photos</h2>
+    <h2>3. Biometric Data — Face &amp; Body Images</h2>
+    <div class="highlight">
+      <strong>⚠️ Sensitive Biometric Information:</strong> The face and body photos you upload may qualify as biometric data under GDPR, and the Illinois Biometric Information Privacy Act (BIPA).
+    </div>
+    <p><strong>Explicit Consent:</strong> We process face/body photos only with your explicit consent and solely for the purpose of delivering the try-on service you requested.</p>
+    <p><strong>Purpose Limitation:</strong> Biometric images will not be used for any purpose other than the try-on processing you initiated — not for model training, not for facial recognition, not for advertising.</p>
+    <p><strong>Deletion Policy:</strong> All biometric data is deleted within 30 days of account deletion, and no later than 3 years from the date of last upload, whichever comes first. For manual deletion requests, within 30 days.</p>
+    <ul>
+      <li>❌ We do not sell biometric data to any third party</li>
+      <li>❌ We do not profit from biometric data</li>
+      <li>❌ We do not retain biometric data after account deletion</li>
+      <li>✅ You may request immediate deletion at any time: <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a></li>
+    </ul>
+
+    <h2>4. What We Never Do With Your Photos</h2>
     <ul>
       <li>❌ Sell photos to any third party</li>
       <li>❌ Use photos to train AI models without explicit consent</li>
@@ -165,19 +208,23 @@
       <li>❌ Retain photos after account deletion</li>
     </ul>
 
-    <h2>4. Storage & Security</h2>
-    <p>Photos are encrypted at rest (AES-256) on Cloudflare R2 servers. Access is time-limited and requires authentication. All traffic is encrypted via TLS 1.3. We comply with SOC 2 security practices.</p>
+    <h2>5. Storage &amp; Security</h2>
+    <p>Photos are encrypted at rest (AES-256) on DigitalOcean Spaces, delivered via Cloudflare CDN. Access is time-limited and requires authentication. All traffic is encrypted via TLS 1.3. We comply with SOC 2 security practices.</p>
+    <div class="highlight">
+      <strong>🔒 Local Storage:</strong> Your profile photo is also stored locally in your browser only (chrome.storage.local) and is not sent to any server without your explicit action.
+    </div>
 
-    <h2>5. Third-Party Sharing</h2>
+    <h2>6. Third-Party Sharing</h2>
     <table>
       <tr><th>Provider</th><th>Purpose</th><th>What's Shared</th></tr>
-      <tr><td>Stripe</td><td>Payment processing</td><td>Payment data only (directly)</td></tr>
-      <tr><td>Cloudflare R2</td><td>Photo storage</td><td>Encrypted photos</td></tr>
+      <tr><td>Secure Payment Processor</td><td>Payment processing</td><td>Payment data only (directly)</td></tr>
+      <tr><td>DigitalOcean Spaces</td><td>Photo storage</td><td>Encrypted photos</td></tr>
       <tr><td>Replicate AI</td><td>Try-on processing</td><td>Photo for processing — not retained</td></tr>
       <tr><td>Resend</td><td>Email delivery</td><td>Email address only</td></tr>
+      <tr><td>OpenAI</td><td>AI chat &amp; space advisor</td><td>Text queries only — no private photos</td></tr>
     </table>
 
-    <h2>6. Your Rights (GDPR & Israeli Privacy Law)</h2>
+    <h2>7. Your Rights (GDPR &amp; CCPA)</h2>
     <ul>
       <li>✅ <strong>Right of Access</strong> — View all data collected about you</li>
       <li>✅ <strong>Right of Rectification</strong> — Correct inaccurate data</li>
@@ -185,30 +232,48 @@
       <li>✅ <strong>Right to Data Portability</strong> — Receive a copy of your data</li>
       <li>✅ <strong>Right to Object</strong> — Withdraw consent at any time</li>
     </ul>
+    <p>For immediate deletion: Settings → Delete Account, or email: <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a></p>
 
-    <h2>7. Retention</h2>
+    <h2>8. California Consumer Privacy Act (CCPA)</h2>
+    <p>California residents have the following rights under the CCPA:</p>
+    <ul>
+      <li>✅ <strong>Right to Know</strong> — Know what personal information is collected, why, and with whom it is shared</li>
+      <li>✅ <strong>Right to Delete</strong> — Request deletion of your personal information</li>
+      <li>✅ <strong>Right to Opt-Out of Sale</strong> — We do not sell personal data. To submit a Do Not Sell request anyway, email: <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a></li>
+      <li>✅ <strong>Right to Non-Discrimination</strong> — You will not receive inferior service for exercising your rights</li>
+    </ul>
+    <p>To submit a CCPA request: <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a> with subject line "CCPA Request".</p>
+
+    <h2>9. Data Retention</h2>
     <ul>
       <li>Photos: Retained while account is active, deleted within 30 days of account deletion</li>
+      <li>Personal data: Retained for the duration of account activity + 24 months after deletion for legal purposes</li>
       <li>Account data: Retained 7 years for accounting/legal compliance</li>
       <li>Logs: Retained 90 days for security purposes</li>
     </ul>
 
-    <h2>8. Minors</h2>
-    <p>Our service is not directed to persons under 16. If you learn a minor has registered, contact us immediately.</p>
+    <h2>10. Minors</h2>
+    <p>Our service is not directed to persons under 16. For US residents: we do not knowingly collect personal information from children under 13 in accordance with the Children's Online Privacy Protection Act (COPPA). If you learn that a child under 13 has registered, contact us immediately at <a href="mailto:privacy@tryiton.ai" style="color:var(--pl)">privacy@tryiton.ai</a> and we will delete the account promptly.</p>
 
-    <h2>9. Changes to This Policy</h2>
+    <h2>11. Cookies</h2>
+    <p>We use essential cookies for site operation and anonymous analytics cookies. You can manage cookie preferences at any time. <a href="/cookies.html" style="color:var(--pl)">See our full Cookie Policy</a>.</p>
+
+    <h2>12. Do Not Track</h2>
+    <p>We do not currently respond to Do Not Track (DNT) browser signals. You can manage tracking preferences through your browser settings or through our <a href="/cookies.html" style="color:var(--pl)">Cookie Policy</a>.</p>
+
+    <h2>13. Changes to This Policy</h2>
     <p>We'll notify you by email of material changes 30 days in advance. Continued use constitutes acceptance.</p>
 
     <div class="contact-box">
       <strong>📧 Privacy Contact</strong><br><br>
       <p>Data Protection Officer: <a href="mailto:privacy@tryiton.ai">privacy@tryiton.ai</a></p>
-      <p>TryItOn Ltd. | Israel</p>
+      <p>TryItOn Inc. | Delaware, USA</p>
       <p>Maximum response time: 72 hours</p>
     </div>
   </div>
 </div>
 
-<footer>© 2025 TryItOn Ltd. | <a href="/privacy.html" style="color:var(--m)">Privacy Policy</a> | <a href="/terms.html" style="color:var(--m)">Terms of Service</a></footer>
+<footer>© 2026 TryItOn Inc. | <a href="/privacy.html" style="color:var(--m)">Privacy Policy</a> | <a href="/terms.html" style="color:var(--m)">Terms of Service</a> | <a href="/cookies.html" style="color:var(--m)">Cookie Policy</a> | <a href="/accessibility.html" style="color:var(--m)">Accessibility</a></footer>
 
 <script>
 function showLang(lang){

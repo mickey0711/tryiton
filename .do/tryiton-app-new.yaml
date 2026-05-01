@@ -117,7 +117,7 @@ static_sites:
 
 services:
 - build_command: |
-    npm install --include=dev && cd apps/web && npm install && npm run build && cd ../.. && mkdir -p services/api/public && cp -r apps/web/out/_next services/api/public/
+    npm install --include=dev
   environment_slug: node-js
   envs:
   - key: JWT_SECRET

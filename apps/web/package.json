@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev -p 3000",
-        "build": "next build",
+        "build": "if [ -d '../../services/api/public/_next' ]; then mkdir -p out && cp -r ../../services/api/public/. out/ && echo 'Used pre-built assets from services/api/public'; else next build; fi",
         "start": "next start"
     },
     "dependencies": {
