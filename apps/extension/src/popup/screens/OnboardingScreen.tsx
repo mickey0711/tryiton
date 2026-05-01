@@ -120,8 +120,13 @@ async function extractMeasurements(b64: string): Promise<BodyMeasurements | null
 
 type Mode = "choose" | "camera" | "preview" | "bodyPrompt" | "bodyCapture" | "bodyAnalyzing";
 
+// Is this tab running in dedicated camera-capture mode? (opened by the side panel)
+const IS_CAPTURE_TAB = new URLSearchParams(window.location.search).get("capture") === "1";
+// Is this popup running inside an iframe (side panel)?
+const IN_IFRAME = window !== window.top;
+
 export function OnboardingScreen({ onProfileSaved, onLogin }: Props) {
-    const [mode, setMode] = useState<Mode>("choose");
+    const [mode, setMode] = useState<Mode>(IS_CAPTURE_TAB ? "camera" : "choose");
     const [preview, setPreview] = useState<string | null>(null);
     const [bodyPreview, setBodyPreview] = useState<string | null>(null);
     const [measurements, setMeasurements] = useState<BodyMeasurements | null>(null);
@@ -131,6 +136,27 @@ export function OnboardingScreen({ onProfileSaved, onLogin }: Props) {
     const streamRef = useRef<MediaStream | null>(null);
     const fileRef = useRef<HTMLInputElement>(null);
     const bodyFileRef = useRef<HTMLInputElement>(null);
+
+    // ── In side panel mode: listen for photo captured in the camera tab ─────────
+    React.useEffect(() => {
+        if (!IN_IFRAME) return;
+        const listener = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+            if (area === "local" && changes.pendingCapturedPhoto?.newValue) {
+                const photo = changes.pendingCapturedPhoto.newValue as string;
+                (chrome as any).storage.local.remove("pendingCapturedPhoto");
+                onProfileSaved(photo);
+            }
+        };
+        (chrome as any).storage.onChanged.addListener(listener);
+        return () => (chrome as any).storage.onChanged.removeListener(listener);
+    }, []);
+
+    // ── In capture-tab mode: start camera immediately on mount ──────────────────
+    React.useEffect(() => {
+        if (IS_CAPTURE_TAB) {
+            startCameraStream();
+        }
+    }, []);
 
     const handleOAuth = async (provider: "google" | "facebook") => {
         setAuthLoading(provider);
@@ -159,31 +185,55 @@ export function OnboardingScreen({ onProfileSaved, onLogin }: Props) {
         }
     };
 
-    const startCamera = async () => {
+    // Opens camera stream directly (works in popup tab / capture tab)
+    const startCameraStream = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: { ideal: 720 }, height: { ideal: 1280 }, facingMode: "user" },
             });
             streamRef.current = stream;
             setMode("camera");
+            // Give React time to render the <video> before attaching the stream
             setTimeout(() => {
-                if (videoRef.current) videoRef.current.srcObject = stream;
-            }, 100);
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.play().catch(() => {});
+                }
+            }, 150);
         } catch {
-            setError("Camera access denied. Please upload a photo instead.");
+            setError("Camera access denied. Please allow camera access or upload a photo instead.");
+        }
+    };
+
+    const startCamera = () => {
+        if (IN_IFRAME) {
+            // Side panel is an iframe — getUserMedia is blocked by Chrome in cross-origin iframes.
+            // Open a dedicated camera-capture tab instead.
+            const url = (chrome as any).runtime.getURL("popup.html") + "?capture=1";
+            (chrome as any).tabs.create({ url });
+        } else {
+            startCameraStream();
         }
     };
 
     const capture = () => {
         if (!videoRef.current) return;
         const canvas = document.createElement("canvas");
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
+        canvas.width = videoRef.current.videoWidth || 720;
+        canvas.height = videoRef.current.videoHeight || 1280;
         canvas.getContext("2d")?.drawImage(videoRef.current, 0, 0);
         const b64 = canvas.toDataURL("image/jpeg", 0.92);
         stopStream();
-        setPreview(b64);
-        setMode("preview");
+
+        if (IS_CAPTURE_TAB) {
+            // Running in dedicated camera tab — save photo to storage, panel will pick it up
+            (chrome as any).storage.local.set({ pendingCapturedPhoto: b64 }, () => {
+                window.close(); // close this tab and return to the side panel
+            });
+        } else {
+            setPreview(b64);
+            setMode("preview");
+        }
     };
 
     const stopStream = () => {
