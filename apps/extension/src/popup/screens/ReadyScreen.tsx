@@ -29,6 +29,7 @@ type CategoryValue = typeof CATEGORIES[number]["value"];
 
 interface Props {
     profileImage: string | null;
+    selfieCount?: number;         // total saved selfies
     productSrc: string | null;
     error: string | null;
     credits: number;
@@ -39,15 +40,15 @@ interface Props {
     onDeleteProfile: () => void;
     onPoseStudio: () => void;
     onSettings: () => void;
-    onMultiPhoto: () => void;
+    onMyPhotos: () => void;       // replaces onMultiPhoto
     onSizeAdvisor: () => void;
     currentPose?: string;
 }
 
 export function ReadyScreen({
-    profileImage, productSrc, error, credits,
+    profileImage, selfieCount = 0, productSrc, error, credits,
     initialCategory = "tops",
-    onGenerate, onSpaceMode, onSelectManually, onDeleteProfile, onPoseStudio, onSettings, onMultiPhoto, onSizeAdvisor,
+    onGenerate, onSpaceMode, onSelectManually, onDeleteProfile, onPoseStudio, onSettings, onMyPhotos, onSizeAdvisor,
     currentPose = "standing",
 }: Props) {
     const validInitial = CATEGORIES.find(c => c.value === initialCategory)?.value ?? "tops";
@@ -72,8 +73,19 @@ export function ReadyScreen({
                     {credits > 0 ? `${credits} left` : "Upgrade"}
                 </span>
                 {profileImage && (
-                    <img src={profileImage} alt="Your profile" className="profile-thumb"
-                        onClick={onMultiPhoto} style={{ cursor: "pointer" }} title="Manage photos" />
+                    <div style={{ position: "relative", cursor: "pointer" }} onClick={onMyPhotos} title="My selfie photos">
+                        <img src={profileImage} alt="Your profile" className="profile-thumb" />
+                        {selfieCount > 1 && (
+                            <div style={{
+                                position: "absolute", bottom: -2, right: -2,
+                                background: "rgba(124,58,237,0.95)", borderRadius: 10,
+                                padding: "1px 5px", fontSize: 8, fontWeight: 700,
+                                color: "white", lineHeight: 1.4, border: "1px solid rgba(255,255,255,0.15)",
+                            }}>
+                                {selfieCount}
+                            </div>
+                        )}
+                    </div>
                 )}
                 <button
                     onClick={onSettings}
@@ -149,8 +161,11 @@ export function ReadyScreen({
             </button>
 
             <div className="divider" />
-            <div style={{ display: "flex", justifyContent: "center" }}>
-                <button className="btn btn-danger" onClick={onDeleteProfile}>🗑 Remove my photo</button>
+            <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+                <button className="btn btn-ghost" style={{ fontSize: 11 }} onClick={onMyPhotos}>
+                    📸 My Photos {selfieCount > 0 ? `(${selfieCount})` : ""}
+                </button>
+                <button className="btn btn-danger" onClick={onDeleteProfile}>🗑 Remove</button>
             </div>
         </div>
     );

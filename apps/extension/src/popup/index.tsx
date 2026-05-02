@@ -11,7 +11,8 @@ import { PriceIntelligenceScreen } from "./screens/PriceIntelligenceScreen";
 import { PoseStudioScreen } from "./screens/PoseStudioScreen";
 import { WishlistScreen } from "./screens/WishlistScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
-import { MultiPhotoScreen } from "./screens/MultiPhotoScreen";
+import { MyPhotosScreen } from "./screens/MyPhotosScreen";
+import { SelfiePickerModal } from "./screens/SelfiePickerModal";
 import { SizeAdvisorScreen } from "./screens/SizeAdvisorScreen";
 import { SpaceUploadScreen } from "./screens/SpaceUploadScreen";
 import { SpaceResultScreen } from "./screens/SpaceResultScreen";
@@ -72,7 +73,8 @@ function App() {
     const [selectedPose, setSelectedPose] = useState<string>("standing");
     const [credits, setCredits] = useState<number>(-1); // -1 = unlimited (beta)
     const [accessToken, setAccessToken] = useState<string | null>(null);
-    const [profilePhotos, setProfilePhotos] = useState<string[]>([]);
+    const [selfies, setSelfies] = useState<string[]>([]);                        // selfie gallery (up to 10)
+    const [pendingCategory, setPendingCategory] = useState<string | null>(null); // triggers selfie picker
     // ── Space Intelligence state ────────────────────────────────────────────────────
     const [spaceCategory, setSpaceCategory] = useState<string>("furniture");
     const [spaceResult, setSpaceResult] = useState<{ resultUrl: string; advisorText: string; fitScore: number; category: string; productSrc: string | null } | null>(null);
@@ -80,15 +82,24 @@ function App() {
 
     // Load saved profile photo, product, and credits
     useEffect(() => {
-        chrome.storage.local.get(["profileImage", "tryitonCredits", "accessToken"], (data) => {
+        chrome.storage.local.get(["profileImage", "tryitonCredits", "accessToken", "selfies"], (data) => {
             if (chrome.runtime.lastError) return;
-            if (data.profileImage) setProfileImageB64(data.profileImage);
-            // -1 = unlimited (beta). If stored credits are 0 or less and user has no token, reset to unlimited.
+
+            // Load selfie gallery — migrate from old profileImage if no gallery yet
+            const storedSelfies: string[] = Array.isArray(data.selfies) ? data.selfies : [];
+            if (storedSelfies.length === 0 && data.profileImage) {
+                // Migrate: wrap old single photo into gallery
+                storedSelfies.push(data.profileImage);
+                chrome.storage.local.set({ selfies: storedSelfies });
+            }
+            setSelfies(storedSelfies);
+            if (storedSelfies.length > 0) setProfileImageB64(storedSelfies[0]);
+            else if (data.profileImage) setProfileImageB64(data.profileImage);
+
             const savedCredits = data.tryitonCredits;
             if (savedCredits !== undefined && savedCredits > 0) {
                 setCredits(savedCredits);
             } else {
-                // Beta: always give unlimited credits; reset exhausted counter
                 setCredits(-1);
                 chrome.storage.local.set({ tryitonCredits: -1 });
             }
@@ -131,19 +142,66 @@ function App() {
     }, [profileImageB64]);
 
     const handleProfileSaved = (b64: string) => {
-        chrome.storage.local.set({ profileImage: b64 });
+        // Add as new selfie (primary) if not already in gallery
+        setSelfies(prev => {
+            const next = prev.includes(b64) ? prev : [b64, ...prev].slice(0, 10);
+            chrome.storage.local.set({ selfies: next, profileImage: next[0] });
+            return next;
+        });
         setProfileImageB64(b64);
         setScreen("ready");
     };
 
+    const handleSaveSelfies = (newSelfies: string[]) => {
+        setSelfies(newSelfies);
+        const primary = newSelfies[0] ?? null;
+        setProfileImageB64(primary);
+        chrome.storage.local.set({ selfies: newSelfies, profileImage: primary ?? "" });
+        if (!primary) setScreen("onboarding");
+    };
+
     const handleDeleteProfile = () => {
-        chrome.storage.local.remove(["profileImage"]);
+        setSelfies([]);
         setProfileImageB64(null);
+        chrome.storage.local.remove(["profileImage", "selfies"]);
         setScreen("onboarding");
     };
 
-    const handleGenerate = async (category: string) => {
-        if (!profileImageB64 || !productSrc) return;
+    // ── Generate request: show selfie picker if multiple photos, else go direct ─
+    const handleGenerateRequest = (category: string) => {
+        if (selfies.length > 1) {
+            // Multiple selfies → let user pick which one to use
+            setPendingCategory(category);
+        } else {
+            // Single or no photo → proceed directly (or onboarding guards it)
+            handleGenerate(category);
+        }
+    };
+
+    // ── User picked a selfie in the picker ─────────────────────────────────────
+    const handlePickedSelfie = (b64: string) => {
+        setPendingCategory(null);
+        setProfileImageB64(b64);
+        // Don't change primary; just use this one for this try-on
+        handleGenerate(pendingCategory!, b64);
+    };
+
+    // ── User uploaded/took a new selfie in the picker ──────────────────────────
+    const handlePickerUploadNew = (b64: string) => {
+        // Save to gallery and use immediately
+        setSelfies(prev => {
+            const next = [b64, ...prev.filter(p => p !== b64)].slice(0, 10);
+            chrome.storage.local.set({ selfies: next, profileImage: next[0] });
+            return next;
+        });
+        setPendingCategory(null);
+        setProfileImageB64(b64);
+        handleGenerate(pendingCategory!, b64);
+    };
+
+    const handleGenerate = async (category: string, photoOverride?: string) => {
+        const activePhoto = photoOverride ?? profileImageB64;
+        if (!activePhoto || !productSrc) return;
 
         // ── Credit check ─────────────────────────────────────────────────────
         if (credits === 0 && accessToken) {
@@ -191,7 +249,7 @@ function App() {
                             ...(backendToken ? { Authorization: `Bearer ${backendToken}` } : {}),
                         },
                         body: JSON.stringify({
-                            human_img: profileImageB64,
+                            human_img: activePhoto,
                             garment_url: garmentData,
                             category,
                         }),
@@ -271,12 +329,12 @@ function App() {
             // ── Direct Replicate flow (fallback if backend unavailable) ────
             const replicateToken = await getReplicateToken();
             if (replicateToken) {
-                await runReplicateGeneration(productSrc, profileImageB64, category, replicateToken);
+                await runReplicateGeneration(productSrc, activePhoto, category, replicateToken);
                 return;
             }
 
             // ── Mock fallback ──────────────────────────────────────────────
-            await runMockGeneration(productSrc, profileImageB64, category);
+            await runMockGeneration(productSrc, activePhoto, category);
         } catch (err: any) {
             setError(err.message ?? "Something went wrong. Please try again.");
             setScreen("ready");
@@ -316,7 +374,7 @@ function App() {
         // For direct Replicate flow, non-garment categories use mock (dedicated models need backend routing)
         if (!GARMENT_CATEGORIES.includes(category.toLowerCase())) {
             // Shoes, glasses, accessories → mock preview in direct mode
-            await runMockGeneration(productSrc!, profileImageB64!, category);
+            await runMockGeneration(productSrc!, profile, category);
             return;
         }
 
@@ -478,8 +536,9 @@ function App() {
             {screen === "ready" && (
                 <ReadyScreen
                     profileImage={profileImageB64}
+                    selfieCount={selfies.length}
                     productSrc={productSrc}
-                    onGenerate={handleGenerate}
+                    onGenerate={handleGenerateRequest}
                     onSpaceMode={handleSpaceMode}
                     onSelectManually={handleSelectManually}
                     onDeleteProfile={handleDeleteProfile}
@@ -488,9 +547,19 @@ function App() {
                     initialCategory={detectedCategory}
                     onPoseStudio={() => setScreen("pose")}
                     onSettings={() => setScreen("settings")}
-                    onMultiPhoto={() => setScreen("photos")}
+                    onMyPhotos={() => setScreen("photos")}
                     onSizeAdvisor={() => setScreen("size")}
                     currentPose={selectedPose}
+                />
+            )}
+            {/* ── Selfie picker modal (shown on top of ready screen before generate) */}
+            {pendingCategory !== null && (
+                <SelfiePickerModal
+                    selfies={selfies}
+                    category={pendingCategory}
+                    onPick={handlePickedSelfie}
+                    onUploadNew={handlePickerUploadNew}
+                    onCancel={() => setPendingCategory(null)}
                 />
             )}
             {screen === "loading" && <LoadingScreen progress={progress} />}
@@ -570,15 +639,10 @@ function App() {
                 />
             )}
             {screen === "photos" && (
-                <MultiPhotoScreen
-                    onBack={() => setScreen("settings")}
-                    currentPhotos={profilePhotos}
-                    onSavePhotos={(photos) => {
-                        setProfilePhotos(photos);
-                        if (photos.length > 0) setProfileImageB64(photos[0]);
-                        chrome.storage.local.set({ profilePhotos: photos, profileImage: photos[0] ?? null });
-                        setScreen("settings");
-                    }}
+                <MyPhotosScreen
+                    selfies={selfies}
+                    onBack={() => setScreen(profileImageB64 ? "ready" : "onboarding")}
+                    onSave={handleSaveSelfies}
                 />
             )}
             {screen === "size" && (
