@@ -76,6 +76,7 @@ function App() {
     const [selfies, setSelfies] = useState<string[]>([]);                        // selfie gallery (up to 10)
     const [pendingCategory, setPendingCategory] = useState<string | null>(null); // triggers selfie picker
     const [onboardingStep, setOnboardingStep] = useState<"auth" | "photo">("auth"); // skip auth if already have token
+    const [showLoginWall, setShowLoginWall] = useState(false);                     // freemium: force login after 1 anon try
     // ── Space Intelligence state ────────────────────────────────────────────────────
     const [spaceCategory, setSpaceCategory] = useState<string>("furniture");
     const [spaceResult, setSpaceResult] = useState<{ resultUrl: string; advisorText: string; fitScore: number; category: string; productSrc: string | null } | null>(null);
@@ -83,7 +84,7 @@ function App() {
 
     // Load saved profile photo, product, and credits
     useEffect(() => {
-        chrome.storage.local.get(["profileImage", "tryitonCredits", "accessToken", "selfies"], (data) => {
+        chrome.storage.local.get(["profileImage", "tryitonCredits", "accessToken", "selfies", "anonTryons"], (data) => {
             if (chrome.runtime.lastError) return;
 
             // Load selfie gallery — migrate from old profileImage if no gallery yet
@@ -209,7 +210,20 @@ function App() {
         const activePhoto = photoOverride ?? profileImageB64;
         if (!activePhoto || !productSrc) return;
 
-        // ── Credit check ─────────────────────────────────────────────────────
+        // ── Freemium gate: anonymous users get 1 free try-on, then must sign in ──
+        if (!accessToken) {
+            const anonCount: number = await new Promise((res) =>
+                chrome.storage.local.get(["anonTryons"], (d) => res(d.anonTryons ?? 0))
+            );
+            if (anonCount >= 1) {
+                setShowLoginWall(true);
+                return;
+            }
+            // First anonymous try-on — increment counter
+            chrome.storage.local.set({ anonTryons: anonCount + 1 });
+        }
+
+        // ── Credit check (for logged-in users) ───────────────────────────────
         if (credits === 0 && accessToken) {
             setError("🚀 You're out of try-ons!\n\nUpgrade to Pro ($19.90/mo) for 150 monthly try-ons, Wishlist, Price Compare, and Social Share.\n\nOr buy a Credits pack — $4.99 / $9.99 / $19.90.");
             return;
@@ -536,7 +550,45 @@ function App() {
 
     return (
         <div className="app">
-            {screen === "onboarding" && (
+            {/* ── Login wall: shown after 1 anonymous try-on ───────────────── */}
+            {showLoginWall && (
+                <div className="screen">
+                    <div className="header"><span className="logo">TryItOn ✨</span></div>
+                    <div style={{ textAlign: "center", padding: "16px 0 8px" }}>
+                        <div style={{ fontSize: 44, marginBottom: 10 }}>🎉</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 6 }}>
+                            You loved your free try-on!
+                        </div>
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6, marginBottom: 16 }}>
+                            Sign in to unlock <strong style={{ color: "#a78bfa" }}>5 free try-ons</strong> and save your profile across sessions.
+                        </div>
+                    </div>
+                    <OnboardingScreen
+                        onProfileSaved={(b64) => {
+                            setShowLoginWall(false);
+                            handleProfileSaved(b64);
+                        }}
+                        initialStep="auth"
+                        onLogin={async (token) => {
+                            setAccessToken(token);
+                            setShowLoginWall(false);
+                            chrome.storage.local.set({ anonTryons: 0 }); // reset counter after login
+                            try {
+                                const meRes = await fetch(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${token}` } });
+                                if (meRes.ok) {
+                                    const { user } = await meRes.json();
+                                    chrome.storage.local.set({ userInfo: user });
+                                    if (typeof user.credits === "number" && user.credits >= 0) {
+                                        setCredits(user.credits);
+                                        chrome.storage.local.set({ tryitonCredits: user.credits });
+                                    }
+                                }
+                            } catch { /* non-critical */ }
+                        }}
+                    />
+                </div>
+            )}
+            {!showLoginWall && screen === "onboarding" && (
                 <OnboardingScreen
                     onProfileSaved={handleProfileSaved}
                     initialStep={onboardingStep}
@@ -560,7 +612,7 @@ function App() {
                     }}
                 />
             )}
-            {screen === "ready" && (
+            {!showLoginWall && screen === "ready" && (
                 <ReadyScreen
                     profileImage={profileImageB64}
                     selfieCount={selfies.length}
