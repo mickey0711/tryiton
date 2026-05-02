@@ -50,13 +50,13 @@ router.post("/", async (req: Request, res: Response) => {
 
         const slot = garmentSlot[category.toLowerCase()] ?? "upper_body";
 
-        // Create prediction — ask Replicate to wait up to 5 s (fast warm model path)
+        // Create prediction — 8 s hard timeout so DO's proxy never kills us
         const predRes = await fetch(`${REPLICATE_API}/predictions`, {
             method: "POST",
+            signal: AbortSignal.timeout(8000),
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
-                Prefer: "wait=5",
             },
             body: JSON.stringify({
                 version: IDMVTON_VERSION,
@@ -128,6 +128,13 @@ router.post("/", async (req: Request, res: Response) => {
         });
 
     } catch (err: any) {
+        if (err?.name === "TimeoutError" || err?.name === "AbortError") {
+            logger.warn("tryon-direct POST: Replicate connection timed out");
+            return res.status(503).json({
+                error: "TIMEOUT",
+                message: "AI service is taking too long. Please try again.",
+            });
+        }
         logger.error({ errMsg: err?.message }, "tryon-direct POST error");
         return res.status(500).json({
             error: "INTERNAL_ERROR",
@@ -146,6 +153,7 @@ router.get("/poll/:predictionId", async (req: Request, res: Response) => {
         }
 
         const pollRes = await fetch(`${REPLICATE_API}/predictions/${predictionId}`, {
+            signal: AbortSignal.timeout(8000),
             headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -178,6 +186,9 @@ router.get("/poll/:predictionId", async (req: Request, res: Response) => {
         return res.json({ status: data.status ?? "processing" });
 
     } catch (err: any) {
+        if (err?.name === "TimeoutError" || err?.name === "AbortError") {
+            return res.status(503).json({ error: "TIMEOUT", message: "Poll timed out. Try again." });
+        }
         logger.error({ errMsg: err?.message }, "tryon-direct poll error");
         return res.status(500).json({
             error: "INTERNAL_ERROR",
