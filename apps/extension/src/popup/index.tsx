@@ -540,9 +540,23 @@ function App() {
                 <OnboardingScreen
                     onProfileSaved={handleProfileSaved}
                     initialStep={onboardingStep}
-                    onLogin={(token) => {
+                    onLogin={async (token) => {
                         setAccessToken(token);
                         setOnboardingStep("photo");
+                        // Sync user profile: credits, plan, name
+                        try {
+                            const meRes = await fetch(`${API_BASE}/me`, {
+                                headers: { Authorization: `Bearer ${token}` },
+                            });
+                            if (meRes.ok) {
+                                const { user } = await meRes.json();
+                                chrome.storage.local.set({ userInfo: user });
+                                if (typeof user.credits === "number" && user.credits >= 0) {
+                                    setCredits(user.credits);
+                                    chrome.storage.local.set({ tryitonCredits: user.credits });
+                                }
+                            }
+                        } catch { /* non-critical — user can still proceed */ }
                     }}
                 />
             )}

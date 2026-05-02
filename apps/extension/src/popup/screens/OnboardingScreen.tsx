@@ -18,45 +18,18 @@ export interface BodyMeasurements {
     recommendedSize?: string;
 }
 
-// ── OAuth: try chrome.identity.getAuthToken first, fallback to launchWebAuthFlow ──
+// ── OAuth via backend extension endpoints ─────────────────────────────────────
+// Flow: extension → tryit4u.ai/auth/oauth/{provider}/extension → Google/Facebook → backend callback → extension
+// The backend receives the OAuth code, issues a JWT, and redirects to chromiumapp.org with the token.
+// This avoids needing to register the extension in Google/Facebook console directly.
 
-async function oauthWithGoogle(): Promise<{ access_token: string; user: any } | null> {
-    // Primary path: chrome.identity.getAuthToken (requires oauth2 in manifest)
-    const tokenFromChrome = await new Promise<string | null>((resolve) => {
-        (chrome as any).identity.getAuthToken({ interactive: true }, (token: string | undefined) => {
-            if ((chrome as any).runtime.lastError || !token) resolve(null);
-            else resolve(token);
-        });
-    });
-
-    if (tokenFromChrome) {
-        try {
-            const infoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                headers: { Authorization: `Bearer ${tokenFromChrome}` },
-            });
-            const info = await infoRes.json() as any;
-            const res = await fetch(`${API_BASE}/auth/oauth/google/exchange`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    google_access_token: tokenFromChrome,
-                    email: info.email,
-                    name: info.name,
-                    picture: info.picture,
-                    sub: info.sub,
-                }),
-            });
-            if (res.ok) return await res.json();
-        } catch { /* fall through to web auth flow */ }
-    }
-
-    // Fallback: launchWebAuthFlow pointing to website's extension auth endpoint
-    const redirectUri = `https://${(chrome as any).runtime.id}.chromiumapp.org/`;
-    const webAuthUrl = `${API_BASE}/auth/extension/google?${new URLSearchParams({ redirect_uri: redirectUri })}`;
+async function oauthViaBackend(provider: "google" | "facebook"): Promise<{ access_token: string; user: any } | null> {
+    const extRedirect = `https://${(chrome as any).runtime.id}.chromiumapp.org/`;
+    const authUrl = `${API_BASE}/auth/oauth/${provider}/extension?${new URLSearchParams({ ext_redirect: extRedirect })}`;
 
     return new Promise((resolve) => {
         (chrome as any).identity.launchWebAuthFlow(
-            { url: webAuthUrl, interactive: true },
+            { url: authUrl, interactive: true },
             (callbackUrl: string | undefined) => {
                 if ((chrome as any).runtime.lastError || !callbackUrl) { resolve(null); return; }
                 try {
@@ -74,40 +47,39 @@ async function oauthWithGoogle(): Promise<{ access_token: string; user: any } | 
     });
 }
 
-async function oauthWithFacebook(): Promise<{ access_token: string; user: any } | null> {
-    const redirectUri = `https://${(chrome as any).runtime.id}.chromiumapp.org/`;
-    const webAuthUrl = `${API_BASE}/auth/extension/facebook?${new URLSearchParams({ redirect_uri: redirectUri })}`;
+// Keep direct Google token exchange as a secondary path
+// (works when manifest oauth2.client_id is correctly set up as "Chrome App" type in Google Console)
+async function oauthWithGoogle(): Promise<{ access_token: string; user: any } | null> {
+    // Primary: backend-mediated flow (reliable, no Google Console extension registration needed)
+    const result = await oauthViaBackend("google");
+    if (result) return result;
 
-    return new Promise((resolve) => {
-        (chrome as any).identity.launchWebAuthFlow(
-            { url: webAuthUrl, interactive: true },
-            async (callbackUrl: string | undefined) => {
-                if ((chrome as any).runtime.lastError || !callbackUrl) { resolve(null); return; }
-                try {
-                    const params = new URLSearchParams(new URL(callbackUrl).search);
-                    const token = params.get("access_token");
-                    const userStr = params.get("user");
-                    if (token) {
-                        resolve({
-                            access_token: token,
-                            user: userStr ? JSON.parse(decodeURIComponent(userStr)) : {},
-                        });
-                    } else {
-                        // Legacy code exchange path
-                        const code = params.get("code");
-                        if (!code) { resolve(null); return; }
-                        const res = await fetch(`${API_BASE}/auth/oauth/facebook/exchange`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ code, redirect_uri: redirectUri }),
-                        });
-                        if (res.ok) resolve(await res.json());
-                        else resolve(null);
-                    }
-                } catch { resolve(null); }
-            }
-        );
+    // Fallback: chrome.identity.getAuthToken (requires manifest oauth2 + Chrome App client type)
+    const tokenFromChrome = await new Promise<string | null>((resolve) => {
+        (chrome as any).identity.getAuthToken({ interactive: true }, (token: string | undefined) => {
+            if ((chrome as any).runtime.lastError || !token) resolve(null);
+            else resolve(token);
+        });
     });
+    if (!tokenFromChrome) return null;
+
+    try {
+        const infoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+            headers: { Authorization: `Bearer ${tokenFromChrome}` },
+        });
+        const info = await infoRes.json() as any;
+        const res = await fetch(`${API_BASE}/auth/oauth/google/exchange`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ google_access_token: tokenFromChrome, email: info.email, name: info.name, picture: info.picture, sub: info.sub }),
+        });
+        if (res.ok) return await res.json();
+    } catch { /* ignore */ }
+    return null;
+}
+
+async function oauthWithFacebook(): Promise<{ access_token: string; user: any } | null> {
+    return oauthViaBackend("facebook");
 }
 
 // ── Measurement extraction ────────────────────────────────────────────────────

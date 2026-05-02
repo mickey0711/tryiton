@@ -87,11 +87,52 @@ router.get("/google", (req, res) => {
     res.redirect(`${GOOGLE_AUTH_URL}?${params}`);
 });
 
+// Chrome Extension flow: GET /auth/oauth/google/extension?ext_redirect=https://<id>.chromiumapp.org/
+// Encodes ext_redirect in OAuth state so the callback can redirect back to the extension.
+router.get("/google/extension", (req, res) => {
+    const client_id = process.env.GOOGLE_CLIENT_ID;
+    if (!client_id) return res.status(503).json({ error: "Google OAuth not configured" });
+
+    const extRedirect = req.query.ext_redirect as string | undefined;
+    if (!extRedirect || !extRedirect.includes("chromiumapp.org")) {
+        return res.status(400).json({ error: "BAD_REQUEST", message: "Invalid ext_redirect" });
+    }
+
+    const redirect_uri = process.env.GOOGLE_REDIRECT_URI ??
+        `${process.env.WEB_APP_URL}/auth/oauth/google/callback`;
+
+    // Encode ext_redirect into state so the callback knows to send token to extension
+    const state = Buffer.from(JSON.stringify({ ext_redirect: extRedirect })).toString("base64url");
+
+    const params = new URLSearchParams({
+        client_id,
+        redirect_uri,
+        response_type: "code",
+        scope: "openid email profile",
+        access_type: "offline",
+        prompt: "select_account",
+        state,
+    });
+    res.redirect(`${GOOGLE_AUTH_URL}?${params}`);
+});
+
 // Web callback: GET /auth/oauth/google/callback?code=...
+// Also handles extension callbacks when state contains ext_redirect.
 router.get("/google/callback", async (req, res, next) => {
     try {
-        const { code } = req.query as { code?: string };
+        const { code, state } = req.query as { code?: string; state?: string };
         if (!code) throw new AppError("BAD_REQUEST", "Missing code", 400);
+
+        // Decode state to detect extension flow
+        let extRedirect: string | null = null;
+        if (state) {
+            try {
+                const decoded = JSON.parse(Buffer.from(state, "base64url").toString()) as any;
+                if (typeof decoded.ext_redirect === "string" && decoded.ext_redirect.includes("chromiumapp.org")) {
+                    extRedirect = decoded.ext_redirect;
+                }
+            } catch { /* ignore malformed state */ }
+        }
 
         const user = await exchangeGoogleCode(code,
             process.env.GOOGLE_REDIRECT_URI ?? `${process.env.WEB_APP_URL}/auth/oauth/google/callback`
@@ -103,7 +144,19 @@ router.get("/google/callback", async (req, res, next) => {
             [user.id, refreshHash, new Date(Date.now() + 30 * 24 * 3600 * 1000)]
         );
 
-        // Redirect to frontend with tokens
+        if (extRedirect) {
+            // Extension flow — pass JWT back to chromiumapp.org redirect URL
+            const userPayload = encodeURIComponent(JSON.stringify({
+                id: user.id,
+                is_admin: user.is_admin,
+                credits: user.credits,
+                plan: user.plan,
+            }));
+            logger.info({ userId: user.id }, "Google OAuth → extension");
+            return res.redirect(`${extRedirect}?access_token=${accessToken}&user=${userPayload}`);
+        }
+
+        // Standard web redirect
         const frontendUrl = process.env.WEB_APP_URL ?? "http://localhost:3000";
         res.redirect(`${frontendUrl}/auth/success?access_token=${accessToken}&refresh_token=${refreshToken}`);
     } catch (err) { next(err); }
@@ -243,10 +296,46 @@ router.get("/facebook", (req, res) => {
     res.redirect(`${FB_AUTH_URL}?${params}`);
 });
 
+// Chrome Extension flow: GET /auth/oauth/facebook/extension?ext_redirect=https://<id>.chromiumapp.org/
+router.get("/facebook/extension", (req, res) => {
+    const client_id = process.env.FACEBOOK_APP_ID;
+    if (!client_id) return res.status(503).json({ error: "Facebook OAuth not configured" });
+
+    const extRedirect = req.query.ext_redirect as string | undefined;
+    if (!extRedirect || !extRedirect.includes("chromiumapp.org")) {
+        return res.status(400).json({ error: "BAD_REQUEST", message: "Invalid ext_redirect" });
+    }
+
+    const redirect_uri = process.env.FACEBOOK_REDIRECT_URI ??
+        `${process.env.WEB_APP_URL}/auth/oauth/facebook/callback`;
+
+    const state = Buffer.from(JSON.stringify({ ext_redirect: extRedirect })).toString("base64url");
+
+    const params = new URLSearchParams({
+        client_id,
+        redirect_uri,
+        scope: "email,public_profile",
+        response_type: "code",
+        state,
+    });
+    res.redirect(`${FB_AUTH_URL}?${params}`);
+});
+
 router.get("/facebook/callback", async (req, res, next) => {
     try {
-        const { code } = req.query as { code?: string };
+        const { code, state } = req.query as { code?: string; state?: string };
         if (!code) throw new AppError("BAD_REQUEST", "Missing code", 400);
+
+        // Decode state to detect extension flow
+        let extRedirect: string | null = null;
+        if (state) {
+            try {
+                const decoded = JSON.parse(Buffer.from(state, "base64url").toString()) as any;
+                if (typeof decoded.ext_redirect === "string" && decoded.ext_redirect.includes("chromiumapp.org")) {
+                    extRedirect = decoded.ext_redirect;
+                }
+            } catch { /* ignore malformed state */ }
+        }
 
         const user = await exchangeFacebookCode(code,
             process.env.FACEBOOK_REDIRECT_URI ?? `${process.env.WEB_APP_URL}/auth/oauth/facebook/callback`
@@ -257,6 +346,17 @@ router.get("/facebook/callback", async (req, res, next) => {
             `INSERT INTO refresh_tokens(user_id, token_hash, expires_at) VALUES($1, $2, $3)`,
             [user.id, refreshHash, new Date(Date.now() + 30 * 24 * 3600 * 1000)]
         );
+
+        if (extRedirect) {
+            const userPayload = encodeURIComponent(JSON.stringify({
+                id: user.id,
+                is_admin: user.is_admin,
+                credits: user.credits,
+                plan: user.plan,
+            }));
+            logger.info({ userId: user.id }, "Facebook OAuth → extension");
+            return res.redirect(`${extRedirect}?access_token=${accessToken}&user=${userPayload}`);
+        }
 
         const frontendUrl = process.env.WEB_APP_URL ?? "http://localhost:3000";
         res.redirect(`${frontendUrl}/auth/success?access_token=${accessToken}&refresh_token=${refreshToken}`);
