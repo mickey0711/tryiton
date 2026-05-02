@@ -132,9 +132,8 @@ app.use("/payments", paymentsRouter);
 app.use("/prices", pricesRouter);
 app.use("/size", sizeRouter);
 app.use("/auth/oauth", oauthRouter);
-// Alias: some DO env vars point to /oauth/* (without /auth prefix) — redirect to canonical path
-app.get("/oauth/google/callback",   (req, res) => res.redirect(307, `/auth/oauth/google/callback?${new URLSearchParams(req.query as any)}`));
-app.get("/oauth/facebook/callback", (req, res) => res.redirect(307, `/auth/oauth/facebook/callback?${new URLSearchParams(req.query as any)}`));
+// Alias: website & DO env vars use /oauth/* (without /auth prefix) — serve same router at both paths
+app.use("/oauth", oauthRouter);
 app.use("/space", spaceRouter);
 app.use("/privacy", privacyRouter);
 app.use("/admin", adminRouter);
