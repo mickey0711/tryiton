@@ -75,6 +75,7 @@ function App() {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [selfies, setSelfies] = useState<string[]>([]);                        // selfie gallery (up to 10)
     const [pendingCategory, setPendingCategory] = useState<string | null>(null); // triggers selfie picker
+    const [onboardingStep, setOnboardingStep] = useState<"auth" | "photo">("auth"); // skip auth if already have token
     // ── Space Intelligence state ────────────────────────────────────────────────────
     const [spaceCategory, setSpaceCategory] = useState<string>("furniture");
     const [spaceResult, setSpaceResult] = useState<{ resultUrl: string; advisorText: string; fitScore: number; category: string; productSrc: string | null } | null>(null);
@@ -103,7 +104,12 @@ function App() {
                 setCredits(-1);
                 chrome.storage.local.set({ tryitonCredits: -1 });
             }
-            if (data.accessToken) setAccessToken(data.accessToken);
+
+            // If user already has a stored token → skip the login step
+            if (data.accessToken) {
+                setAccessToken(data.accessToken);
+                setOnboardingStep("photo"); // already authenticated — go straight to photo upload
+            }
         });
 
         try {
@@ -531,7 +537,14 @@ function App() {
     return (
         <div className="app">
             {screen === "onboarding" && (
-                <OnboardingScreen onProfileSaved={handleProfileSaved} />
+                <OnboardingScreen
+                    onProfileSaved={handleProfileSaved}
+                    initialStep={onboardingStep}
+                    onLogin={(token) => {
+                        setAccessToken(token);
+                        setOnboardingStep("photo");
+                    }}
+                />
             )}
             {screen === "ready" && (
                 <ReadyScreen
