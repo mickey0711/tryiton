@@ -2701,35 +2701,8 @@ function decodeJWT(token){
 }
 
 function doGoogleSignIn(){
-  const err = document.getElementById('si-error') || document.getElementById('si-reg-error');
-  if(typeof google === 'undefined'){
-    if(err){err.textContent='Google sign-in is loading, please try again in a moment.';err.style.display='block';}
-    return;
-  }
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: handleGoogleCredential,
-    auto_select: false,
-    cancel_on_tap_outside: true
-  });
-  google.accounts.id.prompt(notification => {
-    if(notification.isNotDisplayed() || notification.isSkippedMoment()){
-      // GIS One Tap was blocked — show explicit button flow
-      const tempDiv = document.getElementById('g-btn-container') || (() => {
-        const d = document.createElement('div');
-        d.id = 'g-btn-container';
-        d.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;background:#0d0c18;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.8)';
-        d.innerHTML = '<p style="color:#fff;font-size:14px;font-family:Inter,sans-serif;margin-bottom:16px">Continue with Google</p>';
-        document.body.appendChild(d);
-        return d;
-      })();
-      google.accounts.id.renderButton(tempDiv, {
-        type: 'standard', theme: 'outline', size: 'large',
-        text: 'continue_with', shape: 'rectangular',
-        width: 300
-      });
-    }
-  });
+  // Full OAuth redirect — same flow as /login page, avoids One Tap popup issues
+  window.location.href = '/auth/oauth/google';
 }
 
 async function handleGoogleCredential(response){
