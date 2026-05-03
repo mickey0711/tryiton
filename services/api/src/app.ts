@@ -10,7 +10,7 @@ if (process.env.SENTRY_DSN) {
     });
 }
 
-import express from "express";
+import express, { Router } from "express";
 import path from "path";
 import helmet from "helmet";
 import cors from "cors";
@@ -118,31 +118,38 @@ app.use(express.static(publicDir, { index: false }));
 app.use(express.static(path.join(publicDir, "_next"), { index: false }));
 
 // ─── Routes ────────────────────────────────────────────────────────────────────
-app.use("/health", healthRouter);
-app.use("/auth", authRouter);
-app.use("/assets", assetsRouter);
-app.use("/products", productsRouter);
-app.use("/fit/jobs", jobsRouter);
-app.use("/library", libraryRouter);
-app.use("/share", shareRouter);
-app.use("/me", meRouter);
-app.use("/newsletter", newsletterRouter);
-app.use("/referral", referralRouter);
-app.use("/payments", paymentsRouter);
-app.use("/prices", pricesRouter);
-app.use("/size", sizeRouter);
-app.use("/auth/oauth", oauthRouter);
+// Shared router mounted at both / (direct calls) and /api (frontend API_BASE='/api' calls).
+// DO App Platform ingress may or may not strip the /api prefix before forwarding — mounting
+// at both paths means it works regardless of stripping behavior.
+const apiRouter = Router();
+apiRouter.use("/health", healthRouter);
+apiRouter.use("/auth", authRouter);
+apiRouter.use("/assets", assetsRouter);
+apiRouter.use("/products", productsRouter);
+apiRouter.use("/fit/jobs", jobsRouter);
+apiRouter.use("/library", libraryRouter);
+apiRouter.use("/share", shareRouter);
+apiRouter.use("/me", meRouter);
+apiRouter.use("/newsletter", newsletterRouter);
+apiRouter.use("/referral", referralRouter);
+apiRouter.use("/payments", paymentsRouter);
+apiRouter.use("/prices", pricesRouter);
+apiRouter.use("/size", sizeRouter);
+apiRouter.use("/auth/oauth", oauthRouter);
 // Alias: website & DO env vars use /oauth/* (without /auth prefix) — serve same router at both paths
-app.use("/oauth", oauthRouter);
-app.use("/space", spaceRouter);
-app.use("/privacy", privacyRouter);
-app.use("/admin", adminRouter);
-app.use("/whatsapp", whatsappRouter);
-app.use("/messenger", messengerRouter);
-app.use("/chat", chatRouter);
-app.use("/fit/tryon-direct", tryonDirectRouter);
-app.use("/payplus", payplusRouter);
-app.use("/", legalRouter);
+apiRouter.use("/oauth", oauthRouter);
+apiRouter.use("/space", spaceRouter);
+apiRouter.use("/privacy", privacyRouter);
+apiRouter.use("/admin", adminRouter);
+apiRouter.use("/whatsapp", whatsappRouter);
+apiRouter.use("/messenger", messengerRouter);
+apiRouter.use("/chat", chatRouter);
+apiRouter.use("/fit/tryon-direct", tryonDirectRouter);
+apiRouter.use("/payplus", payplusRouter);
+apiRouter.use("/", legalRouter);
+// Mount at root (bare paths) AND at /api (for frontend API_BASE='/api')
+app.use(apiRouter);
+app.use("/api", apiRouter);
 
 // ─── HTML pages — no-cache headers ───────────────────────────────────────────
 const noCacheHtml = (_req: any, res: any, next: any) => {
