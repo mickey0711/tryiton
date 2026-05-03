@@ -174,7 +174,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
 /* ANIMS */
 @keyframes fiu{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.rv{opacity:0;transform:translateY(36px);transition:all .8s cubic-bezier(.22,1,.36,1)}
+.rv{opacity:0;transform:translateY(36px);transition:all .8s cubic-bezier(.22,1,.36,1);pointer-events:auto}
 .rv.in{opacity:1;transform:translateY(0)}
 /* RESPONSIVE */
 @media(max-width:1200px){.pricing-grid{grid-template-columns:repeat(2,1fr)}}
@@ -210,6 +210,18 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   /* Referral link row */
   .rw-link-row{flex-direction:column}
   .rw-link-url{word-break:break-all;font-size:13px}
+}
+/* Hamburger — mobile nav */
+.hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;background:none;border:none;cursor:pointer;padding:6px;z-index:200;flex-shrink:0}
+.hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,.75);border-radius:2px;transition:.3s}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+@media(max-width:900px){
+  .hamburger{display:flex}
+  .nav-links.mobile-open{display:flex;flex-direction:column;position:fixed;inset:0;background:rgba(5,5,8,.97);z-index:150;align-items:center;justify-content:center;gap:36px;padding:100px 24px 40px;backdrop-filter:blur(20px)}
+  .nav-links.mobile-open a{font-size:22px;font-weight:600;color:rgba(255,255,255,.75)}
+  .nav-links.mobile-open li:last-child{display:none}
 }
 @media(max-width:600px){
   h1{letter-spacing:-1px}
@@ -252,7 +264,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
 
 /* NAV RIGHT & USER MENU */
 .nav-right{display:flex;align-items:center;gap:12px;position:relative}
-.user-menu-wrap{position:relative}
+.user-menu-wrap{position:relative;display:flex;align-items:center;gap:8px}
 .user-avatar{width:38px;height:38px;border-radius:50%;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.5);color:#a78bfa;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
 .user-avatar:hover{background:rgba(124,58,237,.35);box-shadow:0 0 16px rgba(124,58,237,.4)}
 .user-dropdown{position:absolute;top:calc(100% + 14px);right:0;background:rgba(8,8,16,.98);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:8px 0;min-width:270px;z-index:500;backdrop-filter:blur(24px);box-shadow:0 24px 70px rgba(0,0,0,.7),0 0 0 1px rgba(124,58,237,.15);opacity:0;transform:translateY(-8px) scale(.97);pointer-events:none;transition:all .22s cubic-bezier(.22,1,.36,1)}
@@ -351,20 +363,21 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       <li><a href="#how">How it works</a></li>
       <li><a href="#pricing">Pricing</a></li>
       <li><a href="#download">Download</a></li>
-      <li><a href="#wishlist">Wishlist</a></li>
+      <li><a href="#wishlist" style="white-space:nowrap">Wishlist</a></li>
       <li><a href="#rewards">Rewards</a></li><li><a href="#blog">Blog</a></li>
       <li><a href="#contact">Contact</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li style="display:flex;align-items:center;gap:8px">
-        <a href="https://www.instagram.com" target="_blank" rel="noopener" class="nav-social" aria-label="Follow us on Instagram" title="Follow on Instagram">
+        <a href="https://www.instagram.com/tryit4u" target="_blank" rel="noopener" class="nav-social" aria-label="Follow us on Instagram" title="Follow on Instagram">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
         </a>
-        <a href="https://www.facebook.com" target="_blank" rel="noopener" class="nav-social" aria-label="Follow us on Facebook" title="Follow on Facebook">
+        <a href="https://www.facebook.com/tryit4u" target="_blank" rel="noopener" class="nav-social" aria-label="Follow us on Facebook" title="Follow on Facebook">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
         </a>
       </li>
     </ul>
   </div>
+  <button class="hamburger" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button>
   <div class="nav-right">
     <!-- Language Picker -->
     <div style="position:relative" id="lang-wrap">
@@ -380,7 +393,9 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       </div>
     </div>
     <div class="user-menu-wrap" id="user-menu-wrap">
-      <button class="user-avatar" id="user-avatar-btn" onclick="toggleUserMenu()" aria-label="User account menu" aria-haspopup="true" aria-expanded="false">
+      <!-- BUG-02 FIX: Sign In button directly in navbar, outside hidden dropdown -->
+      <button id="nav-signin-btn" onclick="openSignIn('login')" aria-label="Sign In" style="display:flex;align-items:center;gap:6px;padding:7px 16px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);border-radius:100px;color:#a78bfa;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;transition:.2s" onmouseover="this.style.background='rgba(124,58,237,.3)'" onmouseout="this.style.background='rgba(124,58,237,.15)'">🔑 Sign In</button>
+      <button class="user-avatar" id="user-avatar-btn" onclick="toggleUserMenu()" aria-label="User account menu" aria-haspopup="true" aria-expanded="false" style="display:none">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       </button>
       <div class="user-dropdown" id="user-dropdown" role="menu" aria-label="User account menu">
@@ -482,104 +497,77 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   </div>
 </section>
 
-<!-- LOGOS -->
+<!-- LOGOS — brand wordmarks (self-hosted, no external API) -->
 <div class="logos" aria-label="Supported stores" id="stores">
-  <p class="logos-lbl" data-i18n="logos_lbl">Trusted by shoppers at the world's top brands</p>
+  <p class="logos-lbl" data-i18n="logos_lbl">Works with the world's top brands &amp; stores</p>
+  <style>
+    .mq-logo{display:inline-flex;align-items:center;justify-content:center;padding:0 20px;margin:0 4px;height:56px;text-decoration:none;transition:.25s;opacity:.55;flex-shrink:0}
+    .mq-logo:hover{opacity:1;transform:scale(1.08)}
+    .mq-bn{color:#fff;white-space:nowrap;display:block;font-family:'Space Grotesk',Inter,sans-serif;user-select:none}
+    .mq-bn.sz-s{font-size:11px;letter-spacing:.18em;font-weight:600}
+    .mq-bn.sz-m{font-size:13px;letter-spacing:.12em;font-weight:600}
+    .mq-bn.sz-l{font-size:16px;letter-spacing:.08em;font-weight:700}
+    .mq-bn.sz-xl{font-size:19px;letter-spacing:.04em;font-weight:700}
+    .mq-bn.light{font-weight:300;letter-spacing:.14em}
+    .mq-bn.italic{font-style:italic}
+    .mq-bn.thin{font-weight:200;letter-spacing:.22em;font-size:14px}
+  </style>
   <div class="mq-track-wrap" aria-hidden="true">
     <div class="mq-track">
-      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener" title="ZARA"><img src="https://logo.clearbit.com/zara.com" alt="ZARA" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/zara/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener" title="H&amp;M"><img src="https://logo.clearbit.com/hm.com" alt="H&amp;M" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/hm/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener" title="ASOS"><img src="https://logo.clearbit.com/asos.com" alt="ASOS" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/asos/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener" title="Nike"><img src="https://logo.clearbit.com/nike.com" alt="Nike" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/nike/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener" title="Adidas"><img src="https://logo.clearbit.com/adidas.com" alt="Adidas" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/adidas/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://aloyoga.com" target="_blank" rel="noopener" title="Alo Yoga"><img src="https://logo.clearbit.com/aloyoga.com" alt="Alo Yoga" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/alo/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener" title="Shein"><img src="https://logo.clearbit.com/shein.com" alt="Shein" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/shein/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener" title="Mango"><img src="https://logo.clearbit.com/mango.com" alt="Mango" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/mango/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener" title="Uniqlo"><img src="https://logo.clearbit.com/uniqlo.com" alt="Uniqlo" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/uniqlo/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://levi.com" target="_blank" rel="noopener" title="Levi's"><img src="https://logo.clearbit.com/levi.com" alt="Levi's" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/levis/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener" title="Puma"><img src="https://logo.clearbit.com/puma.com" alt="Puma" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/puma/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener" title="Gap"><img src="https://logo.clearbit.com/gap.com" alt="Gap" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/gap/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://reebok.com" target="_blank" rel="noopener" title="Reebok"><img src="https://logo.clearbit.com/reebok.com" alt="Reebok" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/reebok/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://underarmour.com" target="_blank" rel="noopener" title="Under Armour"><img src="https://logo.clearbit.com/underarmour.com" alt="Under Armour" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/underarmour/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener" title="Vans"><img src="https://logo.clearbit.com/vans.com" alt="Vans" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/vans/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener" title="Converse"><img src="https://logo.clearbit.com/converse.com" alt="Converse" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/converse/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener" title="New Balance"><img src="https://logo.clearbit.com/newbalance.com" alt="New Balance" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/newbalance/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener" title="The North Face"><img src="https://logo.clearbit.com/thenorthface.com" alt="The North Face" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/thenorthface/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener" title="Lululemon"><img src="https://logo.clearbit.com/lululemon.com" alt="Lululemon" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/lululemon/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://revolve.com" target="_blank" rel="noopener" title="Revolve"><img src="https://logo.clearbit.com/revolve.com" alt="Revolve" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/revolve/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener" title="Amazon"><img src="https://logo.clearbit.com/amazon.com" alt="Amazon" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/amazon/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener" title="eBay"><img src="https://logo.clearbit.com/ebay.com" alt="eBay" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ebay/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://temu.com" target="_blank" rel="noopener" title="Temu"><img src="https://logo.clearbit.com/temu.com" alt="Temu" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/temu/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo mq-ali" href="https://aliexpress.com" target="_blank" rel="noopener" title="AliExpress"><img src="https://logo.clearbit.com/aliexpress.com" alt="AliExpress" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/aliexpress/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener" title="Etsy"><img src="https://logo.clearbit.com/etsy.com" alt="Etsy" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/etsy/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener" title="Zalando"><img src="https://logo.clearbit.com/zalando.com" alt="Zalando" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/zalando/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener" title="Farfetch"><img src="https://logo.clearbit.com/farfetch.com" alt="Farfetch" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/farfetch/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener" title="Nordstrom"><img src="https://logo.clearbit.com/nordstrom.com" alt="Nordstrom" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/nordstrom/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://forever21.com" target="_blank" rel="noopener" title="Forever 21"><img src="https://logo.clearbit.com/forever21.com" alt="Forever 21" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/forever21/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener" title="Ralph Lauren"><img src="https://logo.clearbit.com/ralphlauren.com" alt="Ralph Lauren" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ralphlauren/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener" title="Calvin Klein"><img src="https://logo.clearbit.com/calvinklein.com" alt="Calvin Klein" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/calvinklein/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://tommy.com" target="_blank" rel="noopener" title="Tommy Hilfiger"><img src="https://logo.clearbit.com/tommy.com" alt="Tommy Hilfiger" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/tommy/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://lacoste.com" target="_blank" rel="noopener" title="Lacoste"><img src="https://logo.clearbit.com/lacoste.com" alt="Lacoste" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/lacoste/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener" title="Hugo Boss"><img src="https://logo.clearbit.com/hugoboss.com" alt="Hugo Boss" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/hugoboss/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener" title="Gucci"><img src="https://logo.clearbit.com/gucci.com" alt="Gucci" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/gucci/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://michaelkors.com" target="_blank" rel="noopener" title="Michael Kors"><img src="https://logo.clearbit.com/michaelkors.com" alt="Michael Kors" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/michaelkors/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://coach.com" target="_blank" rel="noopener" title="Coach"><img src="https://logo.clearbit.com/coach.com" alt="Coach" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/coach/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://anthropologie.com" target="_blank" rel="noopener" title="Anthropologie"><img src="https://logo.clearbit.com/anthropologie.com" alt="Anthropologie" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/anthropologie/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://bananarepublic.com" target="_blank" rel="noopener" title="Banana Republic"><img src="https://logo.clearbit.com/bananarepublic.com" alt="Banana Republic" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/bananarepublic/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://jcrew.com" target="_blank" rel="noopener" title="J.Crew"><img src="https://logo.clearbit.com/jcrew.com" alt="J.Crew" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/jcrew/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ssense.com" target="_blank" rel="noopener" title="SSENSE"><img src="https://logo.clearbit.com/ssense.com" alt="SSENSE" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ssense/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ohpolly.com" target="_blank" rel="noopener" title="Oh Polly"><img src="https://logo.clearbit.com/ohpolly.com" alt="Oh Polly" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ohpolly/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener" title="ZARA"><img src="https://logo.clearbit.com/zara.com" alt="ZARA" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/zara/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener" title="H&amp;M"><img src="https://logo.clearbit.com/hm.com" alt="H&amp;M" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/hm/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener" title="ASOS"><img src="https://logo.clearbit.com/asos.com" alt="ASOS" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/asos/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener" title="Nike"><img src="https://logo.clearbit.com/nike.com" alt="Nike" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/nike/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener" title="Adidas"><img src="https://logo.clearbit.com/adidas.com" alt="Adidas" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/adidas/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://aloyoga.com" target="_blank" rel="noopener" title="Alo Yoga"><img src="https://logo.clearbit.com/aloyoga.com" alt="Alo Yoga" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/alo/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener" title="Shein"><img src="https://logo.clearbit.com/shein.com" alt="Shein" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/shein/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener" title="Mango"><img src="https://logo.clearbit.com/mango.com" alt="Mango" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/mango/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener" title="Uniqlo"><img src="https://logo.clearbit.com/uniqlo.com" alt="Uniqlo" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/uniqlo/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://levi.com" target="_blank" rel="noopener" title="Levi's"><img src="https://logo.clearbit.com/levi.com" alt="Levi's" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/levis/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener" title="Puma"><img src="https://logo.clearbit.com/puma.com" alt="Puma" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/puma/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener" title="Gap"><img src="https://logo.clearbit.com/gap.com" alt="Gap" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/gap/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://reebok.com" target="_blank" rel="noopener" title="Reebok"><img src="https://logo.clearbit.com/reebok.com" alt="Reebok" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/reebok/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://underarmour.com" target="_blank" rel="noopener" title="Under Armour"><img src="https://logo.clearbit.com/underarmour.com" alt="Under Armour" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/underarmour/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener" title="Vans"><img src="https://logo.clearbit.com/vans.com" alt="Vans" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/vans/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener" title="Converse"><img src="https://logo.clearbit.com/converse.com" alt="Converse" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/converse/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener" title="New Balance"><img src="https://logo.clearbit.com/newbalance.com" alt="New Balance" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/newbalance/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener" title="The North Face"><img src="https://logo.clearbit.com/thenorthface.com" alt="The North Face" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/thenorthface/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener" title="Lululemon"><img src="https://logo.clearbit.com/lululemon.com" alt="Lululemon" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/lululemon/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://revolve.com" target="_blank" rel="noopener" title="Revolve"><img src="https://logo.clearbit.com/revolve.com" alt="Revolve" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/revolve/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener" title="Amazon"><img src="https://logo.clearbit.com/amazon.com" alt="Amazon" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/amazon/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener" title="eBay"><img src="https://logo.clearbit.com/ebay.com" alt="eBay" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ebay/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://temu.com" target="_blank" rel="noopener" title="Temu"><img src="https://logo.clearbit.com/temu.com" alt="Temu" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/temu/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://aliexpress.com" target="_blank" rel="noopener" title="AliExpress"><img src="https://logo.clearbit.com/aliexpress.com" alt="AliExpress" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/aliexpress/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener" title="Etsy"><img src="https://logo.clearbit.com/etsy.com" alt="Etsy" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/etsy/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener" title="Zalando"><img src="https://logo.clearbit.com/zalando.com" alt="Zalando" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/zalando/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener" title="Farfetch"><img src="https://logo.clearbit.com/farfetch.com" alt="Farfetch" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/farfetch/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener" title="Nordstrom"><img src="https://logo.clearbit.com/nordstrom.com" alt="Nordstrom" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/nordstrom/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://forever21.com" target="_blank" rel="noopener" title="Forever 21"><img src="https://logo.clearbit.com/forever21.com" alt="Forever 21" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/forever21/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener" title="Ralph Lauren"><img src="https://logo.clearbit.com/ralphlauren.com" alt="Ralph Lauren" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ralphlauren/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener" title="Calvin Klein"><img src="https://logo.clearbit.com/calvinklein.com" alt="Calvin Klein" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/calvinklein/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://tommy.com" target="_blank" rel="noopener" title="Tommy Hilfiger"><img src="https://logo.clearbit.com/tommy.com" alt="Tommy Hilfiger" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/tommy/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://lacoste.com" target="_blank" rel="noopener" title="Lacoste"><img src="https://logo.clearbit.com/lacoste.com" alt="Lacoste" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/lacoste/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener" title="Hugo Boss"><img src="https://logo.clearbit.com/hugoboss.com" alt="Hugo Boss" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/hugoboss/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener" title="Gucci"><img src="https://logo.clearbit.com/gucci.com" alt="Gucci" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/gucci/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://michaelkors.com" target="_blank" rel="noopener" title="Michael Kors"><img src="https://logo.clearbit.com/michaelkors.com" alt="Michael Kors" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/michaelkors/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://coach.com" target="_blank" rel="noopener" title="Coach"><img src="https://logo.clearbit.com/coach.com" alt="Coach" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/coach/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://anthropologie.com" target="_blank" rel="noopener" title="Anthropologie"><img src="https://logo.clearbit.com/anthropologie.com" alt="Anthropologie" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/anthropologie/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://bananarepublic.com" target="_blank" rel="noopener" title="Banana Republic"><img src="https://logo.clearbit.com/bananarepublic.com" alt="Banana Republic" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/bananarepublic/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://jcrew.com" target="_blank" rel="noopener" title="J.Crew"><img src="https://logo.clearbit.com/jcrew.com" alt="J.Crew" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/jcrew/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ssense.com" target="_blank" rel="noopener" title="SSENSE"><img src="https://logo.clearbit.com/ssense.com" alt="SSENSE" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ssense/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
-      <a class="mq-logo" href="https://ohpolly.com" target="_blank" rel="noopener" title="Oh Polly"><img src="https://logo.clearbit.com/ohpolly.com" alt="Oh Polly" height="26" loading="lazy" onerror="this.onerror=null;this.src='https://cdn.simpleicons.org/ohpolly/ffffff';this.onerror=function(){this.closest('.mq-logo').style.display='none'}"></a>
+      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener"><span class="mq-bn thin">ZARA</span></a>
+      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl">H&amp;M</span></a>
+      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener"><span class="mq-bn sz-l">ASOS</span></a>
+      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl italic" style="font-weight:400;letter-spacing:.02em">Nike</span></a>
+      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener"><span class="mq-bn sz-l light" style="text-transform:lowercase;letter-spacing:.06em">adidas</span></a>
+      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener"><span class="mq-bn sz-l" style="font-weight:400">amazon</span></a>
+      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener"><span class="mq-bn sz-l">SHEIN</span></a>
+      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener"><span class="mq-bn sz-m" style="letter-spacing:.2em;font-weight:400">MANGO</span></a>
+      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener"><span class="mq-bn sz-m">UNIQLO</span></a>
+      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener"><span class="mq-bn sz-l italic">Levi's</span></a>
+      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="letter-spacing:.06em">PUMA</span></a>
+      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="letter-spacing:.3em">GAP</span></a>
+      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener"><span class="mq-bn sz-l italic" style="font-weight:800">Vans</span></a>
+      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener"><span class="mq-bn sz-s" style="letter-spacing:.16em">CONVERSE</span></a>
+      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener"><span class="mq-bn sz-s light" style="text-transform:lowercase;letter-spacing:.08em;font-size:12px">lululemon</span></a>
+      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener"><span class="mq-bn sz-s" style="letter-spacing:.14em;font-weight:400">NORDSTROM</span></a>
+      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl italic" style="font-weight:600;letter-spacing:.04em">Etsy</span></a>
+      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener"><span class="mq-bn sz-s">FARFETCH</span></a>
+      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener"><span class="mq-bn sz-m" style="font-weight:400;letter-spacing:.1em">Zalando</span></a>
+      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener"><span class="mq-bn sz-m thin" style="letter-spacing:.22em">GUCCI</span></a>
+      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener"><span class="mq-bn sz-s" style="letter-spacing:.14em;font-weight:400">RALPH LAUREN</span></a>
+      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener"><span class="mq-bn sz-s thin" style="letter-spacing:.2em">CALVIN KLEIN</span></a>
+      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener"><span class="mq-bn sz-m" style="letter-spacing:.18em">HUGO BOSS</span></a>
+      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener"><span class="mq-bn sz-s">THE NORTH FACE</span></a>
+      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener"><span class="mq-bn sz-s italic" style="font-weight:700;letter-spacing:.1em">New Balance</span></a>
+      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="font-weight:700;letter-spacing:.02em">ebay</span></a>
+      <!-- duplicate set for seamless infinite scroll -->
+      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener"><span class="mq-bn thin">ZARA</span></a>
+      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl">H&amp;M</span></a>
+      <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener"><span class="mq-bn sz-l">ASOS</span></a>
+      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl italic" style="font-weight:400;letter-spacing:.02em">Nike</span></a>
+      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener"><span class="mq-bn sz-l light" style="text-transform:lowercase;letter-spacing:.06em">adidas</span></a>
+      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener"><span class="mq-bn sz-l" style="font-weight:400">amazon</span></a>
+      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener"><span class="mq-bn sz-l">SHEIN</span></a>
+      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener"><span class="mq-bn sz-m" style="letter-spacing:.2em;font-weight:400">MANGO</span></a>
+      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener"><span class="mq-bn sz-m">UNIQLO</span></a>
+      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener"><span class="mq-bn sz-l italic">Levi's</span></a>
+      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="letter-spacing:.06em">PUMA</span></a>
+      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="letter-spacing:.3em">GAP</span></a>
+      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener"><span class="mq-bn sz-m thin" style="letter-spacing:.22em">GUCCI</span></a>
+      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener"><span class="mq-bn sz-s" style="letter-spacing:.14em;font-weight:400">RALPH LAUREN</span></a>
+      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener"><span class="mq-bn sz-s">FARFETCH</span></a>
     </div>
   </div>
   <p class="logos-count" data-i18n="logos_count">Works on <b>500+ stores</b> worldwide &mdash; anywhere you shop</p>
 </div>
 
+
+
+
 <!-- FEATURES -->
 <section class="sec" id="features" aria-labelledby="features-heading">
   <p class="sec-lbl rv" data-i18n="feat_lbl">Features</p>
-  <h2 class="sec-h rv" id="features-heading" data-i18n="feat_h">Everything you need.<br>Nothing you don't.</h2>
+  <h2 class="sec-h rv" id="features-heading" data-i18n="feat_h">Everything you need.<br>All in one place.</h2>
   <p class="sec-sub rv" data-i18n="feat_sub">One AI. Every product. Any website.</p>
   <div class="g3">
     <article class="card rv"><span class="card-icon">👕</span><h3 class="card-h">Clothing Try-On</h3><p class="card-p">Any shirt, dress, jacket, or pants on your real body — instantly.</p><span class="badge-sm">Live Now</span></article>
@@ -598,7 +586,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
 <!-- UNIVERSAL PRODUCTS -->
 <section class="sec" id="universe" aria-labelledby="universe-heading" style="background:linear-gradient(160deg,rgba(124,58,237,.04) 0%,rgba(16,185,129,.02) 100%)">
   <p class="sec-lbl rv">Universal Try-On</p>
-  <h2 class="sec-h rv" id="universe-heading" style="max-width:780px">Not just fashion.<br><span class="grad">Every product. Every space.</span></h2>
+  <h2 class="sec-h rv" id="universe-heading" style="max-width:780px">Beyond fashion.<br><span class="grad">Every product. Every space.</span></h2>
   <p class="sec-sub rv" style="max-width:600px">Upload a photo of your room, garden, or yourself — and instantly visualise any product in your real world. AI places it perfectly and tells you if it’s the right fit.</p>
 
   <!-- Category tabs -->
@@ -771,7 +759,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
 
   <div style="text-align:center;margin-top:44px" class="rv">
     <p style="font-size:14px;color:rgba(255,255,255,.35);margin-bottom:20px">More categories rolling out throughout 2026 &mdash; Join the waitlist to get early access</p>
-    <button class="btn-filled" onclick="document.getElementById('hero-email').focus()" style="margin-right:12px">Join Waitlist →</button>
+    <button class="btn-filled" onclick="document.getElementById('waitlist').scrollIntoView({behavior:'smooth'})" style="margin-right:12px">Join Waitlist →</button>
     <button class="btn-outline" style="border-color:rgba(52,211,153,.4);color:#34d399" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Partner with Us</button>
   </div>
 </section>
@@ -943,7 +931,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
         <li data-i18n="plan1_f3">Zoom &amp; rotate controls</li>
         <li data-i18n="plan1_f4">Download result image</li>
       </ul>
-      <button class="btn-outline" onclick="document.getElementById('hero-email').focus()" data-i18n="plan1_btn">Get Started →</button>
+      <button class="btn-outline" onclick="openSignIn('register')" data-i18n="plan1_btn">Get Started →</button>
     </div>
     <!-- PRO BASIC -->
     <div class="price-card pop rv" style="transition-delay:.1s">
@@ -963,7 +951,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
         <li data-i18n="plan2_f6">Multi-photo profile (5 photos)</li>
         <li>Pose Studio (standing, walking, runway, sitting)</li>
       </ul>
-      <button class="btn-filled" onclick="document.getElementById('hero-email').focus()" data-i18n="plan2_btn">Start Pro →</button>
+      <button class="btn-filled" onclick="openSignIn('register')" data-i18n="plan2_btn">Start Pro →</button>
     </div>
     <!-- PRO PLUS -->
     <div class="price-card rv" style="transition-delay:.2s;border-color:rgba(251,191,36,.3);background:linear-gradient(160deg,rgba(251,191,36,.05) 0%,rgba(124,58,237,.08) 100%)">
@@ -982,7 +970,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
         <li>Early access to new features</li>
         <li data-i18n="plan3_f6">🎧 Dedicated concierge support</li>
       </ul>
-      <button class="btn-filled" style="background:linear-gradient(135deg,#f59e0b,#d97706)" onclick="document.getElementById('hero-email').focus()" data-i18n="plan3_btn">Go Pro Plus →</button>
+      <button class="btn-filled" style="background:linear-gradient(135deg,#f59e0b,#d97706)" onclick="openSignIn('register')" data-i18n="plan3_btn">Go Pro Plus →</button>
     </div>
     <!-- BUSINESS API -->
     <div class="price-card rv" style="transition-delay:.3s;border-color:rgba(52,211,153,.3);background:linear-gradient(160deg,rgba(52,211,153,.05) 0%,rgba(16,185,129,.06) 100%)">
@@ -1126,7 +1114,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
 
   <!-- CTA row -->
   <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap" class="rv">
-    <button class="btn-filled" style="background:linear-gradient(135deg,#10b981,#059669)" onclick="document.getElementById('hero-email').focus()">Start Saving Today →</button>
+    <button class="btn-filled" style="background:linear-gradient(135deg,#10b981,#059669)" onclick="document.getElementById('waitlist').scrollIntoView({behavior:'smooth'})" data-i18n="cta_btn">Start Saving Today →</button>
     <button class="btn-outline" style="border-color:rgba(52,211,153,.4);color:#34d399" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Become a Partner Brand</button>
   </div>
 </section>
@@ -1205,70 +1193,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   </div>
 </section>
 
-
-
-<!-- REWARDS -->
-<section class="sec" id="rewards" aria-labelledby="rewards-heading">
-  <p class="sec-lbl rv">Referral Rewards</p>
-  <h2 class="sec-h rv" id="rewards-heading">Share &amp; earn free try-ons.<br><span class="grad">Everyone wins.</span></h2>
-  <p class="sec-sub rv">Invite friends and you <b style="color:#f1f5f9">both</b> get free AI try-on credits. No limit — the more you share, the more you earn.</p>
-
-  <div class="rw-steps rv">
-    <div class="rw-box">
-      <div class="rw-num">01</div>
-      <div class="rw-icon">🔗</div>
-      <h3 class="rw-title">Get your link</h3>
-      <p class="rw-desc">Sign up and receive your unique personal referral link instantly in your dashboard.</p>
-    </div>
-    <div class="rw-arrow">→</div>
-    <div class="rw-box">
-      <div class="rw-num">02</div>
-      <div class="rw-icon">📨</div>
-      <h3 class="rw-title">Share with friends</h3>
-      <p class="rw-desc">Send via WhatsApp, Instagram, email — any way you like. No limit on invites.</p>
-    </div>
-    <div class="rw-arrow">→</div>
-    <div class="rw-box rw-box-accent">
-      <div class="rw-num">03</div>
-      <div class="rw-icon">🎁</div>
-      <h3 class="rw-title">Both get credits</h3>
-      <p class="rw-desc">Your friend gets <b style="color:#4ade80">5 bonus try-ons</b>. You earn <b style="color:#a78bfa">5 try-ons</b> the moment they join.</p>
-    </div>
-  </div>
-
-  <div class="rw-milestones-wrap rv">
-    <p class="rw-ms-heading">🏆 Unlock Milestone Rewards</p>
-    <div class="rw-milestones">
-      <div class="rw-ms-card">
-        <div class="rw-ms-medal">🥉</div>
-        <div class="rw-ms-count">5 Friends</div>
-        <div class="rw-ms-reward">+25 free try-ons</div>
-        <div class="rw-ms-tag">Bronze</div>
-      </div>
-      <div class="rw-ms-card rw-ms-silver">
-        <div class="rw-ms-medal">🥈</div>
-        <div class="rw-ms-count">15 Friends</div>
-        <div class="rw-ms-reward">1 month Pro — free</div>
-        <div class="rw-ms-tag">Silver</div>
-      </div>
-      <div class="rw-ms-card rw-ms-gold">
-        <div class="rw-ms-medal">🥇</div>
-        <div class="rw-ms-count">50 Friends</div>
-        <div class="rw-ms-reward">Lifetime Pro access</div>
-        <div class="rw-ms-tag">Gold</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="rw-link-box rv">
-    <div class="rw-link-label">Your personal referral link</div>
-    <div class="rw-link-row">
-      <div class="rw-link-url">tryit4u.ai/ref/<span id="ref-code">join-AB12</span></div>
-      <button onclick="copyRef()" id="copy-ref-btn" class="rw-copy-btn">Copy Link 🔗</button>
-    </div>
-    <p class="rw-link-note">Join the beta to activate your personal referral link</p>
-  </div>
-</section>
+<!-- BUG-07 FIX: duplicate rewards section removed -->
 
 <!-- BLOG / PRESS -->
 <section class="sec" id="blog" aria-labelledby="blog-heading">
@@ -1376,20 +1301,14 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
       <p class="footer-tagline">The future of fashion shopping. Try anything on yourself before you buy it — from any store, on any device.</p>
       <div class="footer-social-label">Connect with us</div>
       <div class="social-row" aria-label="Social media links">
-        <a class="social-ico svg-ico" href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram">
+        <a class="social-ico svg-ico" href="https://instagram.com/tryit4u" target="_blank" rel="noopener" aria-label="Instagram">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
         </a>
-        <a class="social-ico svg-ico" href="https://tiktok.com" target="_blank" rel="noopener" aria-label="TikTok">
+        <a class="social-ico svg-ico" href="https://tiktok.com/@tryit4u" target="_blank" rel="noopener" aria-label="TikTok">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
         </a>
-        <a class="social-ico svg-ico" href="https://twitter.com" target="_blank" rel="noopener" aria-label="X / Twitter">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        </a>
-        <a class="social-ico svg-ico" href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook">
+        <a class="social-ico svg-ico" href="https://facebook.com/tryit4u" target="_blank" rel="noopener" aria-label="Facebook">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-        </a>
-        <a class="social-ico svg-ico" href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
         </a>
         <a class="social-ico svg-ico" href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
@@ -1417,11 +1336,12 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
     <div class="footer-col">
       <h4>Account</h4>
       <ul>
-        <li><a href="javascript:openSignIn('register')">Sign Up</a></li>
-        <li><a href="javascript:openSignIn('login')">Log In</a></li>
-        <li><a href="#wishlist">My Wishlist</a></li>
-        <li><a href="#">My Profile</a></li>
-        <li><a href="#">My Looks</a></li>
+        <li><a href="/register">Sign Up</a></li>
+        <li><a href="/login">Log In</a></li>
+        <li><a href="/account">My Profile</a></li>
+        <li><a href="/saved">My Wishlist</a></li>
+        <li><a href="/account">My Account</a></li>
+        <li><a href="/saved">My Looks</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -1437,14 +1357,11 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2026 TryItOn Ltd. All rights reserved. · <span style="color:rgba(255,255,255,.25);font-size:12px">TryItOn is a brand by TryIt4U AI | Delaware, USA</span></p>
+    <p>© 2026 TryIt4U AI Ltd. All rights reserved.</p>
+    <p style="margin-top:6px;font-size:11px;opacity:0.5;">TryIt4U is a brand by REAL BROKER LTD</p>
     <span class="a11y-flag">♿ WCAG 2.1 AA · <a href="javascript:openLegal('accessibility')" style="color:var(--m)">Accessibility Statement</a></span>
     <div class="footer-bottom-links">
-      <a href="javascript:openLegal('privacy')">Privacy</a>
-      <a href="javascript:openLegal('terms')">Terms</a>
-      <a href="javascript:openLegal('cookie')">Cookies</a>
-      <a href="/accessibility.html">Accessibility</a>
-      <a href="#contact">Contact</a>
+      <a href="javascript:openLegal('privacy')">Privacy</a><a href="javascript:openLegal('terms')">Terms</a><a href="javascript:openLegal('privacy')">Cookies</a><a href="#contact">Contact</a>
     </div>
   </div>
 </footer>
@@ -1579,6 +1496,28 @@ function closeUserMenu(){
 
 function showLoggedIn(user){
   currentUser = user;
+  // Swap navbar: hide Sign In, show avatar button
+  const signinBtn = document.getElementById('nav-signin-btn');
+  const avatarBtn = document.getElementById('user-avatar-btn');
+  if(signinBtn) signinBtn.style.display = 'none';
+  if(avatarBtn){
+    avatarBtn.style.display = 'flex';
+    // Show initials or profile picture inside the avatar button
+    const initial = (user.full_name || user.name || user.email || '?')[0].toUpperCase();
+    if(user.picture){
+      avatarBtn.style.backgroundImage = 'url('+user.picture+')';
+      avatarBtn.style.backgroundSize = 'cover';
+      avatarBtn.style.backgroundPosition = 'center';
+      avatarBtn.innerHTML = '';
+    } else {
+      avatarBtn.style.backgroundImage = 'none';
+      avatarBtn.style.fontSize = '14px';
+      avatarBtn.style.fontWeight = '700';
+      avatarBtn.style.color = '#fff';
+      avatarBtn.textContent = initial;
+    }
+  }
+  // Update dropdown
   document.getElementById('ud-guest').style.display = 'none';
   document.getElementById('ud-loggedin').style.display = 'block';
   const maskedEl = document.getElementById('ud-email-masked');
@@ -1586,7 +1525,7 @@ function showLoggedIn(user){
   emailRevealed = false;
   const planEl = document.getElementById('ud-plan-name');
   if(planEl){
-    const planLabels = { admin:'✨ Admin — Unlimited', pro:'Pro Plan – Monthly', free:'Free Plan' };
+    const planLabels = { admin:'✨ Admin — Unlimited', elite:'⚡ Pro Plus — ₪149/mo', pro:'🚀 Pro Basic — ₪69/mo', free:'Free Plan' };
     planEl.textContent = planLabels[user.plan] || user.plan || 'Free Plan';
   }
 }
@@ -1598,32 +1537,36 @@ function toggleEmailReveal(){
   el.textContent = emailRevealed ? currentUser.email : '••••••••••••••••••••';
 }
 
+// Unified token helper — checks both email/pass token key and OAuth key
+function _authToken(){ return localStorage.getItem('tryiton_token') || localStorage.getItem('accessToken'); }
+
 async function handleSignOut(){
   // Clear all stored auth data
   localStorage.removeItem('tryiton_token');
+  localStorage.removeItem('accessToken');
   localStorage.removeItem('tryiton_refresh');
   localStorage.removeItem('tryiton_user');
+  localStorage.removeItem('tryiton_google_user');
   currentUser = null;
+  // Restore navbar to guest state
+  const signinBtn = document.getElementById('nav-signin-btn');
+  const avatarBtn = document.getElementById('user-avatar-btn');
+  if(signinBtn) signinBtn.style.display = 'flex';
+  if(avatarBtn){
+    avatarBtn.style.display = 'none';
+    avatarBtn.style.backgroundImage = 'none';
+    avatarBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+  }
   document.getElementById('ud-guest').style.display = 'block';
   document.getElementById('ud-loggedin').style.display = 'none';
   closeUserMenu();
 }
 
-function openSection(s){
-  closeUserMenu();
-  const routes = {
-    profile:  '/account/profile',
-    billing:  '/account/billing',
-    address:  '/account/address',
-    photos:   '/account/photos',
-    settings: '/account/settings',
-  };
-  if(routes[s]) window.location.href = routes[s];
-}
+// openSection defined later in the file — do not duplicate here
 
 // Load user from token on page load
 async function initUserMenu(){
-  const token = localStorage.getItem('tryiton_token');
+  const token = _authToken();
   if(!token) return;
   try {
     const res = await fetch(API_BASE + '/me', {
@@ -1635,6 +1578,7 @@ async function initUserMenu(){
     } else {
       // Token expired — clear it
       localStorage.removeItem('tryiton_token');
+      localStorage.removeItem('accessToken');
     }
   } catch(e) {
     console.warn('User auth check failed:', e);
@@ -1652,7 +1596,7 @@ async function copyRef(){
   // Try to get real code from API if user is logged in
   let link='https://tryit4u.ai/ref/join-AB12';
   try{
-    const token=localStorage.getItem('tryiton_token');
+    const token=_authToken();
     if(token){
       const res=await fetch(API_BASE+'/referral/my-code',{headers:{Authorization:'Bearer '+token}});
       if(res.ok){
@@ -1764,7 +1708,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click'
   <p class="cookie-text">
     We use cookies and similar technologies to enhance your experience, analyze traffic, and enable AI try-on features.
     By clicking <strong>Accept All</strong>, you consent to our use of cookies as described in our
-    <a href="/cookies.html" target="_blank">Cookie Policy</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a>.
+    <a href="/privacy" target="_blank">Privacy Policy</a>.
   </p>
   <div class="cookie-actions">
     <button class="cookie-btn cookie-btn-accept" id="cookie-accept">✓ Accept All</button>
@@ -2546,6 +2490,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click'
         <div id="acc-nav-history" onclick="accSection('history')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">🕒 Try-On History</div>
         <div id="acc-nav-wishlist" onclick="accSection('wishlist')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">❤️ Wishlist</div>
         <div id="acc-nav-billing" onclick="accSection('billing')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">💳 Billing</div>
+        <div id="acc-nav-address" onclick="accSection('address')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">📦 My Address</div>
         <div id="acc-nav-settings" onclick="accSection('settings')" style="padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;font-family:Inter,sans-serif;color:rgba(255,255,255,.5);border-left:3px solid transparent;transition:.2s">⚙️ Settings</div>
         <div style="padding:20px 20px 0">
           <button onclick="handleSignOut();closeAccount()" style="width:100%;padding:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;color:#f87171;font-size:12px;font-family:Inter,sans-serif;cursor:pointer">Sign Out</button>
@@ -2672,13 +2617,62 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click'
           <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:14px;padding:20px;margin-bottom:20px">
             <div style="font-size:12px;color:#a78bfa;font-weight:600;font-family:Inter,sans-serif;margin-bottom:6px" data-en="Current Plan" data-he="מנוי נוכחי">Current Plan</div>
             <div id="acc-plan-disp" style="font-size:20px;font-weight:700;color:#fff;font-family:Inter,sans-serif">Loading...</div>
+            <div id="acc-sub-status" style="font-size:13px;color:rgba(255,255,255,.5);font-family:Inter,sans-serif;margin-top:4px"></div>
+            <div id="acc-sub-expiry" style="font-size:12px;color:rgba(255,255,255,.35);font-family:Inter,sans-serif;margin-top:2px"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+            <button id="upgrade-btn-pro_basic" onclick="startUpgrade('pro_basic')" style="padding:11px 20px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:10px;color:#34d399;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">🚀 Pro Basic ₪69/mo</button>
+            <button id="upgrade-btn-pro_plus" onclick="startUpgrade('pro_plus')" style="padding:11px 20px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:10px;color:#fbbf24;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">⚡ Pro Plus ₪149/mo</button>
+            <button id="upgrade-btn-pro_basic_annual" onclick="startUpgrade('pro_basic_annual')" style="padding:11px 20px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:10px;color:#a78bfa;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">🚀 Annual ₪745/yr</button>
+            <button id="upgrade-btn-pro_plus_annual" onclick="startUpgrade('pro_plus_annual')" style="padding:11px 20px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:10px;color:#fbbf24;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">⚡ Annual ₪1,609/yr</button>
+          </div>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;margin-bottom:16px">
+            <div style="font-size:12px;color:rgba(255,255,255,.4);font-weight:600;font-family:Inter,sans-serif;margin-bottom:8px">Payment History</div>
+            <div id="acc-billing-history" style="font-size:13px;color:rgba(255,255,255,.35);font-family:Inter,sans-serif">Loading...</div>
           </div>
           <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;margin-bottom:16px">
             <div style="font-size:12px;color:rgba(255,255,255,.4);font-weight:600;font-family:Inter,sans-serif;margin-bottom:8px">Important</div>
             <p style="font-size:13px;color:rgba(255,255,255,.6);font-family:Inter,sans-serif;line-height:1.6">• Monthly billing from your registration date<br>• Cancel anytime — no refund for current period<br>• We never store your credit card details</p>
           </div>
-          <button onclick="window.location.href='#pricing'" style="padding:11px 24px;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);border-radius:10px;color:#a78bfa;font-size:14px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer;margin-right:10px">Upgrade Plan</button>
           <button onclick="confirmCancel()" style="padding:11px 24px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;color:#f87171;font-size:14px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">Cancel Subscription</button>
+        </div>
+        <!-- Address -->
+        <div id="acc-address" style="display:none">
+          <h2 style="font-size:20px;font-weight:700;color:#fff;margin-bottom:24px">Delivery Address</h2>
+          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">Address Line 1</label>
+              <input id="addr-line1" type="text" placeholder="Street address" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">Address Line 2</label>
+              <input id="addr-line2" type="text" placeholder="Apartment, suite, floor (optional)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">City</label>
+                <input id="addr-city" type="text" placeholder="City" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+              </div>
+              <div>
+                <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">ZIP / Postal Code</label>
+                <input id="addr-zip" type="text" placeholder="ZIP code" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">State / Region</label>
+                <input id="addr-state" type="text" placeholder="State" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+              </div>
+              <div>
+                <label style="font-size:11px;color:rgba(255,255,255,.45);font-family:Inter,sans-serif;font-weight:600;display:block;margin-bottom:5px">Country</label>
+                <input id="addr-country" type="text" placeholder="Country" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:14px;font-family:Inter,sans-serif;padding:10px 12px;outline:none">
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+              <button onclick="saveAddress()" style="padding:10px 22px;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">Save Address</button>
+              <span id="acc-addr-save-ok" style="display:none;color:#34d399;font-size:13px;font-family:Inter,sans-serif">✓ Saved!</span>
+            </div>
+          </div>
         </div>
         <!-- Settings -->
         <div id="acc-settings" style="display:none">
@@ -2731,7 +2725,7 @@ async function handleGoogleCredential(response){
 
   // Try backend exchange — if it fails, log in client-side with Google profile data
   try{
-    const res = await fetch(API_BASE+'/auth/google/exchange', {
+    const res = await fetch(API_BASE+'/auth/oauth/google/exchange', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({id_token: response.credential})
@@ -2859,8 +2853,26 @@ function toggleFaq(btn){
   const isOpen = item.classList.contains('open');
   document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
   if(!isOpen) item.classList.add('open');
-  btn.setAttribute('aria-expanded', !isOpen);
 }
+
+function toggleMobileNav(){
+  const btn=document.getElementById('hamburger-btn');
+  const links=document.querySelector('.nav-links');
+  const isOpen=btn.classList.toggle('open');
+  links.classList.toggle('mobile-open',isOpen);
+  btn.setAttribute('aria-expanded',isOpen);
+  document.body.style.overflow=isOpen?'hidden':'';
+}
+document.querySelectorAll('.nav-links a').forEach(a=>{
+  a.addEventListener('click',()=>{
+    const btn=document.getElementById('hamburger-btn');
+    if(btn&&btn.classList.contains('open')){
+      btn.classList.remove('open');
+      document.querySelector('.nav-links').classList.remove('mobile-open');
+      document.body.style.overflow='';
+    }
+  });
+});
 
 function selectCat(cat){
   const cats=['fashion','furniture','electronics','garden','lighting','kitchen','plants','beauty'];
@@ -2874,12 +2886,13 @@ function selectCat(cat){
 
 function accSection(s){
 
-  ['profile','photos','history','wishlist','billing','settings'].forEach(sec=>{
+  ['profile','photos','history','wishlist','billing','address','settings'].forEach(sec=>{
     const panel = document.getElementById('acc-'+sec);
     if(panel) panel.style.display=sec===s?'block':'none';
     const nav=document.getElementById('acc-nav-'+sec);
     if(nav){nav.style.color=sec===s?'#a78bfa':'rgba(255,255,255,.5)';nav.style.background=sec===s?'rgba(124,58,237,.15)':'transparent';nav.style.borderLeftColor=sec===s?'#7c3aed':'transparent';}
   });
+  if(s==='address') loadAddressForm();
 }
 
 async function loadAccountData(){
@@ -2913,7 +2926,7 @@ async function loadAccountData(){
   }
 
   // Also try backend if token exists
-  const token=localStorage.getItem('tryiton_token');
+  const token=_authToken();
   if(!token) return;
   try{
     const res=await fetch(API_BASE+'/me',{headers:{Authorization:'Bearer '+token}});
@@ -2924,12 +2937,12 @@ async function loadAccountData(){
     const em=document.getElementById('acc-email-disp'); if(em) em.value=user.email||'';
     const ph=document.getElementById('acc-phone'); if(ph) ph.value=user.phone||'';
 
-    // Plan badge + billing display
+    // Plan badge + billing display (ILS pricing)
     const planMeta = {
       admin:  { label:'✨ Admin',  color:'#a78bfa', bg:'rgba(124,58,237,.25)', border:'rgba(124,58,237,.5)',  billing:'Unlimited — Admin' },
-      elite:  { label:'⚡ Elite',  color:'#fbbf24', bg:'rgba(251,191,36,.2)',  border:'rgba(251,191,36,.4)',  billing:'Elite — 300 try-ons/month · $49.90/mo' },
-      pro:    { label:'🚀 Pro',    color:'#34d399', bg:'rgba(52,211,153,.15)', border:'rgba(52,211,153,.35)', billing:'Pro — 100 try-ons/month · $19.90/mo' },
-      free:   { label:'FREE',      color:'#a78bfa', bg:'rgba(124,58,237,.15)', border:'rgba(124,58,237,.3)',  billing:'Free — 5 try-ons one-time' },
+      elite:  { label:'⚡ Pro Plus',color:'#fbbf24', bg:'rgba(251,191,36,.2)',  border:'rgba(251,191,36,.4)',  billing:'Pro Plus — 150 try-ons/month · ₪149/mo' },
+      pro:    { label:'🚀 Pro Basic',color:'#34d399', bg:'rgba(52,211,153,.15)', border:'rgba(52,211,153,.35)', billing:'Pro Basic — 50 try-ons/month · ₪69/mo' },
+      free:   { label:'FREE',       color:'#a78bfa', bg:'rgba(124,58,237,.15)', border:'rgba(124,58,237,.3)',  billing:'Free — 5 try-ons one-time' },
     };
     const meta = planMeta[user.plan] || planMeta.free;
     const badge = document.getElementById('acc-plan-badge');
@@ -2942,11 +2955,16 @@ async function loadAccountData(){
     const sc = document.getElementById('acc-stat-credits');
     if(sc) sc.textContent = credits === -1 ? '∞' : credits;
 
+    // Tryon count stat
+    const st = document.getElementById('acc-stat-tryons');
+    if(st && user.tryon_count != null) st.textContent = user.tryon_count;
+
     setAvatar(user);
 
-    // Load job history
+    // Load all sections in parallel
     loadJobHistory(token);
-  }catch(e){}
+    loadBillingSection(token, user);
+  }catch(e){ console.warn('loadAccountData error',e); }
 }
 
 async function loadJobHistory(token){
@@ -2972,7 +2990,7 @@ async function loadJobHistory(token){
 }
 
 async function saveProfile(){
-  const token=localStorage.getItem('tryiton_token');
+  const token=_authToken();
   if(!token)return;
   const full_name=document.getElementById('acc-fullname').value.trim();
   const phone=document.getElementById('acc-phone').value.trim();
@@ -2983,16 +3001,22 @@ async function saveProfile(){
   }catch(e){}
 }
 
-function confirmCancel(){
-  if(confirm('Your subscription will remain active until the end of the current billing period and will not renew. Continue?')){
-    alert('Subscription will end at the close of the current period. No further charge.');
-  }
+async function confirmCancel(){
+  if(!confirm('Your subscription will remain active until the end of the current billing period and will not renew. Continue?')) return;
+  const token=_authToken();
+  if(!token){ openSignIn(); return; }
+  try{
+    const r=await fetch(API_BASE+'/payplus/cancel',{method:'POST',headers:{Authorization:'Bearer '+token}});
+    const d=await r.json();
+    if(r.ok){ alert('Subscription cancelled. Access continues until end of billing period.'); loadAccountData(); }
+    else{ alert('Error: '+(d.message||'Could not cancel. Please contact support.')); }
+  }catch(e){ alert('Could not connect. Please try again.'); }
 }
 
 function confirmDelete(){
   const conf=prompt('Type DELETE to permanently delete your account:');
   if(conf==='DELETE'){
-    const token=localStorage.getItem('tryiton_token');
+    const token=_authToken();
     fetch(API_BASE+'/me',{method:'DELETE',headers:{Authorization:'Bearer '+token}})
       .then(()=>{ handleSignOut(); closeAccount(); alert('Account deleted. Goodbye!'); })
       .catch(()=>alert('Error — please try again.'));
@@ -3008,8 +3032,99 @@ async function sendPassReset(){
 
 document.getElementById('account-modal').addEventListener('click',function(e){if(e.target===this)closeAccount();});
 
-// Update openSection to use account modal
-function openSection(s){ closeUserMenu(); if(!localStorage.getItem('tryiton_token')){openSignIn();return;} openAccount(s); }
+// Update openSection to use account modal — checks token keys + Google-only fallback
+function openSection(s){ closeUserMenu(); if(!_authToken()&&!localStorage.getItem('tryiton_google_user')){openSignIn();return;} openAccount(s); }
+
+// ─── PayPlus checkout ────────────────────────────────────────────────────────
+async function startUpgrade(planId){
+  const token=_authToken();
+  if(!token){ openSignIn(); return; }
+  const btn=document.getElementById('upgrade-btn-'+planId);
+  if(btn){ btn.textContent='Loading…'; btn.disabled=true; }
+  try{
+    const r=await fetch(API_BASE+'/payplus/create-session',{method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
+      body:JSON.stringify({plan_id:planId})});
+    const d=await r.json();
+    if(d.url){ window.location.href=d.url; }
+    else{ alert('Payment error: '+(d.message||'Unknown error')); }
+  }catch(e){ alert('Could not connect to payment system. Please try again.'); }
+  finally{ if(btn){ btn.textContent='Upgrade'; btn.disabled=false; } }
+}
+
+// ─── Save delivery address ────────────────────────────────────────────────────
+async function saveAddress(){
+  const token=_authToken();
+  if(!token) return;
+  const g=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
+  const address={line1:g('addr-line1'),line2:g('addr-line2'),city:g('addr-city'),zip:g('addr-zip'),state:g('addr-state'),country:g('addr-country')};
+  try{
+    const r=await fetch(API_BASE+'/me/address',{method:'PUT',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},
+      body:JSON.stringify(address)});
+    if(r.ok){
+      const ok=document.getElementById('acc-addr-save-ok');
+      if(ok){ ok.style.display='inline'; setTimeout(()=>ok.style.display='none',3000); }
+    } else { alert('Could not save address. Please try again.'); }
+  }catch(e){ alert('Could not connect. Please try again.'); }
+}
+
+// ─── Load billing section (subscription + payment history) ───────────────────
+async function loadBillingSection(token, user){
+  // Subscription status
+  const subStatus=document.getElementById('acc-sub-status');
+  const subExpiry=document.getElementById('acc-sub-expiry');
+  if(subStatus){
+    if(user.plan==='free' || !user.payplus_plan){
+      subStatus.textContent='No active subscription';
+    } else {
+      subStatus.textContent=user.payplus_plan.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase())+' — Active';
+    }
+  }
+  if(subExpiry && user.subscription_expires_at){
+    subExpiry.textContent='Renews '+new Date(user.subscription_expires_at).toLocaleDateString();
+  }
+  // Payment history
+  try{
+    const r=await fetch(API_BASE+'/me/billing',{headers:{Authorization:'Bearer '+token}});
+    if(!r.ok) return;
+    const {payments}=await r.json();
+    const hist=document.getElementById('acc-billing-history');
+    if(!hist) return;
+    if(!payments||!payments.length){ hist.textContent='No payment history yet.'; return; }
+    hist.textContent=''; // clear "Loading..." text
+    payments.forEach(p=>{
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.06);font-family:Inter,sans-serif;font-size:13px';
+      const date=new Date(p.created_at).toLocaleDateString();
+      const amt=p.currency==='ILS'?'₪'+p.amount:'$'+p.amount;
+      const planName=p.plan.replace(/_/g,' ');
+      const statusMark=p.status==='completed'?'✓':'⏳';
+      const d=document.createElement('span'); d.style.color='rgba(255,255,255,.6)'; d.textContent=date;
+      const n=document.createElement('span'); n.style.color='#fff'; n.textContent=planName;
+      const a=document.createElement('span'); a.style.color='#34d399'; a.textContent=amt;
+      const s=document.createElement('span'); s.textContent=statusMark;
+      row.appendChild(d); row.appendChild(n); row.appendChild(a); row.appendChild(s);
+      hist.appendChild(row);
+    });
+  }catch(e){ const h=document.getElementById('acc-billing-history'); if(h) h.textContent='Could not load history.'; }
+}
+
+// ─── Load address form ────────────────────────────────────────────────────────
+async function loadAddressForm(){
+  const token=_authToken();
+  if(!token) return;
+  try{
+    const r=await fetch(API_BASE+'/me/address',{headers:{Authorization:'Bearer '+token}});
+    if(!r.ok) return;
+    const {address}=await r.json();
+    if(!address) return;
+    const set=(id,val)=>{ const el=document.getElementById(id); if(el&&val) el.value=val; };
+    set('addr-line1',address.line1); set('addr-line2',address.line2);
+    set('addr-city',address.city);   set('addr-zip',address.zip);
+    set('addr-state',address.state); set('addr-country',address.country);
+  }catch(e){}
+}
 
 // ── Language Toggle + i18n ───────────────────────────────────────────────────
 const I18N = {
@@ -3033,7 +3148,7 @@ const I18N = {
   logos_count: { en:'Works on 500+ stores worldwide — anywhere you shop', es:'Funciona en más de 500 tiendas en todo el mundo', de:'Funktioniert in 500+ Geschäften weltweit', fr:'Fonctionne sur 500+ boutiques dans le monde', he:'עובד על 500+ חנויות ברחבי העולם', it:'Funziona su 500+ negozi in tutto il mondo', ru:'Работает в 500+ магазинах по всему миру' },
   // Features
   feat_lbl: { en:'Features', es:'Características', de:'Funktionen', fr:'Fonctionnalités', he:'תכונות', it:'Funzionalità', ru:'Функции' },
-  feat_h:   { en:"Everything you need.\nNothing you don't.", es:'Todo lo que necesitas.', de:'Alles was du brauchst.', fr:'Tout ce dont vous avez besoin.', he:'הכל מה שאתה צריך.', it:'Tutto ciò di cui hai bisogno.', ru:'Всё что нужно.' },
+  feat_h:   { en:"Everything you need.\nAll in one place.", es:'Todo lo que necesitas.', de:'Alles was du brauchst.', fr:'Tout ce dont vous avez besoin.', he:'הכל מה שאתה צריך.', it:'Tutto ciò di cui hai bisogno.', ru:'Всё что нужно.' },
   feat_sub: { en:'One AI. Every product. Any website.', es:'Una IA. Cualquier producto. Cualquier sitio.', de:'Eine KI. Jedes Produkt. Jede Website.', fr:'Une IA. Tout produit. Tout site.', he:'AI אחד. כל מוצר. כל אתר.', it:'Un AI. Ogni prodotto. Qualsiasi sito.', ru:'Один ИИ. Любой товар. Любой сайт.' },
   f1_h: { en:'Clothing Try-On', es:'Prueba de Ropa', de:'Kleidung Anprobieren', fr:'Essayage Vêtements', he:'התנסות בלבוש', it:'Prova Abbigliamento', ru:'Примерка одежды' },
   f1_p: { en:'Any shirt, dress, jacket, or pants on your real body — instantly.', es:'Cualquier camisa, vestido, chaqueta o pantalón en tu cuerpo real.', de:'Jedes Hemd, Kleid, Jacke oder Hose an deinem echten Körper.', fr:'N\'importe quelle chemise, robe, veste ou pantalon sur votre corps.', he:'כל חולצה, שמלה, ז\'קט או מכנסיים על גופך האמיתי.', it:'Qualsiasi camicia, abito, giacca o pantalone sul tuo corpo reale.', ru:'Любая рубашка, платье, куртка или брюки на вашем теле.' },
@@ -3229,7 +3344,7 @@ if(currentLang !== 'en') setLang(currentLang);
       <p>To delete: Settings → Delete Account | Email: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a></p>
       <h3 style="color:#fff;margin:24px 0 8px;font-size:16px;border-left:3px solid #7c3aed;padding-left:12px">6. Data Retention</h3>
       <ul style="padding-left:18px;margin-bottom:16px"><li>Photos: deleted within 30 days of account deletion</li><li>Account data: 7 years (legal requirement)</li><li>Security logs: 90 days</li></ul>
-      <p style="margin-top:24px;color:rgba(255,255,255,.45);font-size:13px">Questions: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a> | TryItOn Ltd.</p>
+      <p style="margin-top:24px;color:rgba(255,255,255,.45);font-size:13px">Questions: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a> | TryIt4U AI Ltd.</p>
     </div>
     <!-- Terms of Service -->
     <div id="legal-terms" style="display:none;color:rgba(255,255,255,.8);font-family:Inter,sans-serif;line-height:1.7">
@@ -3281,7 +3396,7 @@ if(currentLang !== 'en') setLang(currentLang);
         <li><a href="https://support.mozilla.org/kb/enable-and-disable-cookies-website-preferences" target="_blank" rel="noopener" style="color:#a78bfa">Firefox</a></li>
         <li><a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471" target="_blank" rel="noopener" style="color:#a78bfa">Safari</a></li>
       </ul>
-      <p style="margin-top:24px;color:rgba(255,255,255,.45);font-size:13px">Questions: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a> | TryItOn Ltd.</p>
+      <p style="margin-top:24px;color:rgba(255,255,255,.45);font-size:13px">Questions: <a href="mailto:privacy@tryit4u.ai" style="color:#a78bfa">privacy@tryit4u.ai</a> | TryIt4U AI Ltd.</p>
     </div>
 
     <!-- Accessibility Statement -->
@@ -3350,6 +3465,51 @@ function legalTab(tab){
 document.getElementById('legal-modal').addEventListener('click',function(e){if(e.target===this)closeLegal();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLegal();});
 </script>
+
+<!-- ── WhatsApp Floating Widget ──────────────────────────────── -->
+<style>
+#wa-widget{position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:10px;opacity:0;transform:translateY(20px);transition:opacity .4s,transform .4s;pointer-events:none}
+#wa-widget.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+#wa-btn{width:60px;height:60px;background:#25d366;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(37,211,102,.4);text-decoration:none;position:relative;transition:transform .2s,box-shadow .2s}
+#wa-btn:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(37,211,102,.6)}
+#wa-btn::before{content:'';position:absolute;inset:-4px;border-radius:50%;border:3px solid rgba(37,211,102,.35);animation:wa-pulse 2s infinite}
+@keyframes wa-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:0}}
+#wa-btn svg{width:32px;height:32px;fill:#fff}
+#wa-bubble{background:rgba(15,15,30,.95);backdrop-filter:blur(12px);border:1px solid rgba(37,211,102,.2);color:#fff;border-radius:16px 16px 4px 16px;padding:12px 16px;font-size:13.5px;max-width:220px;line-height:1.45;box-shadow:0 4px 24px rgba(0,0,0,.3)}
+#wa-bubble strong{color:#25d366;display:block;margin-bottom:3px;font-size:14px}
+#wa-close{position:absolute;top:-8px;right:-8px;width:22px;height:22px;background:#444;border-radius:50%;border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+</style>
+
+<div id="wa-widget">
+  <div id="wa-bubble" style="position:relative">
+    <button id="wa-close" onclick="document.getElementById('wa-widget').style.display='none'">×</button>
+    <strong>💬 Chat with us</strong>
+    Questions about TryIt4U? We reply instantly!
+  </div>
+  <a id="wa-btn"
+     href="https://wa.me/15077131736?text=היי%20TryIt4U%20AI%20👋%20אשמח%20לשמוע%20עוד%20!"
+     target="_blank"
+     rel="noopener"
+     aria-label="Chat on WhatsApp">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  </a>
+</div>
+
+<script>
+(function(){
+  var w=document.getElementById('wa-widget');
+  // Show after 3 seconds
+  setTimeout(function(){w.classList.add('visible');},3000);
+  // Hide bubble after 8 seconds, keep button
+  setTimeout(function(){
+    var b=document.getElementById('wa-bubble');
+    if(b)b.style.display='none';
+  },11000);
+})();
+</script>
+<!-- ── /WhatsApp Widget ─────────────────────────────────────── -->
 
 </body>
 
