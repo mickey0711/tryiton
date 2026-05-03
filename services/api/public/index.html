@@ -1409,7 +1409,10 @@ function closeCookie(){document.getElementById('cookie').style.display='none';}
 function getUTM(){try{return JSON.parse(localStorage.getItem('_utm')||'{}');}catch(e){return {};}}
 
 // Waitlist / Newsletter signup
-const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8080' : window.location.origin;
+// DO App Platform strips the route prefix before forwarding to the api service.
+// e.g. GET /me → DO strips /me → Express sees / → serves index.html (WRONG).
+// Fix: all API calls use /api prefix. GET /api/me → DO strips /api → Express sees /me → meRouter (CORRECT).
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8080' : '/api';
 let done=false;
 async function handleJoin(e,src){
   e.preventDefault();
