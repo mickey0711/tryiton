@@ -33,6 +33,12 @@ services:
       - path: /auth
       - path: /oauth
       - path: /health
+      - path: /login
+      - path: /register
+      - path: /saved
+      - path: /account
+      - path: /s
+      - path: /_next
       - path: /me
       - path: /fit
       - path: /assets
