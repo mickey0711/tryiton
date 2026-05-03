@@ -48,7 +48,7 @@ export default function LoginPage() {
 
     /* ── OAuth redirects (backend handles the flow) ── */
     const oauthLogin = (provider: "google" | "facebook" | "apple") => {
-        window.location.href = `${API}/oauth/${provider}`;
+        window.location.href = `${API}/auth/oauth/${provider}`;
     };
 
     /* ─────────────── Forgot-password view ─────────────── */
