@@ -67,6 +67,7 @@ function App() {
     const [profileImageB64, setProfileImageB64] = useState<string | null>(null);
     const [productSrc, setProductSrc] = useState<string | null>(null);
     const [detectedCategory, setDetectedCategory] = useState<string>("tops");
+    const [productTitle, setProductTitle] = useState<string | null>(null);       // product name from page (for Space prompt)
     const [jobResult, setJobResult] = useState<JobResult | null>(null);
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
@@ -118,6 +119,8 @@ function App() {
                 void chrome.runtime.lastError;
                 if (res?.src) setProductSrc(res.src);
                 if (res?.category) setDetectedCategory(res.category);
+                if (res?.specs?.title) setProductTitle(res.specs.title);
+                else if (res?.specs?.brand) setProductTitle(res.specs.brand);
             });
         } catch { /* Service worker not active */ }
 
@@ -506,6 +509,7 @@ function App() {
                 body: JSON.stringify({
                     room_image: roomImageB64,
                     product_url: productSrc ?? "",
+                    product_title: productTitle ?? undefined,  // ← product name for smart AI prompt
                     category: spaceCategory,
                 }),
             });
@@ -530,6 +534,8 @@ function App() {
                 plants:      "Check that this corner gets enough light. At least 4h of indirect sunlight daily.",
                 garden:      "Good fit for the outdoor area. Weather-rated materials recommended.",
                 kitchen:     "Fits the counter dimensions. Verify door clearance before ordering.",
+                beauty:      "Product visualised for reference. Try the Makeup or Hair category for face try-on.",
+                other:       "Product visualised in your space. Check dimensions before ordering.",
             };
             setProgress(100);
             setSpaceResult({

@@ -23,7 +23,7 @@ const router = Router();
 // ─── Space categories supported ─────────────────────────────────────────────
 const SPACE_CATEGORIES = new Set([
     "furniture", "electronics", "lighting", "plants",
-    "garden", "kitchen", "beauty",
+    "garden", "kitchen", "beauty", "other",
 ]);
 
 const ADVISOR_TEMPLATES: Record<string, string> = {
@@ -34,29 +34,62 @@ const ADVISOR_TEMPLATES: Record<string, string> = {
     garden:      "Great fit for the outdoor area. Choose weather-rated materials for your local climate conditions.",
     kitchen:     "The appliance fits the counter dimensions well. Always verify door-swing and ventilation clearance before installing.",
     beauty:      "Product placed for reference. For beauty try-on, switch to selfie mode with the Makeup or Hair category.",
+    other:       "Product visualised in your space. Check actual dimensions and proportions before ordering.",
 };
 
-// Category → AI prompt template
-const PLACEMENT_PROMPTS: Record<string, string> = {
-    furniture:   "a stylish piece of furniture placed naturally in the room, photorealistic interior design",
-    electronics: "a modern electronic device mounted or placed in the room, photorealistic",
-    lighting:    "an elegant light fixture installed in the room, with warm ambient lighting, photorealistic",
-    plants:      "a beautiful indoor plant placed naturally in the corner of the room, photorealistic",
-    garden:      "outdoor garden furniture or decor arranged in the space, photorealistic",
-    kitchen:     "a kitchen appliance placed on the counter, photorealistic interior photo",
-    beauty:      "beauty product displayed in the room, photorealistic",
+// ─── Category → placement context ───────────────────────────────────────────
+// Used when no product title is available (fallback generic prompt)
+const PLACEMENT_FALLBACKS: Record<string, string> = {
+    furniture:   "a stylish piece of furniture",
+    electronics: "a modern electronic device",
+    lighting:    "an elegant light fixture",
+    plants:      "a beautiful indoor plant in a ceramic pot",
+    garden:      "outdoor garden furniture or decor",
+    kitchen:     "a kitchen appliance",
+    beauty:      "a beauty product",
+    other:       "a product",
 };
+
+// Category → placement instruction for instruct-pix2pix
+const PLACEMENT_INSTRUCTIONS: Record<string, string> = {
+    furniture:   "placed naturally in the room, keep existing walls and floor",
+    electronics: "mounted or placed on the wall/surface in the room",
+    lighting:    "installed as a light fixture in the room, warm ambient glow",
+    plants:      "placed in the corner of the room with natural sunlight",
+    garden:      "arranged naturally in the outdoor space",
+    kitchen:     "placed on the kitchen counter or mounted on wall",
+    beauty:      "displayed on the vanity surface",
+    other:       "placed naturally in the space",
+};
+
+// ─── Build smart prompt from product title + category ────────────────────────
+function buildSpacePlacementPrompt(category: string, productTitle?: string): string {
+    const instruction = PLACEMENT_INSTRUCTIONS[category] ?? "placed naturally in the space";
+
+    // Use product title if meaningful (not just a URL or very short)
+    const cleanTitle = productTitle?.trim();
+    const useTitle = cleanTitle && cleanTitle.length > 4 && !cleanTitle.startsWith("http");
+
+    const subject = useTitle
+        ? `"${cleanTitle.slice(0, 80)}"` // cap at 80 chars to avoid prompt bloat
+        : PLACEMENT_FALLBACKS[category] ?? "a product";
+
+    return `Photorealistic interior photo: add ${subject} ${instruction}. Keep the room layout, walls, floor, and all existing furniture exactly the same. High quality, 4K, professional photography.`;
+}
 
 // ─── Replicate pix2pix pipeline ──────────────────────────────────────────────
+// Model: timothybrooks/instruct-pix2pix (latest verified version 2024-01)
+const PIX2PIX_VERSION = "30c1d0b916a6f8efce20493f5d61ee27491ab2a60437c13c588468b9810ec23f";
 
 async function runReplicateSpaceAnalysis(
     roomB64: string,
     productUrl: string,
     category: string,
-    replicateToken: string
+    replicateToken: string,
+    productTitle?: string
 ): Promise<{ resultUrl: string; advisorText: string; fitScore: number }> {
-    const prompt = `Photorealistic interior design photo: ${PLACEMENT_PROMPTS[category] ?? "a product placed in the room"}. Keep the room layout and walls exactly the same. High quality, 4K, professional photography.`;
-    const negativePrompt = "blurry, distorted, unrealistic, cartoon, drawing, sketch, low quality, bad composition";
+    const prompt = buildSpacePlacementPrompt(category, productTitle);
+    const negativePrompt = "blurry, distorted, unrealistic, cartoon, drawing, sketch, low quality, bad composition, extra furniture, cluttered";
 
     const response = await fetch("https://api.replicate.com/v1/predictions", {
         method: "POST",
@@ -65,14 +98,14 @@ async function runReplicateSpaceAnalysis(
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            version: "854e8727697a057c525cdb45ab037f64ecca770a1769cc52287c2e56472a247b", // instruct-pix2pix
+            version: PIX2PIX_VERSION,
             input: {
                 image: roomB64,
                 prompt,
                 negative_prompt: negativePrompt,
-                num_inference_steps: 20,
-                image_guidance_scale: 1.5,
-                guidance_scale: 7,
+                num_inference_steps: 25,
+                image_guidance_scale: 1.3,
+                guidance_scale: 8,
                 num_outputs: 1,
             },
         }),
@@ -96,9 +129,12 @@ async function runReplicateSpaceAnalysis(
 
         if (polled.status === "succeeded") {
             const resultUrl = Array.isArray(polled.output) ? polled.output[0] : polled.output;
+            const advisor = productTitle
+                ? `${ADVISOR_TEMPLATES[category] ?? "Great fit for the space!"} The AI visualized "${productTitle.slice(0, 60)}" in your space.`
+                : ADVISOR_TEMPLATES[category] ?? "Great fit for the space!";
             return {
                 resultUrl,
-                advisorText: ADVISOR_TEMPLATES[category] ?? "Great fit for the space!",
+                advisorText: advisor,
                 fitScore: 85 + Math.floor(Math.random() * 12),
             };
         }
@@ -116,9 +152,10 @@ function sleep(ms: number) {
 // ─── POST /space/analyze ─────────────────────────────────────────────────────
 router.post("/analyze", async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { room_image, product_url, category } = req.body as {
+        const { room_image, product_url, product_title, category } = req.body as {
             room_image: string;
-            product_url: string;
+            product_url?: string;
+            product_title?: string;  // ← new: product name from page (e.g. "IKEA SÖDERHAMN sofa")
             category: string;
         };
 
@@ -136,7 +173,8 @@ router.post("/analyze", async (req: Request, res: Response, next: NextFunction) 
                     room_image,
                     product_url ?? "",
                     category,
-                    replicateToken
+                    replicateToken,
+                    product_title   // ← pass title for smart prompt
                 );
                 return res.json({
                     result_image: result.resultUrl,
@@ -144,6 +182,7 @@ router.post("/analyze", async (req: Request, res: Response, next: NextFunction) 
                     fit_score: result.fitScore,
                     category,
                     ai_powered: true,
+                    product_title: product_title ?? null,
                 });
             } catch (aiErr: any) {
                 console.warn("[/space/analyze] Replicate pipeline failed, using advisor fallback:", aiErr.message);
@@ -151,7 +190,6 @@ router.post("/analyze", async (req: Request, res: Response, next: NextFunction) 
         }
 
         // Fallback: return room image + template advisor text
-        // This still provides value — the advisor text is useful even without AI image
         res.json({
             result_image: room_image,
             advisor_text: ADVISOR_TEMPLATES[category] ?? "This product looks like a great fit for your space!",
@@ -200,7 +238,7 @@ router.post("/atmosphere", async (req: Request, res: Response, next: NextFunctio
                     method: "POST",
                     headers: { Authorization: `Bearer ${replicateToken}`, "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        version: "854e8727697a057c525cdb45ab037f64ecca770a1769cc52287c2e56472a247b",
+                        version: PIX2PIX_VERSION,
                         input: {
                             image: room_image,
                             prompt,
