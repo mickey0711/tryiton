@@ -24,8 +24,9 @@ export default function AuthSuccessPage() {
         localStorage.setItem("accessToken",  access);
         if (refresh) localStorage.setItem("refreshToken", refresh);
 
-        // Clean the tokens out of the URL before navigating
-        window.location.replace("/saved");
+        // Clean the tokens out of the URL, then navigate to return_to or /saved
+        const returnTo = params.get("return_to");
+        window.location.replace(returnTo && returnTo.startsWith("/") ? returnTo : "/saved");
     }, []);
 
     if (error) return (

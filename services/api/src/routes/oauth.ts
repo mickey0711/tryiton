@@ -68,13 +68,19 @@ const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
 
-// Web redirect flow: GET /auth/oauth/google
+// Web redirect flow: GET /auth/oauth/google?return_to=/optional/path
 router.get("/google", (req, res) => {
     const client_id = process.env.GOOGLE_CLIENT_ID;
     if (!client_id) return res.status(503).json({ error: "Google OAuth not configured" });
 
     const redirect_uri = process.env.GOOGLE_REDIRECT_URI ??
         `${process.env.WEB_APP_URL}/auth/oauth/google/callback`;
+
+    // Encode return_to in state so the callback knows where to redirect after auth
+    const returnTo = req.query.return_to as string | undefined;
+    const state = returnTo && returnTo.startsWith("/")
+        ? Buffer.from(JSON.stringify({ return_to: returnTo })).toString("base64url")
+        : undefined;
 
     const params = new URLSearchParams({
         client_id,
@@ -84,6 +90,7 @@ router.get("/google", (req, res) => {
         access_type: "offline",
         prompt: "select_account",
     });
+    if (state) params.set("state", state);
     res.redirect(`${GOOGLE_AUTH_URL}?${params}`);
 });
 
@@ -123,13 +130,17 @@ router.get("/google/callback", async (req, res, next) => {
         const { code, state } = req.query as { code?: string; state?: string };
         if (!code) throw new AppError("BAD_REQUEST", "Missing code", 400);
 
-        // Decode state to detect extension flow
+        // Decode state to detect extension flow or return_to
         let extRedirect: string | null = null;
+        let returnTo = "/saved";
         if (state) {
             try {
                 const decoded = JSON.parse(Buffer.from(state, "base64url").toString()) as any;
                 if (typeof decoded.ext_redirect === "string" && decoded.ext_redirect.includes("chromiumapp.org")) {
                     extRedirect = decoded.ext_redirect;
+                }
+                if (typeof decoded.return_to === "string" && decoded.return_to.startsWith("/")) {
+                    returnTo = decoded.return_to;
                 }
             } catch { /* ignore malformed state */ }
         }
@@ -156,9 +167,9 @@ router.get("/google/callback", async (req, res, next) => {
             return res.redirect(`${extRedirect}?access_token=${accessToken}&user=${userPayload}`);
         }
 
-        // Standard web redirect
+        // Standard web redirect — pass return_to so auth/success knows where to land
         const frontendUrl = process.env.WEB_APP_URL ?? "http://localhost:3000";
-        res.redirect(`${frontendUrl}/auth/success?access_token=${accessToken}&refresh_token=${refreshToken}`);
+        res.redirect(`${frontendUrl}/auth/success?access_token=${accessToken}&refresh_token=${refreshToken}&return_to=${encodeURIComponent(returnTo)}`);
     } catch (err) { next(err); }
 });
 

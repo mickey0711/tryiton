@@ -2701,8 +2701,8 @@ function decodeJWT(token){
 }
 
 function doGoogleSignIn(){
-  // Full OAuth redirect — same flow as /login page, avoids One Tap popup issues
-  window.location.href = '/auth/oauth/google';
+  // Full OAuth redirect — return_to=/ so after login we come back to the landing page
+  window.location.href = '/auth/oauth/google?return_to=/';
 }
 
 async function handleGoogleCredential(response){
