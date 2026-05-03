@@ -81,12 +81,12 @@ services:
       - key: CHROME_EXTENSION_URL
         value: https://chrome.google.com/webstore/detail/tryiton/YOUR_EXTENSION_ID
       - key: GOOGLE_CLIENT_ID
-        value: 777217128855-n7uns4h3b9ocn7nkspmuj46hiv4sdmmn.apps.googleusercontent.com
+        value: 820960204469-30cf23ql86flognfhrn8k3k3ghqjvitc.apps.googleusercontent.com
       - key: GOOGLE_CLIENT_SECRET
         scope: RUN_TIME
         type: SECRET
       - key: GOOGLE_REDIRECT_URI
-        value: https://tryit4u.ai/oauth/google/callback
+        value: https://tryit4u.ai/auth/oauth/google/callback
       - key: FACEBOOK_APP_ID
         scope: RUN_TIME
         type: SECRET
