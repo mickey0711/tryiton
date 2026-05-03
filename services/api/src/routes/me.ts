@@ -21,17 +21,27 @@ async function signKey(key: string | null): Promise<string | null> {
 router.get("/", async (req, res, next) => {
     try {
         const userId = (req as AuthRequest).userId;
-        const { rows } = await db.query(
-            `SELECT u.id, u.email, u.full_name, u.phone, u.plan, u.credits, u.is_admin,
-              u.email_verified, u.created_at, u.address,
-              u.payplus_subscription_id, u.payplus_plan, u.subscription_expires_at,
-              p.skin_tone, p.face_shape, p.body_metrics,
-              (SELECT COUNT(*) FROM jobs    WHERE user_id = u.id AND status = 'done')::int AS tryon_count,
-              (SELECT COUNT(*) FROM saved_items WHERE user_id = u.id)::int AS saved_count
-       FROM users u LEFT JOIN user_profiles p ON p.user_id = u.id
-       WHERE u.id = $1`,
-            [userId]
-        );
+        let rows: any[];
+        try {
+            ({ rows } = await db.query(
+                `SELECT u.id, u.email, u.full_name, u.phone, u.plan, u.credits, u.is_admin,
+                  u.email_verified, u.created_at, u.address,
+                  u.payplus_subscription_id, u.payplus_plan, u.subscription_expires_at,
+                  p.skin_tone, p.face_shape, p.body_metrics,
+                  (SELECT COUNT(*) FROM jobs    WHERE user_id = u.id AND status = 'done')::int AS tryon_count,
+                  (SELECT COUNT(*) FROM saved_items WHERE user_id = u.id)::int AS saved_count
+           FROM users u LEFT JOIN user_profiles p ON p.user_id = u.id
+           WHERE u.id = $1`,
+                [userId]
+            ));
+        } catch {
+            // Full query failed (e.g. missing column from pending migration) — fall back to minimal query
+            ({ rows } = await db.query(
+                `SELECT u.id, u.email, u.plan, u.credits, u.is_admin, u.created_at
+                 FROM users u WHERE u.id = $1`,
+                [userId]
+            ));
+        }
         if (!rows.length) return res.status(404).json({ error: "NOT_FOUND", message: "User not found" });
         res.json({ user: rows[0] });
     } catch (err) { next(err); }

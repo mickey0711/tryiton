@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./config/logger";
 import { db } from "./db/client";
+import { runMigrations } from "./db/migrate";
 
 const PORT = parseInt(process.env.PORT ?? "8080", 10);
 
@@ -9,6 +10,9 @@ async function start() {
         // Test DB
         await db.query("SELECT 1");
         logger.info("✅ Database connected");
+
+        // Apply any pending migrations on startup (idempotent — safe to run every time)
+        await runMigrations();
 
         // Test Redis (optional — skip if not configured)
         if (process.env.REDIS_URL) {
