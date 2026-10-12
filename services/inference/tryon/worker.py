@@ -91,7 +91,7 @@ async def process_job(pool: asyncpg.Pool, job_data: dict):
     quality     = job_data.get("qualityProfile", "balanced")
     t0 = time.time()
 
-    with sentry_sdk.push_scope() as scope if SENTRY_DSN else _noop_scope() as scope:
+    with (sentry_sdk.push_scope() if SENTRY_DSN else _noop_scope()) as scope:
         scope.set_tag("category", category)
         scope.set_tag("quality_profile", quality)
         scope.set_user({"id": user_id})
@@ -265,8 +265,15 @@ async def run_worker():
                         "UPDATE jobs SET status='failed', error_message=$1, updated_at=NOW() WHERE id=$2",
                         str(err)[:500], job_data.get("jobId"),
                     )
-                except Exception:
-                    pass
+                    # Give the credit back — the API charged it when the job was created.
+                    if job_data.get("userId"):
+                        await pool.execute(
+                            "UPDATE users SET credits = credits + 1, updated_at = NOW() "
+                            "WHERE id=$1 AND credits <> -1 AND plan <> 'admin'",
+                            job_data["userId"],
+                        )
+                except Exception as db_err:
+                    log.error(f"Failed to mark job {job_data.get('jobId')} as failed: {db_err}")
 
         except Exception as err:
             log.error(f"Worker loop error: {err}", exc_info=True)

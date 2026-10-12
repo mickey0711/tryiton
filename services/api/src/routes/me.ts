@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/client";
-import { requireAuth, AuthRequest } from "../middleware/auth";
+import { requireAuth, AuthRequest, forgetUser } from "../middleware/auth";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { s3, S3_BUCKET } from "../config/s3";
@@ -28,7 +28,7 @@ router.get("/", async (req, res, next) => {
                   u.email_verified, u.created_at, u.address,
                   u.payplus_subscription_id, u.payplus_plan, u.subscription_expires_at,
                   p.skin_tone, p.face_shape, p.body_metrics,
-                  (SELECT COUNT(*) FROM jobs    WHERE user_id = u.id AND status = 'done')::int AS tryon_count,
+                  (SELECT COUNT(*) FROM jobs    WHERE user_id = u.id AND status = 'succeeded')::int AS tryon_count,
                   (SELECT COUNT(*) FROM saved_items WHERE user_id = u.id)::int AS saved_count
            FROM users u LEFT JOIN user_profiles p ON p.user_id = u.id
            WHERE u.id = $1`,
@@ -188,6 +188,7 @@ router.delete("/", async (req, res, next) => {
             await client.query("BEGIN");
             await client.query(`DELETE FROM users WHERE id = $1`, [userId]);
             await client.query("COMMIT");
+            forgetUser(userId);
         } catch (err) {
             await client.query("ROLLBACK");
             throw err;

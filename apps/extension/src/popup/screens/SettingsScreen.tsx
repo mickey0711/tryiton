@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { apiFetch } from "../../lib/api";
 
 interface Props {
     onBack: () => void;
@@ -12,7 +13,6 @@ interface UserStatus {
     referralUses: number;
 }
 
-const API_BASE = "https://tryit4u.ai";
 
 export function SettingsScreen({ onBack, token }: Props) {
     const [status, setStatus]           = useState<UserStatus | null>(null);
@@ -27,10 +27,10 @@ export function SettingsScreen({ onBack, token }: Props) {
         if (!token) { setLoading(false); return; }
         try {
             const [payRes, refRes] = await Promise.all([
-                fetch(`${API_BASE}/payments/status`, { headers: { Authorization: `Bearer ${token}` } }),
-                fetch(`${API_BASE}/referral/my-code`, { headers: { Authorization: `Bearer ${token}` } }),
+                apiFetch(`/me`),
+                apiFetch(`/referral/my-code`),
             ]);
-            const pay = payRes.ok ? await payRes.json() : { credits: 5, plan: "free" };
+            const pay = payRes.ok ? (await payRes.json()).user ?? { credits: 5, plan: "free" } : { credits: 5, plan: "free" };
             const ref = refRes.ok ? await refRes.json() : { code: null, uses: 0 };
             setStatus({ credits: pay.credits, plan: pay.plan, referralCode: ref.code, referralUses: ref.uses });
         } catch {
@@ -46,9 +46,8 @@ export function SettingsScreen({ onBack, token }: Props) {
         if (!redeemCode.trim() || !token) return;
         setRedeemLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/referral/redeem`, {
+            const res = await apiFetch(`/referral/redeem`, {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ code: redeemCode.trim() }),
             });
             const data = await res.json();

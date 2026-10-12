@@ -45,6 +45,10 @@ import payplusRouter from "./routes/payplus";
 
 const app = express();
 
+// Behind DigitalOcean App Platform ingress — needed so req.ip is the real client
+// address for rate limiting and login lockouts (otherwise everyone shares the proxy IP).
+app.set("trust proxy", 1);
+
 // ─── Correlation ID ────────────────────────────────────────────────────────────
 app.use((req, _res, next) => {
     (req as any).requestId = uuidv4();

@@ -1,13 +1,77 @@
 import { Router, Request, Response, NextFunction } from "express";
+import crypto from "crypto";
 import { db } from "../db/client";
 
 const router = Router();
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "tryiton-admin-2026";
+const COOKIE = "tryiton_admin";
 
+/** No default token: the admin panel is disabled until ADMIN_TOKEN is set in the environment. */
+function adminToken(): string | null {
+    const t = process.env.ADMIN_TOKEN?.trim();
+    return t && t.length >= 16 ? t : null;
+}
+
+function tokenMatches(given: unknown): boolean {
+    const expected = adminToken();
+    if (!expected || typeof given !== "string") return false;
+    const a = Buffer.from(given), b = Buffer.from(expected);
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function readCookie(req: Request, name: string): string | undefined {
+    const raw = req.headers.cookie;
+    if (!raw) return undefined;
+    for (const part of raw.split(";")) {
+        const [k, ...v] = part.trim().split("=");
+        if (k === name) return decodeURIComponent(v.join("="));
+    }
+    return undefined;
+}
+
+/**
+ * Auth order: X-Admin-Token header → HttpOnly cookie → ?token= (first visit only).
+ * A query token is swapped for a cookie and the URL is cleaned so the secret
+ * does not stay in browser history, Referer headers or access logs.
+ */
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
-    const token = req.headers["x-admin-token"] || req.query.token;
-    if (token !== ADMIN_TOKEN) return res.status(401).json({ error: "UNAUTHORIZED" });
-    next();
+    if (!adminToken()) {
+        return res.status(503).json({ error: "ADMIN_DISABLED", message: "Set ADMIN_TOKEN (16+ chars) to enable the admin panel" });
+    }
+    if (tokenMatches(req.headers["x-admin-token"]) || tokenMatches(readCookie(req, COOKIE))) return next();
+    if (tokenMatches(req.query.token)) {
+        res.cookie(COOKIE, String(req.query.token), {
+            httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict",
+            path: "/admin", maxAge: 12 * 3600_000,
+        });
+        if (req.method === "GET") {
+            const url = new URL(req.originalUrl, "http://x");
+            url.searchParams.delete("token");
+            return res.redirect(url.pathname + url.search);
+        }
+        return next();
+    }
+    res.status(401).json({ error: "UNAUTHORIZED" });
+}
+
+/** HTML-escape anything that came from users or scraped product pages before interpolating it. */
+function esc(v: unknown): string {
+    return String(v ?? "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+/** Only allow http(s) links in href attributes. */
+function safeHref(v: unknown): string {
+    if (typeof v !== "string") return "";
+    try { const u = new URL(v); return u.protocol === "https:" || u.protocol === "http:" ? esc(v) : ""; }
+    catch { return ""; }
+}
+
+/** RFC-4180 quoting plus a guard against spreadsheet formula injection. */
+function csvCell(v: unknown): string {
+    let t = String(v ?? "");
+    if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;
+    return `"${t.replace(/"/g, '""')}"`;
 }
 
 // ─── HTML helper ────────────────────────────────────────────────────────────
@@ -96,12 +160,12 @@ tr:hover td{background:rgba(124,58,237,.05);color:#fff}
 <div class="topbar">
   <div class="logo">✨ TryIt4U</div>
   <div class="tabs">
-    ${tabs.map(t => `<a href="/admin/${t.id}?token=${token}" class="tab${activeTab===t.id?' active':''}">${t.icon} ${t.label}</a>`).join("")}
+    ${tabs.map(t => `<a href="/admin/${t.id}" class="tab${activeTab===t.id?' active':''}">${t.icon} ${t.label}</a>`).join("")}
   </div>
   <div class="topbar-right">
     <span class="ts">🕐 ${new Date().toLocaleString("he-IL")}</span>
     <button class="btn-sm btn-outline" onclick="location.reload()">↻ Refresh</button>
-    <a href="/admin/export?token=${token}" class="btn-sm btn-primary">⬇ CSV</a>
+    <a href="/admin/export" class="btn-sm btn-primary">⬇ CSV</a>
   </div>
 </div>
 <div class="main">${content}</div>
@@ -123,7 +187,7 @@ router.get(["/", "/overview"], requireAdmin, async (req, res, next) => {
         const [userS, nlS, jobS, topCat, userG, nlG, jobG] = await Promise.all([
             db.query<any>(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER(WHERE created_at>=NOW()-INTERVAL '1 day')::int AS today, COUNT(*) FILTER(WHERE created_at>=NOW()-INTERVAL '7 days')::int AS week, COUNT(*) FILTER(WHERE plan NOT IN('free','admin'))::int AS paid FROM users`),
             db.query<any>(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER(WHERE created_at>=NOW()-INTERVAL '1 day')::int AS today, COUNT(*) FILTER(WHERE created_at>=NOW()-INTERVAL '7 days')::int AS week FROM newsletter_subscribers`),
-            db.query<any>(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER(WHERE status='done')::int AS done, COUNT(*) FILTER(WHERE created_at>=NOW()-INTERVAL '1 day')::int AS today, ROUND(AVG(fit_score) FILTER(WHERE fit_score IS NOT NULL))::int AS avg_fit FROM jobs`),
+            db.query<any>(`SELECT COUNT(*)::int AS total, COUNT(*) FILTER(WHERE status='succeeded')::int AS done, COUNT(*) FILTER(WHERE created_at>=NOW()-INTERVAL '1 day')::int AS today, ROUND(AVG(fit_score) FILTER(WHERE fit_score IS NOT NULL))::int AS avg_fit FROM jobs`),
             db.query<any>(`SELECT category, COUNT(*)::int AS cnt FROM jobs GROUP BY category ORDER BY cnt DESC LIMIT 6`),
             db.query<any>(`SELECT TO_CHAR(created_at::date,'MM/DD') d,COUNT(*)::int c FROM users WHERE created_at>=NOW()-INTERVAL '30 days' GROUP BY d ORDER BY d`),
             db.query<any>(`SELECT TO_CHAR(created_at::date,'MM/DD') d,COUNT(*)::int c FROM newsletter_subscribers WHERE created_at>=NOW()-INTERVAL '30 days' GROUP BY d ORDER BY d`),
@@ -258,19 +322,19 @@ router.get("/marketing", requireAdmin, async (req, res, next) => {
 <div class="cg cg-2">
   <div class="box"><div class="box-h">📈 Daily Signups (30d)</div><canvas id="nlDay" height="110"></canvas></div>
   <div class="box"><div class="box-h">📍 UTM Sources</div>
-    ${utmSource.rows.map((r:any)=>{const pct=Math.round(r.c/totalNl*100);return `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#fff;font-weight:600">${r.s}</span><span style="color:rgba(255,255,255,.4)">${r.c} (${pct}%)</span></div><div class="mbar"><div class="mbar-f" style="width:${pct}%"></div></div></div>`;}).join("") || '<div style="color:rgba(255,255,255,.3);font-size:12px;padding:8px 0">No UTM data yet — add ?utm_source=facebook to campaigns</div>'}
+    ${utmSource.rows.map((r:any)=>{const pct=Math.round(r.c/totalNl*100);return `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#fff;font-weight:600">${esc(r.s)}</span><span style="color:rgba(255,255,255,.4)">${r.c} (${pct}%)</span></div><div class="mbar"><div class="mbar-f" style="width:${pct}%"></div></div></div>`;}).join("") || '<div style="color:rgba(255,255,255,.3);font-size:12px;padding:8px 0">No UTM data yet — add ?utm_source=facebook to campaigns</div>'}
   </div>
 </div>
 
 <div class="cg cg-3">
   <div class="box"><div class="box-h">📣 Campaigns (utm_campaign)</div>
-    ${utmCampaign.rows.map((r:any)=>{const pct=Math.round(r.c/totalNl*100);return `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px"><span class="pill p-v">${r.s}</span><span style="color:rgba(255,255,255,.4)">${r.c} leads (${pct}%)</span></div></div>`;}).join("") || '<div style="color:rgba(255,255,255,.3);font-size:12px">No data</div>'}
+    ${utmCampaign.rows.map((r:any)=>{const pct=Math.round(r.c/totalNl*100);return `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px"><span class="pill p-v">${esc(r.s)}</span><span style="color:rgba(255,255,255,.4)">${r.c} leads (${pct}%)</span></div></div>`;}).join("") || '<div style="color:rgba(255,255,255,.3);font-size:12px">No data</div>'}
   </div>
   <div class="box"><div class="box-h">📲 Mediums</div>
-    ${utmMedium.rows.map((r:any)=>{const pct=Math.round(r.c/totalNl*100);return `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#fff">${r.s}</span><span style="color:rgba(255,255,255,.4)">${r.c} (${pct}%)</span></div></div>`;}).join("") || '<div style="color:rgba(255,255,255,.3);font-size:12px">No data</div>'}
+    ${utmMedium.rows.map((r:any)=>{const pct=Math.round(r.c/totalNl*100);return `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#fff">${esc(r.s)}</span><span style="color:rgba(255,255,255,.4)">${r.c} (${pct}%)</span></div></div>`;}).join("") || '<div style="color:rgba(255,255,255,.3);font-size:12px">No data</div>'}
   </div>
   <div class="box"><div class="box-h">🔗 Referrers</div>
-    ${referrerRows.rows.slice(0,8).map((r:any)=>{const host=r.r.replace(/https?:\/\//,'').split('/')[0];return `<div style="margin-bottom:7px;font-size:12px;display:flex;justify-content:space-between"><span style="color:#a78bfa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px" title="${r.r}">${host}</span><span style="color:rgba(255,255,255,.4)">${r.c}</span></div>`;}).join("") || '<div style="color:rgba(255,255,255,.3);font-size:12px">No data</div>'}
+    ${referrerRows.rows.slice(0,8).map((r:any)=>{const host=r.r.replace(/https?:\/\//,'').split('/')[0];return `<div style="margin-bottom:7px;font-size:12px;display:flex;justify-content:space-between"><span style="color:#a78bfa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px" title="${esc(r.r)}">${esc(host)}</span><span style="color:rgba(255,255,255,.4)">${r.c}</span></div>`;}).join("") || '<div style="color:rgba(255,255,255,.3);font-size:12px">No data</div>'}
   </div>
 </div>
 
@@ -292,7 +356,7 @@ router.get("/marketing", requireAdmin, async (req, res, next) => {
 <div class="section-title">💸 Campaigns & Costs</div>
 <div class="tbox">
   <div class="tbox-h">Campaign Performance
-    <a href="/admin/add-campaign?token=${token}" style="font-size:11px;color:#a78bfa;text-decoration:none">+ Add Campaign</a>
+    <a href="/admin/add-campaign" style="font-size:11px;color:#a78bfa;text-decoration:none">+ Add Campaign</a>
   </div>
   <div class="tw"><table>
     <thead><tr><th>Campaign</th><th>Platform</th><th>Budget</th><th>Spent</th><th>Leads</th><th>CPL</th><th>Status</th></tr></thead>
@@ -302,8 +366,8 @@ router.get("/marketing", requireAdmin, async (req, res, next) => {
       const leads = leadsRow?.c || 0;
       const cpl = leads > 0 ? (r.spent/leads).toFixed(2) : '—';
       return `<tr>
-        <td style="font-weight:600;color:#fff">${r.name}</td>
-        <td><span class="pill p-b">${platformIcon[r.platform]||'🔗'} ${r.platform}</span></td>
+        <td style="font-weight:600;color:#fff">${esc(r.name)}</td>
+        <td><span class="pill p-b">${platformIcon[r.platform]||'🔗'} ${esc(r.platform)}</span></td>
         <td>$${Number(r.budget).toLocaleString()}</td>
         <td>$${Number(r.spent).toLocaleString()}</td>
         <td style="color:#34d399;font-weight:700">${leads}</td>
@@ -331,7 +395,7 @@ router.get("/marketing", requireAdmin, async (req, res, next) => {
   </div>
   <div class="box">
     <div class="box-h">Set Pixel ID</div>
-    <form method="POST" action="/admin/set-pixel?token=${token}">
+    <form method="POST" action="/admin/set-pixel">
       <div class="form-row"><label>Platform</label><select name="platform" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;color:#fff;font-family:inherit"><option value="facebook">Facebook</option><option value="google">Google Tag</option><option value="tiktok">TikTok</option><option value="twitter">Twitter/X</option></select></div>
       <div class="form-row"><label>Pixel / Tag ID</label><input name="pixel_id" placeholder="e.g. 123456789012345" required></div>
       <button type="submit" class="btn-sm btn-primary" style="margin-top:8px;padding:10px 20px">Save Pixel →</button>
@@ -384,11 +448,11 @@ ${planRows.rows.map((r:any)=>`<div class="stat"><div class="kpi">${r.plan}</div>
       const planCls:Record<string,string>={free:'p-b',admin:'p-v','pro-basic':'p-g','pro-plus':'p-y'};
       return `<tr>
         <td style="color:rgba(255,255,255,.2)">${i+1}</td>
-        <td style="color:#a78bfa">${r.email}</td>
-        <td>${r.full_name||'—'}</td>
-        <td><span class="pill ${planCls[r.plan]||'p-v'}">${r.plan}</span></td>
+        <td style="color:#a78bfa">${esc(r.email)}</td>
+        <td>${esc(r.full_name||'—')}</td>
+        <td><span class="pill ${planCls[r.plan]||'p-v'}">${esc(r.plan)}</span></td>
         <td style="color:${r.credits===0?'#f87171':r.credits===-1?'#fbbf24':'#34d399'};font-weight:700">${r.credits===-1?'∞':r.credits}</td>
-        <td>${r.provider?`<span class="pill p-b">${r.provider}</span>`:'<span style="color:rgba(255,255,255,.2)">email</span>'}</td>
+        <td>${r.provider?`<span class="pill p-b">${esc(r.provider)}</span>`:'<span style="color:rgba(255,255,255,.2)">email</span>'}</td>
         <td>${r.email_verified?'<span class="pill p-g">✓</span>':'<span class="pill p-r">No</span>'}</td>
         <td style="color:rgba(255,255,255,.35)">${r.created}</td>
       </tr>`;
@@ -414,7 +478,7 @@ router.get("/products", requireAdmin, async (req, res, next) => {
                 ORDER BY tryon_cnt DESC`),
             db.query<any>(`SELECT p.category, COUNT(j.id)::int c FROM jobs j JOIN products p ON j.product_id=p.id GROUP BY p.category ORDER BY c DESC`),
             db.query<any>(`SELECT p.brand, COUNT(j.id)::int c, ROUND(AVG(j.fit_score) FILTER(WHERE j.fit_score IS NOT NULL))::int avg_fit FROM jobs j JOIN products p ON j.product_id=p.id WHERE p.brand IS NOT NULL GROUP BY p.brand ORDER BY c DESC LIMIT 20`),
-            db.query<any>(`SELECT COUNT(*)::int total, COUNT(DISTINCT product_id)::int unique_products, COUNT(DISTINCT user_id)::int active_users FROM jobs WHERE status='done'`),
+            db.query<any>(`SELECT COUNT(*)::int total, COUNT(DISTINCT product_id)::int unique_products, COUNT(DISTINCT user_id)::int active_users FROM jobs WHERE status='succeeded'`),
         ]);
         const js=jobStats.rows[0];
         const content = `
@@ -429,7 +493,7 @@ router.get("/products", requireAdmin, async (req, res, next) => {
   <div class="box"><div class="box-h">📦 All Categories</div><canvas id="catC" height="150"></canvas></div>
   <div class="tbox" style="margin:0"><div class="tbox-h">🔥 Top Brands</div><div class="tw"><table>
     <thead><tr><th>Brand</th><th>Try-Ons</th><th>Avg Fit</th></tr></thead><tbody>
-    ${topBrands.rows.map((r:any)=>`<tr><td style="color:#fff;font-weight:600">${r.brand}</td><td style="color:#a78bfa;font-weight:700">${r.c}</td><td>${r.avg_fit??'—'}</td></tr>`).join("") || '<tr><td colspan="3" style="color:rgba(255,255,255,.3)">No data</td></tr>'}
+    ${topBrands.rows.map((r:any)=>`<tr><td style="color:#fff;font-weight:600">${esc(r.brand)}</td><td style="color:#a78bfa;font-weight:700">${r.c}</td><td>${r.avg_fit??'—'}</td></tr>`).join("") || '<tr><td colspan="3" style="color:rgba(255,255,255,.3)">No data</td></tr>'}
     </tbody></table></div>
   </div>
 </div>
@@ -443,10 +507,10 @@ router.get("/products", requireAdmin, async (req, res, next) => {
     ${repeatProducts.rows.length > 0 ? repeatProducts.rows.map((r:any,i:number)=>`<tr>
       <td style="color:rgba(255,255,255,.2)">${i+1}</td>
       <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        ${r.canonical_url ? `<a href="${r.canonical_url}" target="_blank" style="color:#a78bfa">${r.title}</a>` : r.title}
+        ${safeHref(r.canonical_url) ? `<a href="${safeHref(r.canonical_url)}" target="_blank" rel="noopener" style="color:#a78bfa">${esc(r.title)}</a>` : esc(r.title)}
       </td>
-      <td>${r.brand ? `<span class="pill p-v">${r.brand}</span>` : '—'}</td>
-      <td>${r.category ? `<span class="pill p-b">${r.category}</span>` : '—'}</td>
+      <td>${r.brand ? `<span class="pill p-v">${esc(r.brand)}</span>` : '—'}</td>
+      <td>${r.category ? `<span class="pill p-b">${esc(r.category)}</span>` : '—'}</td>
       <td style="color:#fbbf24">${r.price ? '$'+Number(r.price).toFixed(2) : '—'}</td>
       <td style="color:#34d399;font-weight:800;font-size:15px">${r.tryon_cnt}</td>
       <td>${r.avg_fit ? `<span style="color:${r.avg_fit>=80?'#34d399':r.avg_fit>=60?'#fbbf24':'#f87171'}">${r.avg_fit}</span>` : '—'}</td>
@@ -463,20 +527,23 @@ doC('catC',${JSON.stringify(allCats.rows.map((r:any)=>r.category))},${JSON.strin
 
 // ─── DASHBOARD redirect ───────────────────────────────────────────────────────
 router.get("/dashboard", requireAdmin, (req, res) => {
-    res.redirect(`/admin/overview?token=${req.query.token||""}`);
+    res.redirect(`/admin/overview`);
 });
 
 // ─── POST /admin/set-pixel ────────────────────────────────────────────────────
 router.post("/set-pixel", requireAdmin, async (req, res, next) => {
     try {
-        const { platform, pixel_id } = req.body;
+        const { platform, pixel_id } = req.body as { platform?: string; pixel_id?: string };
         if (!platform || !pixel_id) return res.status(400).send("Missing fields");
+        if (!["facebook", "google", "tiktok", "twitter"].includes(platform) || !/^[A-Za-z0-9_-]{3,64}$/.test(pixel_id)) {
+            return res.status(400).send("Invalid platform or pixel id");
+        }
         await db.query(
             `INSERT INTO site_pixels(platform,pixel_id,active) VALUES($1,$2,true)
              ON CONFLICT(platform) DO UPDATE SET pixel_id=EXCLUDED.pixel_id, active=true, updated_at=NOW()`,
             [platform, pixel_id]
         );
-        res.redirect(`/admin/marketing?token=${req.query.token||""}&saved=1`);
+        res.redirect(`/admin/marketing?saved=1`);
     } catch(err){next(err);}
 });
 
@@ -490,7 +557,7 @@ router.get("/export", requireAdmin, async (_req, res, next) => {
              FROM newsletter_subscribers ORDER BY created_at DESC`
         );
         const csv = ["id,email,name,source,utm_source,utm_campaign,utm_medium,country,created_at",
-            ...rows.map((r:any)=>`${r.id},${r.email},${r.name},${r.source},${r.utm_source},${r.utm_campaign},${r.utm_medium},${r.country},${r.created_at}`)
+            ...rows.map((r:any)=>[r.id,r.email,r.name,r.source,r.utm_source,r.utm_campaign,r.utm_medium,r.country,r.created_at].map(csvCell).join(","))
         ].join("\n");
         res.setHeader("Content-Type","text/csv");
         res.setHeader("Content-Disposition",`attachment;filename="tryiton-subscribers-${new Date().toISOString().slice(0,10)}.csv"`);
@@ -503,7 +570,7 @@ router.get("/stats", requireAdmin, async (_req, res, next) => {
     try {
         const [u,j,n] = await Promise.all([
             db.query<any>("SELECT COUNT(*)::int total,COUNT(*) FILTER(WHERE plan NOT IN('free','admin'))::int paid FROM users"),
-            db.query<any>("SELECT COUNT(*)::int total,COUNT(*) FILTER(WHERE status='done')::int done FROM jobs"),
+            db.query<any>("SELECT COUNT(*)::int total,COUNT(*) FILTER(WHERE status='succeeded')::int done FROM jobs"),
             db.query<any>("SELECT COUNT(*)::int total FROM newsletter_subscribers"),
         ]);
         res.json({users:u.rows[0],jobs:j.rows[0],newsletter:n.rows[0]});

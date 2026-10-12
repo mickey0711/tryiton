@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { apiFetch, getToken } from "../../lib/api";
 import type { JobResult } from "../index";
 
 interface Props {
@@ -262,9 +263,8 @@ export function ResultScreen({ result, onRegenerate, onBack, onSceneVibe, onPric
         const token = await getToken();
         if (token && !result.jobId.startsWith("mock-")) {
             try {
-                await fetch("https://tryiton-app-f32z6.ondigitalocean.app/library/saved", {
+                await apiFetch("/library/saved", {
                     method: "POST",
-                    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
                     body: JSON.stringify({ job_id: result.jobId, snapshot: { result_url: result.resultUrl, product_image: result.productSrc, fit_score: result.fitScore } }),
                 });
             } catch { /* non-critical */ }
@@ -448,6 +448,4 @@ export function ResultScreen({ result, onRegenerate, onBack, onSceneVibe, onPric
     );
 }
 
-async function getToken(): Promise<string | null> {
-    return new Promise((res) => chrome.storage.local.get(["accessToken"], (d: any) => res(d.accessToken ?? null)));
-}
+

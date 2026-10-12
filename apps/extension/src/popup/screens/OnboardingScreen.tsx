@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 
-const API_BASE = "https://tryit4u.ai";
+import { API_BASE, apiFetch } from "../../lib/api";
 
 interface Props {
     onProfileSaved: (b64: string, measurements?: BodyMeasurements) => void;
@@ -23,7 +23,7 @@ export interface BodyMeasurements {
 // The backend receives the OAuth code, issues a JWT, and redirects to chromiumapp.org with the token.
 // This avoids needing to register the extension in Google/Facebook console directly.
 
-async function oauthViaBackend(provider: "google" | "facebook"): Promise<{ access_token: string; user: any } | null> {
+async function oauthViaBackend(provider: "google" | "facebook"): Promise<{ access_token: string; refresh_token?: string; user: any } | null> {
     const extRedirect = `https://${(chrome as any).runtime.id}.chromiumapp.org/`;
     const authUrl = `${API_BASE}/auth/oauth/${provider}/extension?${new URLSearchParams({ ext_redirect: extRedirect })}`;
 
@@ -35,10 +35,12 @@ async function oauthViaBackend(provider: "google" | "facebook"): Promise<{ acces
                 try {
                     const params = new URLSearchParams(new URL(callbackUrl).search);
                     const token = params.get("access_token");
+                    const refresh = params.get("refresh_token");
                     const userStr = params.get("user");
                     if (!token) { resolve(null); return; }
                     resolve({
                         access_token: token,
+                        refresh_token: refresh ?? undefined,
                         user: userStr ? JSON.parse(decodeURIComponent(userStr)) : {},
                     });
                 } catch { resolve(null); }
@@ -49,7 +51,7 @@ async function oauthViaBackend(provider: "google" | "facebook"): Promise<{ acces
 
 // Keep direct Google token exchange as a secondary path
 // (works when manifest oauth2.client_id is correctly set up as "Chrome App" type in Google Console)
-async function oauthWithGoogle(): Promise<{ access_token: string; user: any } | null> {
+async function oauthWithGoogle(): Promise<{ access_token: string; refresh_token?: string; user: any } | null> {
     // Primary: backend-mediated flow (reliable, no Google Console extension registration needed)
     const result = await oauthViaBackend("google");
     if (result) return result;
@@ -78,7 +80,7 @@ async function oauthWithGoogle(): Promise<{ access_token: string; user: any } | 
     return null;
 }
 
-async function oauthWithFacebook(): Promise<{ access_token: string; user: any } | null> {
+async function oauthWithFacebook(): Promise<{ access_token: string; refresh_token?: string; user: any } | null> {
     return oauthViaBackend("facebook");
 }
 
@@ -89,12 +91,9 @@ async function extractMeasurements(b64: string): Promise<BodyMeasurements | null
         const token: string | null = await new Promise((res) =>
             (chrome as any).storage.local.get(["accessToken"], (d: any) => res(d.accessToken ?? null))
         );
-        const resp = await fetch(`${API_BASE}/size/analyze`, {
+        const resp = await apiFetch(`/size/analyze`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
+            auth: "optional",
             body: JSON.stringify({ image: b64, category: "tops" }),
         });
         if (!resp.ok) return null;
@@ -161,6 +160,7 @@ export function OnboardingScreen({ onProfileSaved, onLogin, initialStep = "auth"
 
             (chrome as any).storage.local.set({
                 accessToken: result.access_token,
+                ...(result.refresh_token ? { refreshToken: result.refresh_token } : {}),
                 userInfo: result.user,
             });
 

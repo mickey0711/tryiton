@@ -45,10 +45,35 @@ function clearFailedLogins(req: Request, email: string): void {
     loginAttempts.delete(`${req.ip}:${email.toLowerCase()}`);
 }
 
-function hashPassword(password: string): string {
-    // PBKDF2 — secure, no extra deps
-    const salt = process.env.PASSWORD_SALT ?? "tryiton-salt-2024";
-    return crypto.pbkdf2Sync(password, salt, 100_000, 64, "sha512").toString("hex");
+const PBKDF2_ITER = 100_000;
+const LEGACY_SALT = process.env.PASSWORD_SALT ?? "tryiton-salt-2024";
+
+function pbkdf2(password: string, salt: string): Promise<Buffer> {
+    return new Promise((resolve, reject) =>
+        crypto.pbkdf2(password, salt, PBKDF2_ITER, 64, "sha512", (err, key) => (err ? reject(err) : resolve(key))));
+}
+
+/** New format: "pbkdf2$<iterations>$<salt>$<hex>" with a random per-user salt. */
+async function hashPassword(password: string): Promise<string> {
+    const salt = crypto.randomBytes(16).toString("hex");
+    const key = await pbkdf2(password, salt);
+    return `pbkdf2$${PBKDF2_ITER}$${salt}$${key.toString("hex")}`;
+}
+
+/** Constant-time verification. Returns { ok, needsUpgrade } — legacy single-salt hashes get re-hashed after a successful login. */
+async function verifyPassword(password: string, stored: string): Promise<{ ok: boolean; needsUpgrade: boolean }> {
+    let expected: Buffer, actual: Buffer, legacy = false;
+    if (stored.startsWith("pbkdf2$")) {
+        const [, , salt, hex] = stored.split("$");
+        expected = Buffer.from(hex ?? "", "hex");
+        actual = await pbkdf2(password, salt ?? "");
+    } else {
+        legacy = true;
+        expected = Buffer.from(stored, "hex");
+        actual = await pbkdf2(password, LEGACY_SALT);
+    }
+    const ok = expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+    return { ok, needsUpgrade: ok && legacy };
 }
 
 async function sendVerificationEmail(email: string, token: string, name: string) {
@@ -189,7 +214,7 @@ router.post("/register", async (req, res, next) => {
             throw new AppError("CONFLICT", "Email already registered. Please log in.", 409);
         }
 
-        const passwordHash = hashPassword(password);
+        const passwordHash = await hashPassword(password);
         const verifyToken = crypto.randomBytes(32).toString("hex");
         const verifyTokenExpiresAt = new Date(Date.now() + 24 * 3600 * 1000); // 24 hours
         const country = (req.body.country as string | undefined)?.trim() ?? null;
@@ -302,10 +327,14 @@ router.post("/login", async (req, res, next) => {
             throw new AppError("UNAUTHORIZED", "Invalid email or password", 401);
         }
 
-        const hash = hashPassword(password);
-        if (hash !== user.password_hash) {
+        const check = await verifyPassword(password, user.password_hash);
+        if (!check.ok) {
             recordFailedLogin(req, email);
             throw new AppError("UNAUTHORIZED", "Invalid email or password", 401);
+        }
+        if (check.needsUpgrade) {
+            await db.query(`UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
+                [await hashPassword(password), user.id]);
         }
 
         clearFailedLogins(req, email);
@@ -355,6 +384,7 @@ router.post("/refresh", async (req, res, next) => {
         );
         const row = result.rows[0];
         if (!row || row.expires_at < new Date()) {
+            if (row) await db.query(`DELETE FROM refresh_tokens WHERE token_hash = $1`, [hash]);
             throw new AppError("UNAUTHORIZED", "Invalid or expired refresh token", 401);
         }
 
@@ -393,20 +423,66 @@ router.post("/forgot-password", async (req, res, next) => {
             const resetUrl = `${process.env.WEB_APP_URL ?? "http://localhost:3000"}/reset-password?token=${resetToken}`;
             const apiKey = process.env.RESEND_API_KEY;
             if (apiKey) {
-                await fetch("https://api.resend.com/emails", {
+                const safeName = String(result.rows[0].full_name ?? "").replace(/[<>&"]/g, "");
+                fetch("https://api.resend.com/emails", {
                     method: "POST",
                     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        from: "TryItOn <noreply@tryiton.ai>",
+                        from: process.env.EMAIL_FROM ?? "TryItOn <noreply@tryit4u.ai>",
                         to: [email],
                         subject: "Reset your TryItOn password",
-                        html: `<p>Hi ${result.rows[0].full_name},</p><p><a href="${resetUrl}">Click here to reset your password</a></p><p>Link expires in 1 hour.</p>`,
+                        html: `<p>Hi ${safeName},</p><p><a href="${resetUrl}">Click here to reset your password</a></p><p>Link expires in 1 hour.</p>`,
                     }),
-                });
+                }).catch((err) => logger.error({ err }, "reset email failed"));
             }
         }
 
         res.json({ ok: true, message: "If this email exists, a reset link was sent." });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// ── POST /auth/reset-password ─────────────────────────────────────────────────
+// Completes the flow started by /forgot-password. Consumes the token and revokes
+// every refresh token so stolen sessions die with the old password.
+
+router.post("/reset-password", async (req, res, next) => {
+    try {
+        const { token, password } = req.body as { token?: string; password?: string };
+        if (!token || !password) throw new AppError("VALIDATION_ERROR", "token and password required", 400);
+        if (password.length < 8) throw new AppError("VALIDATION_ERROR", "Password must be at least 8 characters", 400);
+
+        const hash = await hashPassword(password);
+        const result = await db.query<{ id: string }>(
+            `UPDATE users
+                SET password_hash = $2, email_verify_token = NULL, email_verify_token_expires_at = NULL, updated_at = NOW()
+              WHERE email_verify_token = $1 AND email_verified = TRUE
+                AND email_verify_token_expires_at IS NOT NULL AND email_verify_token_expires_at > NOW()
+              RETURNING id`,
+            [token, hash]
+        );
+        if (!result.rows.length) throw new AppError("NOT_FOUND", "Invalid or expired reset link", 404);
+
+        await db.query(`DELETE FROM refresh_tokens WHERE user_id = $1`, [result.rows[0].id]);
+        logger.info({ userId: result.rows[0].id }, "Password reset");
+        res.json({ ok: true, message: "Password updated. Please log in." });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// ── POST /auth/logout ─────────────────────────────────────────────────────────
+// Revokes the given refresh token (the access JWT simply expires).
+
+router.post("/logout", async (req, res, next) => {
+    try {
+        const { refresh_token } = req.body as { refresh_token?: string };
+        if (refresh_token) {
+            const hash = crypto.createHash("sha256").update(refresh_token).digest("hex");
+            await db.query(`DELETE FROM refresh_tokens WHERE token_hash = $1`, [hash]);
+        }
+        res.json({ ok: true });
     } catch (err) {
         next(err);
     }
@@ -426,7 +502,8 @@ router.post("/admin/set-password", async (req, res, next) => {
             throw new AppError("VALIDATION_ERROR", "email and password required", 400);
         }
 
-        const hash = hashPassword(password);
+        if (password.length < 12) throw new AppError("VALIDATION_ERROR", "Admin password must be at least 12 characters", 400);
+        const hash = await hashPassword(password);
         await db.query(
             `UPDATE users SET password_hash = $1, email_verified = TRUE, updated_at = NOW() WHERE email = $2`,
             [hash, email.toLowerCase()]

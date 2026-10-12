@@ -15,10 +15,14 @@
 import { Router } from "express";
 import { AppError } from "../middleware/errorHandler";
 import { Request, Response, NextFunction } from "express";
+import { optionalAuth, AuthRequest } from "../middleware/auth";
+import { anonLimit, isImageInput } from "../middleware/anonLimit";
+import { chargeCredit, refundCredit } from "../services/credits";
 
 const router = Router();
-// NOTE: Space analyze intentionally does NOT require auth so unauthenticated
-// users can still try the feature. Auth is optional — used for usage tracking.
+// Signed-in users pay one credit per AI run (refunded if the AI pipeline fails and we
+// fall back to the template answer). Anonymous users get the small per-IP allowance.
+router.use(optionalAuth, anonLimit);
 
 // ─── Space categories supported ─────────────────────────────────────────────
 const SPACE_CATEGORIES = new Set([
@@ -159,15 +163,21 @@ router.post("/analyze", async (req: Request, res: Response, next: NextFunction) 
             category: string;
         };
 
-        if (!room_image) throw new AppError("BAD_REQUEST", "room_image is required", 400);
+        if (!isImageInput(room_image)) throw new AppError("BAD_REQUEST", "room_image is required", 400);
         if (!category) throw new AppError("BAD_REQUEST", "category is required", 400);
         if (!SPACE_CATEGORIES.has(category)) {
             throw new AppError("BAD_REQUEST", `Unsupported category '${category}'`, 400);
         }
+        if (product_url !== undefined && product_url !== "" && !isImageInput(product_url, 4000)) {
+            throw new AppError("BAD_REQUEST", "product_url must be a URL", 400);
+        }
 
         const replicateToken = process.env.REPLICATE_API_TOKEN;
+        const userId = (req as AuthRequest).userId as string | undefined;
 
         if (replicateToken) {
+            let charged = false;
+            if (userId) charged = !(await chargeCredit(userId, "space-analyze")).unlimited;
             try {
                 const result = await runReplicateSpaceAnalysis(
                     room_image,
@@ -186,6 +196,7 @@ router.post("/analyze", async (req: Request, res: Response, next: NextFunction) 
                 });
             } catch (aiErr: any) {
                 console.warn("[/space/analyze] Replicate pipeline failed, using advisor fallback:", aiErr.message);
+                if (charged && userId) await refundCredit(userId, "space-analyze-failed").catch(() => {});
             }
         }
 
@@ -221,15 +232,18 @@ router.post("/atmosphere", async (req: Request, res: Response, next: NextFunctio
             style: string;
         };
 
-        if (!room_image) throw new AppError("BAD_REQUEST", "room_image is required", 400);
-        if (!style || !ATMOSPHERE_STYLES[style]) {
+        if (!isImageInput(room_image)) throw new AppError("BAD_REQUEST", "room_image is required", 400);
+        if (typeof style !== "string" || !Object.prototype.hasOwnProperty.call(ATMOSPHERE_STYLES, style)) {
             throw new AppError("BAD_REQUEST", `style must be one of: ${Object.keys(ATMOSPHERE_STYLES).join(", ")}`, 400);
         }
 
         const atmStyle = ATMOSPHERE_STYLES[style];
         const replicateToken = process.env.REPLICATE_API_TOKEN;
+        const userId = (req as AuthRequest).userId as string | undefined;
 
         if (replicateToken) {
+            let charged = false;
+            if (userId) charged = !(await chargeCredit(userId, "space-atmosphere")).unlimited;
             try {
                 const prompt = `Photorealistic interior photo: ${atmStyle.prompt}. Keep all room dimensions, layout, windows, and doors identical. High quality, 4K, professional interior photography.`;
                 const negPrompt = "blurry, distorted, cartoon, drawing, low quality, unrealistic, different room shape";
@@ -270,6 +284,7 @@ router.post("/atmosphere", async (req: Request, res: Response, next: NextFunctio
                 throw new Error("Timeout");
             } catch (aiErr: any) {
                 console.warn("[/space/atmosphere] AI failed, returning original:", aiErr.message);
+                if (charged && userId) await refundCredit(userId, "space-atmosphere-failed").catch(() => {});
             }
         }
 

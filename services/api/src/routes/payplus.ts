@@ -244,100 +244,123 @@ router.post("/cancel", requireAuth, async (req, res, next) => {
 });
 
 // ─── POST /payplus/webhook — payment notification from PayPlus ────────────────
-// NOTE: This route needs raw body for HMAC verification.
-// Mount it with express.raw() in app.ts BEFORE json middleware.
+// Mounted with express.raw() in app.ts so req.body is the raw Buffer.
+// PayPlus signs callbacks with header `hash` = base64(HMAC-SHA256(body, secret_key))
+// and sends `user-agent: PayPlus` (docs.payplus.co.il/reference/validate-requests-received-from-payplus).
+
+function verifyPayPlusHash(rawStr: string, parsed: unknown, hash: string | undefined): boolean {
+    const secret = PP_SEC();
+    if (!secret || !hash) return false;
+    const given = Buffer.from(hash);
+    // Docs hash JSON.stringify(body); also accept the raw bytes in case formatting differs.
+    for (const msg of [rawStr, JSON.stringify(parsed)]) {
+        const expected = Buffer.from(crypto.createHmac("sha256", secret).update(msg).digest("base64"));
+        if (expected.length === given.length && crypto.timingSafeEqual(expected, given)) return true;
+    }
+    return false;
+}
+
 router.post("/webhook", async (req, res, next) => {
     try {
-        const rawBody = req.body;  // Buffer if mounted with express.raw()
-        const body    = typeof rawBody === "string" ? JSON.parse(rawBody)
-                      : Buffer.isBuffer(rawBody)    ? JSON.parse(rawBody.toString())
-                      : rawBody;
+        const rawStr = Buffer.isBuffer(req.body) ? req.body.toString("utf8")
+                     : typeof req.body === "string" ? req.body
+                     : JSON.stringify(req.body ?? {});
+        let body: any;
+        try { body = JSON.parse(rawStr); } catch { return res.status(400).json({ error: "INVALID_JSON" }); }
 
-        // Verify HMAC-SHA256 signature
-        const sigHeader = req.headers["x-payplus-signature"] as string;
-        const secret    = PP_SEC();
-        if (secret && sigHeader) {
-            const rawStr  = Buffer.isBuffer(rawBody) ? rawBody.toString() : JSON.stringify(rawBody);
-            const expected = crypto
-                .createHmac("sha256", secret)
-                .update(rawStr)
-                .digest("hex");
-            if (!crypto.timingSafeEqual(
-                Buffer.from(sigHeader,  "hex"),
-                Buffer.from(expected,   "hex"),
-            )) {
-                logger.warn("PayPlus webhook signature mismatch");
-                return res.status(401).json({ error: "INVALID_SIGNATURE" });
-            }
+        if (!verifyPayPlusHash(rawStr, body, req.headers["hash"] as string | undefined)) {
+            logger.warn({ ua: req.headers["user-agent"] }, "PayPlus webhook: missing/invalid hash — rejected");
+            return res.status(401).json({ error: "INVALID_SIGNATURE" });
         }
 
-        const status      = Number(body.data?.status_code ?? body.data?.status);  // 1 = success
-        const userId      = body.data?.more_info_1 as string;
-        const planId      = body.data?.more_info_2 as string;
-        const txnId       = body.data?.transaction_uid as string;
-        const recurringId = body.data?.recurring_uid   as string;
+        // PayPlus has used both `transaction` and `data` envelopes — read from either.
+        const t = { ...(body.data ?? {}), ...(body.transaction ?? {}) };
+        const statusRaw   = String(t.status_code ?? t.status ?? "");
+        const approved    = statusRaw === "000" || statusRaw === "1" || statusRaw.toLowerCase() === "approved";
+        const userId      = t.more_info_1 as string | undefined;
+        const planId      = t.more_info_2 as string | undefined;
+        const orderNumber = t.more_info_3 as string | undefined;
+        const txnId       = (t.uid ?? t.transaction_uid) as string | undefined;
+        const recurringId = (t.recurring_uid ?? body.recurring_uid) as string | undefined;
 
-        logger.info({ status, userId, planId, txnId, recurringId }, "PayPlus webhook received");
+        logger.info({ statusRaw, approved, userId, planId, orderNumber, txnId, recurringId }, "PayPlus webhook received");
 
-        if (!userId || !planId) {
-            logger.warn({ body }, "PayPlus webhook missing user_id or plan_id");
+        if (!approved) return res.json({ ok: true });
+        if (!userId || !planId || !txnId) {
+            logger.warn({ body }, "PayPlus webhook missing user/plan/transaction id");
             return res.json({ ok: true });  // ack to avoid retries
         }
+        const plan = PLANS[planId];
+        if (!plan) {
+            logger.warn({ planId }, "PayPlus webhook: unknown plan");
+            return res.json({ ok: true });
+        }
 
-        if (status === 1) {
-            const plan = PLANS[planId];
-            if (!plan) {
-                logger.warn({ planId }, "PayPlus webhook: unknown plan");
+        const client = await db.connect();
+        try {
+            await client.query("BEGIN");
+            // Serialize concurrent deliveries of the same transaction
+            await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [txnId]);
+
+            const dup = await client.query(
+                `SELECT 1 FROM payments WHERE provider = 'payplus' AND status = 'completed'
+                   AND payload->>'transaction_id' = $1 LIMIT 1`,
+                [txnId]
+            );
+            if (dup.rowCount) {
+                await client.query("ROLLBACK");
+                logger.info({ txnId }, "PayPlus webhook: duplicate delivery ignored");
                 return res.json({ ok: true });
             }
 
-            const client = await db.connect();
-            try {
-                await client.query("BEGIN");
-
-                if (plan.recurring) {
-                    const expiresAt = new Date(
-                        plan.billing === "annual"
-                            ? Date.now() + 366 * 86400_000
-                            : Date.now() +  32 * 86400_000
-                    );
-                    await client.query(
-                        `UPDATE users
-                         SET plan = $1, credits = credits + $2,
-                             payplus_subscription_id = $3,
-                             payplus_plan            = $4,
-                             subscription_expires_at = $5,
-                             updated_at = NOW()
-                         WHERE id = $6`,
-                        [plan.plan, plan.credits, recurringId ?? null, planId, expiresAt, userId]
-                    );
-                } else {
-                    // Credit pack — add credits only
-                    await client.query(
-                        `UPDATE users SET credits = credits + $1, updated_at = NOW() WHERE id = $2`,
-                        [plan.credits, userId]
-                    );
-                }
-
-                // Mark payment completed
+            const meta = JSON.stringify({ transaction_id: txnId, recurring_id: recurringId ?? null });
+            // First charge: complete the pending row created by /create-session
+            const upd = orderNumber ? await client.query(
+                `UPDATE payments SET status = 'completed', subscription_id = $1,
+                        payload = payload || $2::jsonb
+                  WHERE provider = 'payplus' AND user_id = $3 AND transaction_id = $4 AND status = 'pending'`,
+                [recurringId ?? null, meta, userId, orderNumber]
+            ) : { rowCount: 0 };
+            if (!upd.rowCount) {
+                // No pending row: recurring renewal charge (or session row lost) — record it
                 await client.query(
-                    `UPDATE payments
-                     SET status = 'completed',
-                         payload = payload || $1::jsonb
-                     WHERE user_id = $2 AND status = 'pending'
-                     ORDER BY created_at DESC
-                     LIMIT 1`,
-                    [JSON.stringify({ transaction_id: txnId, recurring_id: recurringId }), userId]
+                    `INSERT INTO payments(user_id, provider, transaction_id, subscription_id, plan, amount, currency, status, payload)
+                     VALUES($1, 'payplus', $2, $3, $4, $5, $6, 'completed', $7::jsonb)`,
+                    [userId, orderNumber ?? txnId, recurringId ?? null, planId, plan.amount, plan.currency, meta]
                 );
-
-                await client.query("COMMIT");
-                logger.info({ userId, planId, credits: plan.credits }, "PayPlus payment applied ✓");
-            } catch (err) {
-                await client.query("ROLLBACK");
-                throw err;
-            } finally {
-                client.release();
             }
+
+            if (plan.recurring) {
+                const expiresAt = new Date(
+                    plan.billing === "annual"
+                        ? Date.now() + 366 * 86400_000
+                        : Date.now() +  32 * 86400_000
+                );
+                await client.query(
+                    `UPDATE users
+                     SET plan = $1, credits = credits + $2,
+                         payplus_subscription_id = COALESCE($3, payplus_subscription_id),
+                         payplus_plan            = $4,
+                         subscription_expires_at = $5,
+                         updated_at = NOW()
+                     WHERE id = $6`,
+                    [plan.plan, plan.credits, recurringId ?? null, planId, expiresAt, userId]
+                );
+            } else {
+                // Credit pack — add credits only
+                await client.query(
+                    `UPDATE users SET credits = credits + $1, updated_at = NOW() WHERE id = $2`,
+                    [plan.credits, userId]
+                );
+            }
+
+            await client.query("COMMIT");
+            logger.info({ userId, planId, credits: plan.credits, txnId }, "PayPlus payment applied ✓");
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
         }
 
         res.json({ ok: true });

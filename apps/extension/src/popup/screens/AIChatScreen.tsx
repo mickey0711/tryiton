@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-const API_BASE = "https://tryiton-app-f32z6.ondigitalocean.app";
+import { apiFetch } from "../../lib/api";
 
 interface Message {
     role: "user" | "assistant";
@@ -43,16 +43,20 @@ export function AIChatScreen({ category, fitScore, onBack }: Props) {
         setLoading(true);
 
         try {
-            const res = await fetch(`${API_BASE}/chat/fit-advisor`, {
+            const res = await apiFetch(`/chat/fit-advisor`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     messages: newMessages,
                     category,
                     fitScore,
                 }),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
+            if (res.status === 401) {
+                setMessages([...newMessages, { role: "assistant", content: "Please sign in to chat with the AI stylist. 🔐" }]);
+                return;
+            }
+            if (!res.ok || !data.message) throw new Error(data.message ?? "chat failed");
             setMessages([...newMessages, { role: "assistant", content: data.message }]);
         } catch {
             setMessages([...newMessages, { role: "assistant", content: "Sorry, I had trouble connecting. Try again? 😊" }]);

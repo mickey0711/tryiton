@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { apiFetch } from "../../lib/api";
 
 interface SavedItem {
     id: string;
@@ -20,7 +21,6 @@ interface Props {
     token: string | null;
 }
 
-const API_BASE = "http://localhost:8080";
 
 export function WishlistScreen({ onBack, token }: { onBack: () => void; token: string | null }) {
     const [items, setItems]         = useState<SavedItem[]>([]);
@@ -34,9 +34,7 @@ export function WishlistScreen({ onBack, token }: { onBack: () => void; token: s
     const loadItems = useCallback(async () => {
         if (!token) { setLoading(false); setError("Sign in to see your saved items"); return; }
         try {
-            const res = await fetch(`${API_BASE}/library/saved`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await apiFetch(`/library/saved`);
             if (!res.ok) throw new Error("Failed to load");
             const data = await res.json();
             setItems(data.items ?? []);
@@ -52,10 +50,7 @@ export function WishlistScreen({ onBack, token }: { onBack: () => void; token: s
     const handleDelete = async (id: string) => {
         setDeleting(id);
         try {
-            const res = await fetch(`${API_BASE}/library/saved/${id}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token ?? ""}` },
-            });
+            const res = await apiFetch(`/library/saved/${id}`, { method: "DELETE" });
             if (res.ok) {
                 setItems(prev => prev.filter(i => i.id !== id));
                 showToast("Removed from wishlist");

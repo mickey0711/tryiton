@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const API_BASE = "https://tryiton-app-f32z6.ondigitalocean.app";
+import { apiFetch } from "../../lib/api";
 
 interface Props {
     roomImageB64: string;
@@ -27,11 +27,13 @@ export function AtmosphereScreen({ roomImageB64, onBack, onResult }: Props) {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${API_BASE}/space/atmosphere`, {
+            const res = await apiFetch(`/space/atmosphere`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                auth: "optional",
                 body: JSON.stringify({ room_image: roomImageB64, style: selected }),
             });
+            if (res.status === 402) { setError("You're out of try-ons — upgrade at tryit4u.ai/account"); return; }
+            if (res.status === 401) { setError("Please sign in to use room styling."); return; }
             if (!res.ok) throw new Error(`API error ${res.status}`);
             const data = await res.json();
             onResult(data.result_image, STYLES.find(s => s.id === selected)?.label ?? selected);

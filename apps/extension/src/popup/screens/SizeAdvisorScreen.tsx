@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-const API_BASE = "https://tryiton-app-f32z6.ondigitalocean.app";
+import { apiFetch } from "../../lib/api";
 
 // Category groups
 const UPPER_BODY = ["tops", "jacket", "dress"];   // waist-up photo
@@ -90,17 +90,9 @@ export function SizeAdvisorScreen({ category, productTitle, onBack, onSizeFound 
     setError(null);
 
     try {
-      // Get auth token if available
-      const token: string | null = await new Promise((res) =>
-        (chrome as any).storage.local.get(["accessToken"], (d: any) => res(d.accessToken ?? null))
-      );
-
-      const resp = await fetch(`${API_BASE}/size/analyze`, {
+      const resp = await apiFetch(`/size/analyze`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        auth: "optional",
         body: JSON.stringify({
           image: bodyImage,
           category,

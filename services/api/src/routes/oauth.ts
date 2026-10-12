@@ -9,6 +9,89 @@ const router = Router();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/**
+ * Only allow redirects back to a Chrome extension's identity callback origin
+ * (https://<extension-id>.chromiumapp.org/). Anything else is an open redirect
+ * that would leak the issued access token.
+ */
+function safeExtRedirect(value: unknown): string | null {
+    if (typeof value !== "string") return null;
+    try {
+        const u = new URL(value);
+        if (u.protocol !== "https:") return null;
+        if (!/^[a-p]{32}\.chromiumapp\.org$/.test(u.hostname)) return null;
+        return `${u.origin}/`;
+    } catch { return null; }
+}
+
+/** Accept the web client id plus any extra ids (extension / iOS) listed in GOOGLE_EXTRA_CLIENT_IDS. */
+function googleClientIds(): string[] {
+    return [process.env.GOOGLE_CLIENT_ID, ...(process.env.GOOGLE_EXTRA_CLIENT_IDS ?? "").split(",")]
+        .map((v) => v?.trim()).filter((v): v is string => !!v);
+}
+
+/** Verify a Google ID token with Google (signature, expiry) and check it was issued to us. */
+async function verifyGoogleIdToken(idToken: string) {
+    const ids = googleClientIds();
+    if (!ids.length) throw new AppError("SERVICE_ERROR", "Google OAuth not configured", 503);
+    const r = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`,
+        { signal: AbortSignal.timeout(8000) });
+    const info = await r.json().catch(() => ({})) as any;
+    if (!r.ok || !info.sub) throw new AppError("UNAUTHORIZED", "Invalid Google token", 401);
+    if (!ids.includes(info.aud)) throw new AppError("UNAUTHORIZED", "id_token audience mismatch", 401);
+    if (info.email_verified !== "true" && info.email_verified !== true) {
+        throw new AppError("OAUTH_ERROR", "Google email is not verified", 400);
+    }
+    return info as { sub: string; email: string; name?: string; picture?: string };
+}
+
+/** Verify a Google OAuth access token was issued to one of our client ids, then load the profile. */
+async function verifyGoogleAccessToken(accessToken: string) {
+    const ids = googleClientIds();
+    if (!ids.length) throw new AppError("SERVICE_ERROR", "Google OAuth not configured", 503);
+    const t = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`,
+        { signal: AbortSignal.timeout(8000) });
+    const tok = await t.json().catch(() => ({})) as any;
+    if (!t.ok || !ids.includes(tok.aud ?? tok.azp)) {
+        throw new AppError("UNAUTHORIZED", "Google access token was not issued to this app", 401);
+    }
+    const infoRes = await fetch(GOOGLE_USERINFO_URL, {
+        headers: { Authorization: `Bearer ${accessToken}` }, signal: AbortSignal.timeout(8000),
+    });
+    const info = await infoRes.json().catch(() => ({})) as any;
+    if (!info.email || !info.sub) throw new AppError("OAUTH_ERROR", "Failed to get user info", 400);
+    if (info.email_verified === false) throw new AppError("OAUTH_ERROR", "Google email is not verified", 400);
+    return info as { sub: string; email: string; name?: string; picture?: string };
+}
+
+// Apple public keys (JWKS) — cached for an hour.
+let appleKeys: { keys: any[]; fetchedAt: number } | null = null;
+async function getAppleKey(kid: string) {
+    if (!appleKeys || Date.now() - appleKeys.fetchedAt > 3600_000) {
+        const r = await fetch("https://appleid.apple.com/auth/keys", { signal: AbortSignal.timeout(8000) });
+        appleKeys = { keys: ((await r.json()) as any).keys ?? [], fetchedAt: Date.now() };
+    }
+    const jwk = appleKeys.keys.find((k) => k.kid === kid);
+    if (!jwk) throw new AppError("UNAUTHORIZED", "Unknown Apple signing key", 401);
+    return crypto.createPublicKey({ key: jwk, format: "jwk" });
+}
+
+/** Verify an Apple identity token: RS256 signature against Apple's JWKS, issuer and audience. */
+async function verifyAppleIdToken(idToken: string) {
+    const audience = process.env.APPLE_CLIENT_ID;
+    if (!audience) throw new AppError("SERVICE_ERROR", "Apple Sign In not configured", 503);
+    const header = jwt.decode(idToken, { complete: true })?.header as { kid?: string } | undefined;
+    if (!header?.kid) throw new AppError("UNAUTHORIZED", "Invalid Apple token", 401);
+    const key = await getAppleKey(header.kid);
+    try {
+        return jwt.verify(idToken, key, {
+            algorithms: ["RS256"], issuer: "https://appleid.apple.com", audience,
+        }) as { sub: string; email?: string; email_verified?: string | boolean };
+    } catch {
+        throw new AppError("UNAUTHORIZED", "Invalid Apple token", 401);
+    }
+}
+
 function issueTokens(userId: string) {
     const accessToken = jwt.sign({ sub: userId }, process.env.JWT_SECRET as string, {
         expiresIn: "7d" as any,
@@ -36,6 +119,9 @@ async function upsertOAuthUser(data: {
          VALUES($1, $2, TRUE, 'free', 5)
          ON CONFLICT(email) DO UPDATE SET
            email_verified = TRUE,
+           -- If the existing row was never verified, whoever set its password did not prove
+           -- ownership of the email — the OAuth sign-in just did. Drop that password.
+           password_hash = CASE WHEN users.email_verified THEN users.password_hash ELSE NULL END,
            full_name = COALESCE(users.full_name, EXCLUDED.full_name),
            updated_at = NOW()
          RETURNING id, is_admin, credits, plan`,
@@ -100,8 +186,8 @@ router.get("/google/extension", (req, res) => {
     const client_id = process.env.GOOGLE_CLIENT_ID;
     if (!client_id) return res.status(503).json({ error: "Google OAuth not configured" });
 
-    const extRedirect = req.query.ext_redirect as string | undefined;
-    if (!extRedirect || !extRedirect.includes("chromiumapp.org")) {
+    const extRedirect = safeExtRedirect(req.query.ext_redirect);
+    if (!extRedirect) {
         return res.status(400).json({ error: "BAD_REQUEST", message: "Invalid ext_redirect" });
     }
 
@@ -136,9 +222,7 @@ router.get("/google/callback", async (req, res, next) => {
         if (state) {
             try {
                 const decoded = JSON.parse(Buffer.from(state, "base64url").toString()) as any;
-                if (typeof decoded.ext_redirect === "string" && decoded.ext_redirect.includes("chromiumapp.org")) {
-                    extRedirect = decoded.ext_redirect;
-                }
+                extRedirect = safeExtRedirect(decoded.ext_redirect);
                 if (typeof decoded.return_to === "string" && decoded.return_to.startsWith("/")) {
                     returnTo = decoded.return_to;
                 }
@@ -164,12 +248,12 @@ router.get("/google/callback", async (req, res, next) => {
                 plan: user.plan,
             }));
             logger.info({ userId: user.id }, "Google OAuth → extension");
-            return res.redirect(`${extRedirect}?access_token=${accessToken}&user=${userPayload}`);
+            return res.redirect(`${extRedirect}?access_token=${accessToken}&refresh_token=${refreshToken}&user=${userPayload}`);
         }
 
         // Standard web redirect — pass return_to so auth/success knows where to land
         const frontendUrl = process.env.WEB_APP_URL ?? "http://localhost:3000";
-        res.redirect(`${frontendUrl}/auth/success?access_token=${accessToken}&refresh_token=${refreshToken}&return_to=${encodeURIComponent(returnTo)}`);
+        res.redirect(`${frontendUrl}/auth/success?return_to=${encodeURIComponent(returnTo)}#access_token=${accessToken}&refresh_token=${refreshToken}`);
     } catch (err) { next(err); }
 });
 
@@ -187,18 +271,8 @@ router.post("/google/exchange", async (req, res, next) => {
         let user: { id: string; is_admin: boolean; credits: number; plan: string };
 
         if (id_token) {
-            // GIS popup flow — id_token is a signed JWT from Google
-            const parts = id_token.split(".");
-            if (parts.length !== 3) throw new AppError("BAD_REQUEST", "Invalid id_token", 400);
-            const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString()) as any;
-
-            // Validate audience
-            const clientId = process.env.GOOGLE_CLIENT_ID;
-            if (clientId && payload.aud !== clientId) {
-                throw new AppError("UNAUTHORIZED", "id_token audience mismatch", 401);
-            }
-            if (!payload.email) throw new AppError("OAUTH_ERROR", "Google token has no email", 400);
-
+            // GIS popup flow — verified with Google (signature + audience), never just decoded
+            const payload = await verifyGoogleIdToken(id_token);
             logger.info({ email: payload.email, provider: "google-gis" }, "Google GIS sign-in");
             user = await upsertOAuthUser({
                 email: payload.email,
@@ -208,12 +282,8 @@ router.post("/google/exchange", async (req, res, next) => {
                 provider_id: payload.sub,
             });
         } else if (google_access_token) {
-            // Chrome extension access token flow
-            const infoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                headers: { Authorization: `Bearer ${google_access_token}` },
-            });
-            const info = await infoRes.json() as any;
-            if (!info.email) throw new AppError("OAUTH_ERROR", "Failed to get user info", 400);
+            // Chrome extension chrome.identity.getAuthToken flow — token must belong to our client id
+            const info = await verifyGoogleAccessToken(google_access_token);
             user = await upsertOAuthUser({
                 email: info.email,
                 full_name: info.name ?? info.email,
@@ -273,6 +343,7 @@ async function exchangeGoogleCode(code: string, redirectUri: string) {
         headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
     const info = await infoRes.json() as any;
+    if (!info.email || !info.sub) throw new AppError("OAUTH_ERROR", "Google returned no email", 400);
 
     logger.info({ email: info.email, provider: "google" }, "Google OAuth user");
 
@@ -312,8 +383,8 @@ router.get("/facebook/extension", (req, res) => {
     const client_id = process.env.FACEBOOK_APP_ID;
     if (!client_id) return res.status(503).json({ error: "Facebook OAuth not configured" });
 
-    const extRedirect = req.query.ext_redirect as string | undefined;
-    if (!extRedirect || !extRedirect.includes("chromiumapp.org")) {
+    const extRedirect = safeExtRedirect(req.query.ext_redirect);
+    if (!extRedirect) {
         return res.status(400).json({ error: "BAD_REQUEST", message: "Invalid ext_redirect" });
     }
 
@@ -342,9 +413,7 @@ router.get("/facebook/callback", async (req, res, next) => {
         if (state) {
             try {
                 const decoded = JSON.parse(Buffer.from(state, "base64url").toString()) as any;
-                if (typeof decoded.ext_redirect === "string" && decoded.ext_redirect.includes("chromiumapp.org")) {
-                    extRedirect = decoded.ext_redirect;
-                }
+                extRedirect = safeExtRedirect(decoded.ext_redirect);
             } catch { /* ignore malformed state */ }
         }
 
@@ -366,11 +435,11 @@ router.get("/facebook/callback", async (req, res, next) => {
                 plan: user.plan,
             }));
             logger.info({ userId: user.id }, "Facebook OAuth → extension");
-            return res.redirect(`${extRedirect}?access_token=${accessToken}&user=${userPayload}`);
+            return res.redirect(`${extRedirect}?access_token=${accessToken}&refresh_token=${refreshToken}&user=${userPayload}`);
         }
 
         const frontendUrl = process.env.WEB_APP_URL ?? "http://localhost:3000";
-        res.redirect(`${frontendUrl}/auth/success?access_token=${accessToken}&refresh_token=${refreshToken}`);
+        res.redirect(`${frontendUrl}/auth/success#access_token=${accessToken}&refresh_token=${refreshToken}`);
     } catch (err) { next(err); }
 });
 
@@ -436,9 +505,15 @@ router.post("/apple/verify", async (req, res, next) => {
         };
         if (!id_token) throw new AppError("BAD_REQUEST", "id_token required", 400);
 
-        // Decode Apple's JWT (public key verification optional for MVP)
-        const payload = JSON.parse(Buffer.from(id_token.split(".")[1], "base64url").toString()) as any;
-        const email = payload.email ?? appleUser?.email;
+        const payload = await verifyAppleIdToken(id_token);
+        // Apple only includes the email on first sign-in; afterwards we look it up by provider_id.
+        let email = payload.email ?? null;
+        if (!email) {
+            const prev = await db.query<{ email: string }>(
+                `SELECT u.email FROM oauth_providers o JOIN users u ON u.id = o.user_id
+                  WHERE o.provider = 'apple' AND o.provider_id = $1`, [payload.sub]);
+            email = prev.rows[0]?.email ?? null;
+        }
         if (!email) throw new AppError("OAUTH_ERROR", "Apple auth returned no email", 400);
 
         const firstName = appleUser?.name?.firstName ?? "";

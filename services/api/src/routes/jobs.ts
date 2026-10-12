@@ -6,6 +6,7 @@ import { requireAuth, AuthRequest } from "../middleware/auth";
 import { generateQueue } from "../services/queue";
 import { CreateJobReq } from "@tryiton/shared";
 import { getResultSignedUrl } from "./assets";
+import { chargeCredit, refundCredit } from "../services/credits";
 
 const router = Router();
 router.use(requireAuth);
@@ -63,6 +64,9 @@ router.post("/", async (req, res, next) => {
         if (!prodRes.rows.length) throw new AppError("NOT_FOUND", "Product not found", 404);
         const product = prodRes.rows[0];
 
+        // One credit per generation — refunded by the worker if the job fails.
+        await chargeCredit(userId, "fit-job");
+
         const jobId = uuidv4();
         const inputAssets = {
             user: userAsset.s3_key,
@@ -70,14 +74,20 @@ router.post("/", async (req, res, next) => {
             hand: body.hand_asset_id ? assetMap[body.hand_asset_id]?.s3_key : undefined,
         };
 
-        await db.query(
-            `INSERT INTO jobs(id, user_id, product_id, intent, category, quality_profile, input_assets, status)
-       VALUES($1, $2, $3, $4, $5, $6, $7, 'queued')`,
-            [jobId, userId, body.product_id, body.intent, body.category, body.quality_profile, JSON.stringify(inputAssets)]
-        );
+        try {
+            await db.query(
+                `INSERT INTO jobs(id, user_id, product_id, intent, category, quality_profile, input_assets, status)
+           VALUES($1, $2, $3, $4, $5, $6, $7, 'queued')`,
+                [jobId, userId, body.product_id, body.intent, body.category, body.quality_profile, JSON.stringify(inputAssets)]
+            );
+        } catch (err) {
+            await refundCredit(userId, "fit-job-insert-failed").catch(() => {});
+            throw err;
+        }
 
         // Enqueue GPU job
-        await generateQueue.add("generate", {
+        try {
+          await generateQueue.add("generate", {
             jobId,
             userId,
             productId: body.product_id,
@@ -88,7 +98,12 @@ router.post("/", async (req, res, next) => {
             productAssetKey: product.canonical_url ?? "",
             roomAssetKey: inputAssets.room,
             handAssetKey: inputAssets.hand,
-        });
+          });
+        } catch (err) {
+            await db.query(`UPDATE jobs SET status = 'failed', error_message = 'queue unavailable' WHERE id = $1`, [jobId]).catch(() => {});
+            await refundCredit(userId, "fit-job-enqueue-failed").catch(() => {});
+            throw err;
+        }
 
         // Track event
         await db.query(
@@ -214,13 +229,17 @@ router.post("/:id/regenerate", async (req, res, next) => {
         if (!rows.length) throw new AppError("NOT_FOUND", "Job not found", 404);
         const src = rows[0];
 
+        checkJobRateLimit(userId);
+        await chargeCredit(userId, "fit-job-regenerate");
+
         const newJobId = uuidv4();
-        await db.query(
+        try {
+          await db.query(
             `INSERT INTO jobs(id, user_id, product_id, intent, category, quality_profile, input_assets, status)
        VALUES($1, $2, $3, $4, $5, $6, $7, 'queued')`,
             [newJobId, userId, src.product_id, src.intent, src.category, src.quality_profile, JSON.stringify(src.input_assets)]
-        );
-        await generateQueue.add("generate", {
+          );
+          await generateQueue.add("generate", {
             jobId: newJobId,
             userId,
             productId: src.product_id,
@@ -231,7 +250,12 @@ router.post("/:id/regenerate", async (req, res, next) => {
             productAssetKey: src.input_assets.product ?? "",
             roomAssetKey: src.input_assets.room,
             handAssetKey: src.input_assets.hand,
-        });
+          });
+        } catch (err) {
+            await db.query(`UPDATE jobs SET status = 'failed', error_message = 'queue unavailable' WHERE id = $1`, [newJobId]).catch(() => {});
+            await refundCredit(userId, "fit-job-regenerate-failed").catch(() => {});
+            throw err;
+        }
 
         res.status(201).json({ job_id: newJobId });
     } catch (err) { next(err); }

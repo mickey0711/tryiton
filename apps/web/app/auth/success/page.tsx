@@ -12,9 +12,12 @@ export default function AuthSuccessPage() {
     const [error, setError] = useState(false);
 
     useEffect(() => {
+        // Tokens arrive in the URL fragment (never sent to the server / logs);
+        // the query form is still accepted for older links.
         const params  = new URLSearchParams(window.location.search);
-        const access  = params.get("access_token");
-        const refresh = params.get("refresh_token");
+        const hash    = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const access  = hash.get("access_token")  ?? params.get("access_token");
+        const refresh = hash.get("refresh_token") ?? params.get("refresh_token");
 
         if (!access) {
             setError(true);

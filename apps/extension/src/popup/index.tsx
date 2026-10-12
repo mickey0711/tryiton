@@ -18,6 +18,10 @@ import { SpaceUploadScreen } from "./screens/SpaceUploadScreen";
 import { SpaceResultScreen } from "./screens/SpaceResultScreen";
 import { AIChatScreen } from "./screens/AIChatScreen";
 import { AtmosphereScreen } from "./screens/AtmosphereScreen";
+import { API_BASE, apiFetch, getToken, ApiError } from "../lib/api";
+
+const OUT_OF_CREDITS_MSG =
+    "🚀 You're out of try-ons!\n\nUpgrade to Pro (₪69/mo for 50 try-ons, ₪149/mo for 150) or buy a credits pack — ₪39 / ₪79 / ₪179.\n\nOpen tryit4u.ai/account to upgrade.";
 
 export type Screen = "onboarding" | "ready" | "loading" | "result" | "outfit" | "vibe" | "price" | "pose" | "wishlist" | "settings" | "photos" | "size" | "space-upload" | "space-result" | "chat" | "atmosphere";
 
@@ -59,8 +63,6 @@ export interface JobResult {
     explanation: string[];
     productSrc: string | null;
 }
-
-const API_BASE = "https://tryit4u.ai";
 
 function App() {
     const [screen, setScreen] = useState<Screen>("onboarding");
@@ -228,7 +230,7 @@ function App() {
 
         // ── Credit check (for logged-in users) ───────────────────────────────
         if (credits === 0 && accessToken) {
-            setError("🚀 You're out of try-ons!\n\nUpgrade to Pro ($19.90/mo) for 150 monthly try-ons, Wishlist, Price Compare, and Social Share.\n\nOr buy a Credits pack — $4.99 / $9.99 / $19.90.");
+            setError(OUT_OF_CREDITS_MSG);
             return;
         }
 
@@ -265,12 +267,9 @@ function App() {
                     setProgress(18);
 
                     // Step 2: POST to backend — returns immediately with prediction_id
-                    const res = await fetch(`${API_BASE}/fit/tryon-direct`, {
+                    const res = await apiFetch(`/fit/tryon-direct`, {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            ...(backendToken ? { Authorization: `Bearer ${backendToken}` } : {}),
-                        },
+                        auth: "optional",
                         body: JSON.stringify({
                             human_img: activePhoto,
                             garment_url: garmentData,
@@ -281,10 +280,24 @@ function App() {
 
                     if (!res.ok) {
                         const errData = await res.json().catch(() => ({}));
+                        if (res.status === 402) {
+                            setCredits(0);
+                            chrome.storage.local.set({ tryitonCredits: 0 });
+                            throw new Error(OUT_OF_CREDITS_MSG);
+                        }
+                        if (res.status === 401 && !backendToken) {
+                            setShowLoginWall(true);
+                            throw new Error(errData.message ?? "Please sign in to continue.");
+                        }
                         throw new Error(errData.message ?? `Server error (${res.status})`);
                     }
 
                     const initData = await res.json();
+                    // Server is the source of truth for credits
+                    if (typeof initData.credits_left === "number") {
+                        setCredits(initData.credits_left);
+                        chrome.storage.local.set({ tryitonCredits: initData.credits_left });
+                    }
 
                     // Fast path: Replicate finished within the 5 s wait window
                     if (initData.result_url) {
@@ -310,12 +323,9 @@ function App() {
                         // Smooth progress animation: 22 → 92 over 60 iterations
                         setProgress(Math.min(92, 22 + i * 1.2));
 
-                        const pollRes = await fetch(
-                            `${API_BASE}/fit/tryon-direct/poll/${predictionId}`,
-                            {
-                                headers: backendToken ? { Authorization: `Bearer ${backendToken}` } : {},
-                                signal: AbortSignal.timeout(10_000),
-                            }
+                        const pollRes = await apiFetch(
+                            `/fit/tryon-direct/poll/${predictionId}`,
+                            { auth: "optional", signal: AbortSignal.timeout(10_000) }
                         );
                         if (!pollRes.ok) continue; // transient network error — keep polling
 
@@ -498,14 +508,10 @@ function App() {
         setScreen("loading");
         setProgress(10);
         try {
-            const token = await getToken();
             setProgress(30);
-            const res = await fetch(`${API_BASE}/space/analyze`, {
+            const res = await apiFetch(`/space/analyze`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
+                auth: "optional",
                 body: JSON.stringify({
                     room_image: roomImageB64,
                     product_url: productSrc ?? "",
@@ -514,6 +520,18 @@ function App() {
                 }),
             });
             setProgress(80);
+            if (res.status === 402) {
+                setCredits(0);
+                chrome.storage.local.set({ tryitonCredits: 0 });
+                setError(OUT_OF_CREDITS_MSG);
+                setScreen("ready");
+                return;
+            }
+            if (res.status === 401) {
+                setShowLoginWall(true);
+                setScreen("ready");
+                return;
+            }
             if (!res.ok) throw new Error(`Space API error ${res.status}`);
             const data = await res.json();
             setProgress(100);
@@ -786,21 +804,13 @@ function App() {
 
 // ─── API helpers ───────────────────────────────────────────────────────────────
 
-async function getToken(): Promise<string | null> {
-    return new Promise((res) =>
-        chrome.storage.local.get(["accessToken"], (d: any) => res(d.accessToken ?? null))
-    );
-}
 
-// Hardcoded for direct extension use (developer mode) — also written to storage for future use
-// REPLICATE_API_TOKEN is loaded from chrome.storage.local — never hardcode secrets in source
-
-async function getReplicateToken(): Promise<string> {
-    // Try stored token first, fallback to hardcoded
+// Developer-mode only: a Replicate token stored in chrome.storage.local enables the direct
+// Replicate path. Never hardcode secrets here. (The old fallback referenced an undefined
+// constant, which threw inside the storage callback and left the loading screen stuck forever.)
+async function getReplicateToken(): Promise<string | null> {
     return new Promise((res) =>
-        chrome.storage.local.get(["replicateToken"], (d: any) =>
-            res(d.replicateToken ?? REPLICATE_API_TOKEN)
-        )
+        chrome.storage.local.get(["replicateToken"], (d: any) => res(d?.replicateToken ?? null))
     );
 }
 
@@ -847,9 +857,10 @@ async function createJob(token: string, productId: string, userAssetId: string, 
 async function pollJob(token: string, jobId: string, onProgress: (p: number) => void): Promise<any> {
     for (let i = 0; i < 60; i++) {
         await new Promise((r) => setTimeout(r, 2000));
-        const res = await fetch(`${API_BASE}/fit/jobs/${jobId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiFetch(`/fit/jobs/${jobId}`);
+        if (res.status === 401) throw new Error("Session expired — please sign in again.");
+        if (res.status === 404) throw new Error("Job not found.");
+        if (!res.ok) continue; // transient error — keep polling
         const data = await res.json();
         onProgress(data.progress ?? 0);
         if (data.status === "succeeded") return data;

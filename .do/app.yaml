@@ -110,6 +110,20 @@ services:
       - key: REPLICATE_API_TOKEN
         scope: RUN_TIME
         type: SECRET
+      # Admin panel is disabled until this is set (16+ random chars). Open /admin/overview?token=<value> once; it becomes an HttpOnly cookie.
+      - key: ADMIN_TOKEN
+        scope: RUN_TIME
+        type: SECRET
+      # Extra Google OAuth client ids allowed to sign in (comma-separated), e.g. the Chrome extension's client id.
+      - key: GOOGLE_EXTRA_CLIENT_IDS
+        scope: RUN_TIME
+      # Required for Sign in with Apple (the Services ID used as the token audience).
+      - key: APPLE_CLIENT_ID
+        scope: RUN_TIME
+      # Free try-ons per IP per day for visitors who have not signed in (default 2; 0 disables anonymous use).
+      - key: ANON_TRYON_DAILY_LIMIT
+        scope: RUN_TIME
+        value: "2"
     health_check:
       http_path: /health
       period_seconds: 30
