@@ -92,7 +92,7 @@ async function sendVerificationEmail(email: string, token: string, name: string)
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            from: "TryItOn <noreply@tryiton.ai>",
+            from: process.env.EMAIL_FROM ?? "TryIt4U <noreply@tryit4u.ai>",
             to: [email],
             subject: "Verify your TryItOn account ✨",
             html: `
@@ -142,7 +142,7 @@ async function sendWelcomeEmail(email: string, name: string) {
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-            from: "Mickey from TryItOn <hello@tryiton.ai>",
+            from: process.env.EMAIL_FROM_PERSONAL ?? "TryIt4U <hello@tryit4u.ai>",
             to: [email],
             subject: `Welcome to TryItOn, ${name}! 🎉 Here's how to start`,
             html: `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
@@ -167,7 +167,7 @@ body{font-family:-apple-system,sans-serif;background:#0d0c18;color:#f0f0f8;margi
 <a class="btn" href="${downloadUrl}">📦 Download Chrome Extension</a>
 <br>
 <a class="btn" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.4)" href="${appUrl}/account">👤 Visit My Account</a>
-<div class="footer">Questions? Reply to this email — we read every one.<br>© 2026 TryItOn · <a href="${appUrl}" style="color:#6366f1">tryiton.ai</a></div>
+<div class="footer">Questions? Reply to this email — we read every one.<br>© 2026 TryIt4U · <a href="${appUrl}" style="color:#6366f1">tryit4u.ai</a></div>
 </div></body></html>`,
         }),
     }).catch((e) => logger.error({ e }, "Failed to send welcome email"));
