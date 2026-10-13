@@ -60,7 +60,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com", "https://lmsqueezy.com", "https://cdn.simpleicons.org"],
             // Allow onclick/onmouseover attributes — landing page uses them extensively
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],

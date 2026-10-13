@@ -26,7 +26,7 @@ router.get("/", async (req, res, next) => {
             ({ rows } = await db.query(
                 `SELECT u.id, u.email, u.full_name, u.phone, u.plan, u.credits, u.is_admin,
                   u.email_verified, u.created_at, u.address,
-                  u.payplus_subscription_id, u.payplus_plan, u.subscription_expires_at,
+                  u.payplus_subscription_id, u.payplus_plan, u.subscription_expires_at, u.ls_subscription_id, u.country,
                   p.skin_tone, p.face_shape, p.body_metrics,
                   (SELECT COUNT(*) FROM jobs    WHERE user_id = u.id AND status = 'succeeded')::int AS tryon_count,
                   (SELECT COUNT(*) FROM saved_items WHERE user_id = u.id)::int AS saved_count

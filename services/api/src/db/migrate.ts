@@ -281,6 +281,15 @@ const MIGRATIONS = [
   CREATE INDEX IF NOT EXISTS payments_user_idx ON payments(user_id);
   CREATE INDEX IF NOT EXISTS payments_txn_idx  ON payments(transaction_id);
     `,
+
+    // 011: users.country (registration was failing: column referenced but never created) + Lemon Squeezy ids
+    `
+  ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS country            TEXT,
+    ADD COLUMN IF NOT EXISTS ls_subscription_id TEXT,
+    ADD COLUMN IF NOT EXISTS ls_customer_id     TEXT;
+  CREATE INDEX IF NOT EXISTS payments_provider_txn_idx ON payments(provider, transaction_id);
+    `,
 ];
 
 export async function runMigrations() {
