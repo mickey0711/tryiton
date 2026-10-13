@@ -497,65 +497,75 @@ footer{position:relative;z-index:1;border-top:1px solid var(--b);padding:40px 60
   </div>
 </section>
 
-<!-- LOGOS — brand wordmarks (self-hosted, no external API) -->
+<!-- LOGOS — brand logos: Simple Icons (SVG) / uplead wordmarks, styled text where no clean logo exists -->
 <div class="logos" aria-label="Supported stores" id="stores">
   <p class="logos-lbl" data-i18n="logos_lbl">Works with the world's top brands &amp; stores</p>
   <style>
-    .mq-logo{display:inline-flex;align-items:center;justify-content:center;padding:0 20px;margin:0 4px;height:56px;text-decoration:none;transition:.25s;opacity:.55;flex-shrink:0}
+    .mq-logo{display:inline-flex;align-items:center;justify-content:center;padding:0 18px;margin:0 4px;height:56px;text-decoration:none;transition:.25s;opacity:.6;flex-shrink:0}
     .mq-logo:hover{opacity:1;transform:scale(1.08)}
+    .mq-logo img{height:30px;width:auto;max-width:120px;object-fit:contain;filter:brightness(0) invert(1);display:block;pointer-events:none}
     .mq-bn{color:#fff;white-space:nowrap;display:block;font-family:'Space Grotesk',Inter,sans-serif;user-select:none}
     .mq-bn.sz-s{font-size:11px;letter-spacing:.18em;font-weight:600}
     .mq-bn.sz-m{font-size:13px;letter-spacing:.12em;font-weight:600}
     .mq-bn.sz-l{font-size:16px;letter-spacing:.08em;font-weight:700}
-    .mq-bn.sz-xl{font-size:19px;letter-spacing:.04em;font-weight:700}
     .mq-bn.light{font-weight:300;letter-spacing:.14em}
-    .mq-bn.italic{font-style:italic}
     .mq-bn.thin{font-weight:200;letter-spacing:.22em;font-size:14px}
   </style>
   <div class="mq-track-wrap" aria-hidden="true">
     <div class="mq-track">
-      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener"><span class="mq-bn thin">ZARA</span></a>
-      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl">H&amp;M</span></a>
+      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/zara/ffffff" alt="ZARA" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">ZARA</span></a>
+      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/handm/ffffff" alt="H&M" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">H&amp;M</span></a>
       <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener"><span class="mq-bn sz-l">ASOS</span></a>
-      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl italic" style="font-weight:400;letter-spacing:.02em">Nike</span></a>
-      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener"><span class="mq-bn sz-l light" style="text-transform:lowercase;letter-spacing:.06em">adidas</span></a>
-      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener"><span class="mq-bn sz-l" style="font-weight:400">amazon</span></a>
-      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener"><span class="mq-bn sz-l">SHEIN</span></a>
-      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener"><span class="mq-bn sz-m" style="letter-spacing:.2em;font-weight:400">MANGO</span></a>
-      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener"><span class="mq-bn sz-m">UNIQLO</span></a>
-      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener"><span class="mq-bn sz-l italic">Levi's</span></a>
-      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="letter-spacing:.06em">PUMA</span></a>
-      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="letter-spacing:.3em">GAP</span></a>
-      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener"><span class="mq-bn sz-l italic" style="font-weight:800">Vans</span></a>
-      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener"><span class="mq-bn sz-s" style="letter-spacing:.16em">CONVERSE</span></a>
-      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener"><span class="mq-bn sz-s light" style="text-transform:lowercase;letter-spacing:.08em;font-size:12px">lululemon</span></a>
-      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener"><span class="mq-bn sz-s" style="letter-spacing:.14em;font-weight:400">NORDSTROM</span></a>
-      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl italic" style="font-weight:600;letter-spacing:.04em">Etsy</span></a>
-      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener"><span class="mq-bn sz-s">FARFETCH</span></a>
-      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener"><span class="mq-bn sz-m" style="font-weight:400;letter-spacing:.1em">Zalando</span></a>
-      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener"><span class="mq-bn sz-m thin" style="letter-spacing:.22em">GUCCI</span></a>
-      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener"><span class="mq-bn sz-s" style="letter-spacing:.14em;font-weight:400">RALPH LAUREN</span></a>
-      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener"><span class="mq-bn sz-s thin" style="letter-spacing:.2em">CALVIN KLEIN</span></a>
-      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener"><span class="mq-bn sz-m" style="letter-spacing:.18em">HUGO BOSS</span></a>
-      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener"><span class="mq-bn sz-s">THE NORTH FACE</span></a>
-      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener"><span class="mq-bn sz-s italic" style="font-weight:700;letter-spacing:.1em">New Balance</span></a>
-      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="font-weight:700;letter-spacing:.02em">ebay</span></a>
+      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/nike/ffffff" alt="Nike" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Nike</span></a>
+      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/adidas/ffffff" alt="adidas" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">adidas</span></a>
+      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener"><span class="mq-bn sz-l" style="font-weight:400;text-transform:lowercase">amazon</span></a>
+      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener"><span class="mq-bn sz-m">SHEIN</span></a>
+      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/mango.com" alt="MANGO" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">MANGO</span></a>
+      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/uniqlo/ffffff" alt="UNIQLO" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">UNIQLO</span></a>
+      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/levi.com" alt="Levi's" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Levi's</span></a>
+      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/puma/ffffff" alt="PUMA" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">PUMA</span></a>
+      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/gapinc.com" alt="GAP" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">GAP</span></a>
+      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/vans.com" alt="Vans" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Vans</span></a>
+      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/converse.com" alt="CONVERSE" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">CONVERSE</span></a>
+      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener"><span class="mq-bn sz-l" style="font-weight:400;text-transform:lowercase">lululemon</span></a>
+      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener"><span class="mq-bn sz-s">NORDSTROM</span></a>
+      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/etsy/ffffff" alt="Etsy" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Etsy</span></a>
+      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/farfetch/ffffff" alt="FARFETCH" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">FARFETCH</span></a>
+      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/zalando/ffffff" alt="Zalando" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Zalando</span></a>
+      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener"><span class="mq-bn sz-m light">GUCCI</span></a>
+      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener"><span class="mq-bn sz-s thin">RALPH LAUREN</span></a>
+      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener"><span class="mq-bn sz-m light">Calvin Klein</span></a>
+      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/hugoboss.com" alt="HUGO BOSS" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">HUGO BOSS</span></a>
+      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/thenorthface/ffffff" alt="THE NORTH FACE" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">THE NORTH FACE</span></a>
+      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/newbalance/ffffff" alt="New Balance" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">New Balance</span></a>
+      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/ebay/ffffff" alt="eBay" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">eBay</span></a>
       <!-- duplicate set for seamless infinite scroll -->
-      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener"><span class="mq-bn thin">ZARA</span></a>
-      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl">H&amp;M</span></a>
+      <a class="mq-logo" href="https://zara.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/zara/ffffff" alt="ZARA" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">ZARA</span></a>
+      <a class="mq-logo" href="https://hm.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/handm/ffffff" alt="H&M" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">H&amp;M</span></a>
       <a class="mq-logo" href="https://asos.com" target="_blank" rel="noopener"><span class="mq-bn sz-l">ASOS</span></a>
-      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl italic" style="font-weight:400;letter-spacing:.02em">Nike</span></a>
-      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener"><span class="mq-bn sz-l light" style="text-transform:lowercase;letter-spacing:.06em">adidas</span></a>
-      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener"><span class="mq-bn sz-l" style="font-weight:400">amazon</span></a>
-      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener"><span class="mq-bn sz-l">SHEIN</span></a>
-      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener"><span class="mq-bn sz-m" style="letter-spacing:.2em;font-weight:400">MANGO</span></a>
-      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener"><span class="mq-bn sz-m">UNIQLO</span></a>
-      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener"><span class="mq-bn sz-l italic">Levi's</span></a>
-      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="letter-spacing:.06em">PUMA</span></a>
-      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener"><span class="mq-bn sz-xl" style="letter-spacing:.3em">GAP</span></a>
-      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener"><span class="mq-bn sz-m thin" style="letter-spacing:.22em">GUCCI</span></a>
-      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener"><span class="mq-bn sz-s" style="letter-spacing:.14em;font-weight:400">RALPH LAUREN</span></a>
-      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener"><span class="mq-bn sz-s">FARFETCH</span></a>
+      <a class="mq-logo" href="https://nike.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/nike/ffffff" alt="Nike" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Nike</span></a>
+      <a class="mq-logo" href="https://adidas.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/adidas/ffffff" alt="adidas" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">adidas</span></a>
+      <a class="mq-logo" href="https://amazon.com" target="_blank" rel="noopener"><span class="mq-bn sz-l" style="font-weight:400;text-transform:lowercase">amazon</span></a>
+      <a class="mq-logo" href="https://shein.com" target="_blank" rel="noopener"><span class="mq-bn sz-m">SHEIN</span></a>
+      <a class="mq-logo" href="https://mango.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/mango.com" alt="MANGO" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">MANGO</span></a>
+      <a class="mq-logo" href="https://uniqlo.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/uniqlo/ffffff" alt="UNIQLO" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">UNIQLO</span></a>
+      <a class="mq-logo" href="https://levis.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/levi.com" alt="Levi's" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Levi's</span></a>
+      <a class="mq-logo" href="https://puma.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/puma/ffffff" alt="PUMA" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">PUMA</span></a>
+      <a class="mq-logo" href="https://gap.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/gapinc.com" alt="GAP" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">GAP</span></a>
+      <a class="mq-logo" href="https://vans.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/vans.com" alt="Vans" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Vans</span></a>
+      <a class="mq-logo" href="https://converse.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/converse.com" alt="CONVERSE" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">CONVERSE</span></a>
+      <a class="mq-logo" href="https://lululemon.com" target="_blank" rel="noopener"><span class="mq-bn sz-l" style="font-weight:400;text-transform:lowercase">lululemon</span></a>
+      <a class="mq-logo" href="https://nordstrom.com" target="_blank" rel="noopener"><span class="mq-bn sz-s">NORDSTROM</span></a>
+      <a class="mq-logo" href="https://etsy.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/etsy/ffffff" alt="Etsy" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Etsy</span></a>
+      <a class="mq-logo" href="https://farfetch.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/farfetch/ffffff" alt="FARFETCH" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">FARFETCH</span></a>
+      <a class="mq-logo" href="https://zalando.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/zalando/ffffff" alt="Zalando" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">Zalando</span></a>
+      <a class="mq-logo" href="https://gucci.com" target="_blank" rel="noopener"><span class="mq-bn sz-m light">GUCCI</span></a>
+      <a class="mq-logo" href="https://ralphlauren.com" target="_blank" rel="noopener"><span class="mq-bn sz-s thin">RALPH LAUREN</span></a>
+      <a class="mq-logo" href="https://calvinklein.com" target="_blank" rel="noopener"><span class="mq-bn sz-m light">Calvin Klein</span></a>
+      <a class="mq-logo" href="https://hugoboss.com" target="_blank" rel="noopener"><img src="https://logo.uplead.com/hugoboss.com" alt="HUGO BOSS" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">HUGO BOSS</span></a>
+      <a class="mq-logo" href="https://thenorthface.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/thenorthface/ffffff" alt="THE NORTH FACE" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">THE NORTH FACE</span></a>
+      <a class="mq-logo" href="https://newbalance.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/newbalance/ffffff" alt="New Balance" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">New Balance</span></a>
+      <a class="mq-logo" href="https://ebay.com" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/ebay/ffffff" alt="eBay" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="mq-bn sz-m" style="display:none">eBay</span></a>
     </div>
   </div>
   <p class="logos-count" data-i18n="logos_count">Works on <b>500+ stores</b> worldwide &mdash; anywhere you shop</p>
