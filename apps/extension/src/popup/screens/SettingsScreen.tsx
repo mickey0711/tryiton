@@ -122,7 +122,7 @@ export function SettingsScreen({ onBack, token }: Props) {
                         {status?.plan !== "pro" && status?.plan !== "elite" && (
                             <button className="btn btn-primary" style={{ fontSize: 11, padding: "8px 0" }}
                                 onClick={() => window.open("https://tryit4u.ai/account#billing", "_blank")}>
-                                ⚡ Upgrade to Pro — ₪69/mo
+                                ⚡ Upgrade to Pro — $19.90/mo
                             </button>
                         )}
                     </div>

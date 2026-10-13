@@ -21,7 +21,7 @@ import { AtmosphereScreen } from "./screens/AtmosphereScreen";
 import { API_BASE, apiFetch, getToken, ApiError } from "../lib/api";
 
 const OUT_OF_CREDITS_MSG =
-    "🚀 You're out of try-ons!\n\nUpgrade to Pro (₪69/mo for 50 try-ons, ₪149/mo for 150) or buy a credits pack — ₪39 / ₪79 / ₪179.\n\nOpen tryit4u.ai/account to upgrade.";
+    "🚀 You're out of try-ons!\n\nUpgrade to Pro ($19.90/mo for 50 try-ons, $49.90/mo for 150) or buy a credits pack — $9.99 / $19.99 / $49.90 / $99.\n\nOpen tryit4u.ai/account to upgrade.";
 
 export type Screen = "onboarding" | "ready" | "loading" | "result" | "outfit" | "vibe" | "price" | "pose" | "wishlist" | "settings" | "photos" | "size" | "space-upload" | "space-result" | "chat" | "atmosphere";
 

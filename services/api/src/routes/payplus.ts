@@ -27,7 +27,7 @@ const PP_TERMINAL = () => process.env.PAYPLUS_TERMINAL_UID ?? "";
 const PP_PAGE     = () => process.env.PAYPLUS_PAGE_UID     ?? "";
 const APP_URL     = () => process.env.WEB_APP_URL          ?? "https://tryit4u.ai";
 
-// ─── Plans catalogue (ILS pricing) ───────────────────────────────────────────
+// ─── Plans catalogue (USD pricing — matches landing page) ───────────────────
 export const PLANS: Record<string, {
     label: string; amount: number; currency: string;
     credits: number; plan: string;
@@ -36,48 +36,56 @@ export const PLANS: Record<string, {
 }> = {
     pro_basic: {
         label:    "Pro Basic — 50 try-ons/month",
-        amount:   69, currency: "ILS",
+        amount:   19.90, currency: "USD",
         credits:  50, plan: "pro",
         recurring: true, billing: "monthly",
     },
     pro_plus: {
         label:    "Pro Plus — 150 try-ons/month",
-        amount:   149, currency: "ILS",
+        amount:   49.90, currency: "USD",
         credits:  150, plan: "elite",
         recurring: true, billing: "monthly",
         badge: "Most Popular",
     },
     pro_basic_annual: {
         label:    "Pro Basic Annual — 50 try-ons/month",
-        amount:   745, currency: "ILS",  // ₪69×12 − 10% = ₪745.20
+        amount:   214.90, currency: "USD",  // $17.90 × 12 — save 10%
         credits:  600, plan: "pro",
         recurring: true, billing: "annual",
         badge: "Save 10%",
     },
     pro_plus_annual: {
         label:    "Pro Plus Annual — 150 try-ons/month",
-        amount:   1609, currency: "ILS", // ₪149×12 − 10% = ₪1609.20
+        amount:   539.00, currency: "USD",  // $44.90 × 12 — save 10%
         credits:  1800, plan: "elite",
         recurring: true, billing: "annual",
         badge: "Best Value — Save 10%",
     },
     credits_20: {
-        label:   "20 Credits Pack",
-        amount:  39, currency: "ILS",
+        label:   "Starter Pack — 20 Credits",
+        amount:  9.99, currency: "USD",
         credits: 20, plan: "",
         recurring: false, billing: "one_time",
     },
-    credits_50: {
-        label:   "50 Credits Pack",
-        amount:  79, currency: "ILS",
-        credits: 50, plan: "",
+    credits_40: {
+        label:   "Value Pack — 40 Credits",
+        amount:  19.99, currency: "USD",
+        credits: 40, plan: "",
         recurring: false, billing: "one_time",
     },
     credits_130: {
-        label:   "130 Credits Pack",
-        amount:  179, currency: "ILS",
+        label:   "Power Pack — 130 Credits",
+        amount:  49.90, currency: "USD",
         credits: 130, plan: "",
         recurring: false, billing: "one_time",
+        badge: "Popular",
+    },
+    credits_200: {
+        label:   "Ultimate Pack — 200 Credits",
+        amount:  99.00, currency: "USD",
+        credits: 200, plan: "",
+        recurring: false, billing: "one_time",
+        badge: "Best Value",
     },
 };
 

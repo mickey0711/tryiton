@@ -1525,7 +1525,7 @@ function showLoggedIn(user){
   emailRevealed = false;
   const planEl = document.getElementById('ud-plan-name');
   if(planEl){
-    const planLabels = { admin:'✨ Admin — Unlimited', elite:'⚡ Pro Plus — ₪149/mo', pro:'🚀 Pro Basic — ₪69/mo', free:'Free Plan' };
+    const planLabels = { admin:'✨ Admin — Unlimited', elite:'⚡ Pro Plus — $49.90/mo', pro:'🚀 Pro Basic — $19.90/mo', free:'Free Plan' };
     planEl.textContent = planLabels[user.plan] || user.plan || 'Free Plan';
   }
 }
@@ -2621,10 +2621,10 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click'
             <div id="acc-sub-expiry" style="font-size:12px;color:rgba(255,255,255,.35);font-family:Inter,sans-serif;margin-top:2px"></div>
           </div>
           <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-            <button id="upgrade-btn-pro_basic" onclick="startUpgrade('pro_basic')" style="padding:11px 20px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:10px;color:#34d399;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">🚀 Pro Basic ₪69/mo</button>
-            <button id="upgrade-btn-pro_plus" onclick="startUpgrade('pro_plus')" style="padding:11px 20px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:10px;color:#fbbf24;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">⚡ Pro Plus ₪149/mo</button>
-            <button id="upgrade-btn-pro_basic_annual" onclick="startUpgrade('pro_basic_annual')" style="padding:11px 20px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:10px;color:#a78bfa;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">🚀 Annual ₪745/yr</button>
-            <button id="upgrade-btn-pro_plus_annual" onclick="startUpgrade('pro_plus_annual')" style="padding:11px 20px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:10px;color:#fbbf24;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">⚡ Annual ₪1,609/yr</button>
+            <button id="upgrade-btn-pro_basic" onclick="startUpgrade('pro_basic')" style="padding:11px 20px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:10px;color:#34d399;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">🚀 Pro Basic $19.90/mo</button>
+            <button id="upgrade-btn-pro_plus" onclick="startUpgrade('pro_plus')" style="padding:11px 20px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:10px;color:#fbbf24;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">⚡ Pro Plus $49.90/mo</button>
+            <button id="upgrade-btn-pro_basic_annual" onclick="startUpgrade('pro_basic_annual')" style="padding:11px 20px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:10px;color:#a78bfa;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">🚀 Annual $214.90/yr</button>
+            <button id="upgrade-btn-pro_plus_annual" onclick="startUpgrade('pro_plus_annual')" style="padding:11px 20px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:10px;color:#fbbf24;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer">⚡ Annual $539/yr</button>
           </div>
           <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:20px;margin-bottom:16px">
             <div style="font-size:12px;color:rgba(255,255,255,.4);font-weight:600;font-family:Inter,sans-serif;margin-bottom:8px">Payment History</div>
@@ -2940,8 +2940,8 @@ async function loadAccountData(){
     // Plan badge + billing display (ILS pricing)
     const planMeta = {
       admin:  { label:'✨ Admin',  color:'#a78bfa', bg:'rgba(124,58,237,.25)', border:'rgba(124,58,237,.5)',  billing:'Unlimited — Admin' },
-      elite:  { label:'⚡ Pro Plus',color:'#fbbf24', bg:'rgba(251,191,36,.2)',  border:'rgba(251,191,36,.4)',  billing:'Pro Plus — 150 try-ons/month · ₪149/mo' },
-      pro:    { label:'🚀 Pro Basic',color:'#34d399', bg:'rgba(52,211,153,.15)', border:'rgba(52,211,153,.35)', billing:'Pro Basic — 50 try-ons/month · ₪69/mo' },
+      elite:  { label:'⚡ Pro Plus',color:'#fbbf24', bg:'rgba(251,191,36,.2)',  border:'rgba(251,191,36,.4)',  billing:'Pro Plus — 150 try-ons/month · $49.90/mo' },
+      pro:    { label:'🚀 Pro Basic',color:'#34d399', bg:'rgba(52,211,153,.15)', border:'rgba(52,211,153,.35)', billing:'Pro Basic — 50 try-ons/month · $19.90/mo' },
       free:   { label:'FREE',       color:'#a78bfa', bg:'rgba(124,58,237,.15)', border:'rgba(124,58,237,.3)',  billing:'Free — 5 try-ons one-time' },
     };
     const meta = planMeta[user.plan] || planMeta.free;
