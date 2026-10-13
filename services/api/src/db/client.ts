@@ -17,7 +17,8 @@ function connectionConfig() {
         const u = new URL(raw);
         const mode = u.searchParams.get("sslmode");
         if (mode && mode !== "disable") wantsSsl = true;
-        for (const k of ["sslmode", "ssl", "sslrootcert", "sslcert", "sslkey", "uselibpqcompat"]) u.searchParams.delete(k);
+        // Only the mode is overridden; client-cert / root-cert params stay on the URL for pg to use.
+        for (const k of ["sslmode", "uselibpqcompat"]) u.searchParams.delete(k);
         connectionString = u.toString();
     } catch { /* not a URL (e.g. unset in tests) — pass through */ }
 
@@ -25,6 +26,10 @@ function connectionConfig() {
     const ssl = !wantsSsl ? false
         : ca ? { ca, rejectUnauthorized: true }
         : { rejectUnauthorized: false };
+    if (wantsSsl && !ca) {
+        logger.warn("DATABASE_CA_CERT not set — Postgres TLS is encrypted but the server certificate is NOT verified. " +
+            "Set DATABASE_CA_CERT (DigitalOcean: `doctl databases get-ca <db-id>`) to enable verification.");
+    }
     return { connectionString, ssl };
 }
 
