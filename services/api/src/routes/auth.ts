@@ -188,16 +188,18 @@ function issueTokens(userId: string) {
 
 router.post("/register", async (req, res, next) => {
     try {
-        const { email, password, full_name, phone } = req.body as {
+        let { email, password, full_name, phone } = req.body as {
             email?: string;
             password?: string;
             full_name?: string;
             phone?: string;
         };
 
-        if (!email || !password || !full_name) {
-            throw new AppError("VALIDATION_ERROR", "email, password and full_name are required", 400);
+        if (!email || !password) {
+            throw new AppError("VALIDATION_ERROR", "email and password are required", 400);
         }
+        // The web register form has no name field — fall back to the mailbox name (user can edit it later).
+        if (!full_name?.trim()) full_name = email.split("@")[0].replace(/[._-]+/g, " ").trim() || "New user";
         if (password.length < 8) {
             throw new AppError("VALIDATION_ERROR", "Password must be at least 8 characters", 400);
         }
