@@ -253,7 +253,8 @@ router.get("/google/callback", async (req, res, next) => {
 
         // Standard web redirect — pass return_to so auth/success knows where to land
         const frontendUrl = process.env.WEB_APP_URL ?? "http://localhost:3000";
-        res.redirect(`${frontendUrl}/auth/success?return_to=${encodeURIComponent(returnTo)}#access_token=${accessToken}&refresh_token=${refreshToken}`);
+        // `t` busts any CDN/browser cache of the success page (it was serving a stale copy without the token reader)
+        res.redirect(`${frontendUrl}/auth/success?return_to=${encodeURIComponent(returnTo)}&t=${Date.now()}#access_token=${accessToken}&refresh_token=${refreshToken}`);
     } catch (err) { next(err); }
 });
 
@@ -439,7 +440,7 @@ router.get("/facebook/callback", async (req, res, next) => {
         }
 
         const frontendUrl = process.env.WEB_APP_URL ?? "http://localhost:3000";
-        res.redirect(`${frontendUrl}/auth/success#access_token=${accessToken}&refresh_token=${refreshToken}`);
+        res.redirect(`${frontendUrl}/auth/success?t=${Date.now()}#access_token=${accessToken}&refresh_token=${refreshToken}`);
     } catch (err) { next(err); }
 });
 

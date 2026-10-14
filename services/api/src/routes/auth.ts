@@ -286,6 +286,13 @@ router.get("/verify-email", async (req, res, next) => {
         sendWelcomeEmail(user.email, user.full_name.split(" ")[0]).catch(() => {});
 
         logger.info({ email: user.email }, "✅ Email verified");
+
+        // Browser click from the verification email → sign the user in and land in the app.
+        // API clients (Accept: application/json) still get the JSON body below.
+        if (req.accepts(["html", "json"]) === "html") {
+            const appUrl = process.env.WEB_APP_URL ?? "https://tryit4u.ai";
+            return res.redirect(`${appUrl}/auth/success?return_to=%2F&t=${Date.now()}#access_token=${accessToken}&refresh_token=${refreshToken}`);
+        }
         res.json({
             ok: true,
             message: "Email verified! Welcome to TryItOn.",
