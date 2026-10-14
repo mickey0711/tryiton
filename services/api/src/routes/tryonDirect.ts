@@ -31,6 +31,25 @@ const garmentSlot: Record<string, string> = {
     skirt:  "lower_body",
 };
 
+// Everything that is not a garment goes through a general image-editing model
+// (google/nano-banana — Gemini 2.5 Flash Image, multi-image, commercial use OK).
+// The previously configured shoe model (dcsaurabh/virtual-shoe-try-on) no longer exists on Replicate.
+const EDIT_MODEL = process.env.REPLICATE_EDIT_MODEL ?? "google/nano-banana";
+const editPrompt: Record<string, string> = {
+    shoes:   "Put the shoes from the second image on the feet of the person in the first image. Keep the person, pose, background and all other clothing exactly the same. Photorealistic, correct perspective and lighting.",
+    glasses: "Put the eyewear from the second image on the face of the person in the first image. Keep the person, pose, hair and background exactly the same. Photorealistic fit and reflections.",
+    hat:     "Put the hat from the second image on the head of the person in the first image. Keep the person, face, pose and background exactly the same. Photorealistic.",
+    watch:   "Put the watch from the second image on the wrist of the person in the first image. Keep everything else exactly the same. Photorealistic.",
+    jewelry: "Put the jewelry from the second image on the person in the first image where it would naturally be worn. Keep everything else exactly the same. Photorealistic.",
+    bag:     "Give the person in the first image the bag from the second image, carried naturally. Keep the person, pose and background exactly the same. Photorealistic.",
+    hair:    "Give the person in the first image the hairstyle and hair color shown in the second image. Keep the face, body, clothing and background exactly the same. Photorealistic.",
+    makeup:  "Apply the makeup look from the second image to the face of the person in the first image. Keep identity, pose and background exactly the same. Photorealistic.",
+    nails:   "Apply the nail design from the second image to the nails of the person in the first image. Keep everything else exactly the same. Photorealistic.",
+    beauty:  "Apply the beauty product from the second image to the person in the first image in a natural way. Keep identity, pose and background the same. Photorealistic.",
+    other:   "Show the person in the first image wearing or using the product from the second image in a natural, realistic way. Keep the person, pose and background the same. Photorealistic.",
+};
+function isGarment(cat: string) { return cat in garmentSlot; }
+
 // prediction id → user charged for it, so a failed poll can refund exactly once.
 const chargedPredictions = new Map<string, { userId: string; at: number }>();
 setInterval(() => {
@@ -80,29 +99,44 @@ router.post("/", optionalAuth, anonLimit, async (req: Request, res: Response) =>
             creditsLeft = r.credits;
         }
 
-        const slot = garmentSlot[cat.toLowerCase()] ?? "upper_body";
+        const catKey = cat.toLowerCase();
+        const garment = isGarment(catKey);
+
+        // Garments → IDM-VTON (version endpoint). Everything else → general edit model (model endpoint).
+        const endpoint = garment
+            ? `${REPLICATE_API}/predictions`
+            : `${REPLICATE_API}/models/${EDIT_MODEL}/predictions`;
+        const body = garment
+            ? {
+                version: IDMVTON_VERSION,
+                input: {
+                    human_img,
+                    garm_img: garment_url,
+                    garment_des: `A ${catKey} clothing item`,
+                    category: garmentSlot[catKey] ?? "upper_body",
+                    is_checked: true,
+                    is_checked_crop: true,
+                    denoise_steps: 30,
+                    seed: 42,
+                },
+            }
+            : {
+                input: {
+                    prompt: editPrompt[catKey] ?? editPrompt.other,
+                    image_input: [human_img, garment_url],
+                    output_format: "jpg",
+                },
+            };
 
         // Create prediction — 8 s hard timeout so DO's proxy never kills us
-        const predRes = await fetch(`${REPLICATE_API}/predictions`, {
+        const predRes = await fetch(endpoint, {
             method: "POST",
             signal: AbortSignal.timeout(8000),
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                version: IDMVTON_VERSION,
-                input: {
-                    human_img,
-                    garm_img: garment_url,
-                    garment_des: `A ${cat} clothing item`,
-                    category: slot,
-                    is_checked: true,
-                    is_checked_crop: true,
-                    denoise_steps: 30,
-                    seed: 42,
-                },
-            }),
+            body: JSON.stringify(body),
         });
 
         if (!predRes.ok) {
