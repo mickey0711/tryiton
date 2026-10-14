@@ -128,6 +128,9 @@ app.use(express.static(path.join(publicDir, "_next"), { index: false }));
 const apiRouter = Router();
 apiRouter.use("/health", healthRouter);
 apiRouter.use("/auth", authRouter);
+// DO ingress strips the matched "/auth" prefix, so /auth/register etc. can arrive as /register.
+// Mounting the auth router at the root too makes the API path-prefix agnostic.
+apiRouter.use("/", authRouter);
 apiRouter.use("/assets", assetsRouter);
 apiRouter.use("/products", productsRouter);
 apiRouter.use("/fit/jobs", jobsRouter);
