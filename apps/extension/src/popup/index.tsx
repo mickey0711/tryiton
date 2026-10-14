@@ -241,13 +241,11 @@ function App() {
 
         try {
             const backendToken = await getToken();
-            const GARMENT_CATS = ["tops", "jacket", "dress", "pants", "shirt"];
-
-            // ── Backend tryon-direct (recommended path) ────────────────────
-            // Works without Redis/R2 — backend calls Replicate using server token.
+            // ── Backend tryon-direct (the only production path) ───────────
+            // Garments → IDM-VTON; shoes/glasses/hat/accessories/hair/makeup → general edit model.
             // Async flow: POST returns prediction_id immediately, extension polls.
             // Garment fetched as base64 to bypass Amazon/Zara CDN restrictions.
-            if (GARMENT_CATS.includes(category.toLowerCase())) {
+            {
                 try {
                     setProgress(10);
 
@@ -359,15 +357,7 @@ function App() {
                 }
             }
 
-            // ── Direct Replicate flow (fallback if backend unavailable) ────
-            const replicateToken = await getReplicateToken();
-            if (replicateToken) {
-                await runReplicateGeneration(productSrc, activePhoto, category, replicateToken);
-                return;
-            }
-
-            // ── Mock fallback ──────────────────────────────────────────────
-            await runMockGeneration(productSrc, activePhoto, category);
+            // No silent mock fallback in production: a failure must be visible, not a fake result.
         } catch (err: any) {
             setError(err.message ?? "Something went wrong. Please try again.");
             setScreen("ready");
@@ -475,7 +465,7 @@ function App() {
         setScreen("result");
     };
 
-    // ── Mock fallback (no AI, shows selfie) ──────────────────────────────────────
+    // ── Mock fallback (dev only — never used in production flow) ───────────────────
     const runMockGeneration = async (product: string, profile: string, _category: string) => {
         for (let i = 0; i <= 95; i += 15) {
             await new Promise((r) => setTimeout(r, 300));
