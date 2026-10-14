@@ -194,6 +194,9 @@ const nextPages: Record<string, string> = {
     "/s.html":        "s.html",
     "/auth/success":        "auth/success.html",
     "/auth/success.html":   "auth/success.html",
+    // DO ingress strips the matched "/auth" prefix before forwarding, so the page arrives as /success
+    "/success":             "auth/success.html",
+    "/success.html":        "auth/success.html",
 };
 Object.entries(nextPages).forEach(([route, file]) => {
     app.get(route, noCacheHtml, (_req, res) => {
