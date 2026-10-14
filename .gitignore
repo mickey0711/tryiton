@@ -10,3 +10,4 @@ dist/
 
 # local secrets (never commit)
 .secrets/
+.claude/launch.json
